@@ -66,7 +66,9 @@
 <div id="timer"></div>
 <div id="score"></div>
 
-<audio id="bgMusic" src="Capsule.wav" loop></audio>
+<audio id="menuMusic" src="menu.mp3" loop></audio>
+<audio id="gameMusic" src="game.mp3" loop></audio>
+<audio id="gameOverMusic" src="gameover.mp3" loop></audio>
 
 <div id="ui">
 
@@ -363,9 +365,11 @@
 
     document.getElementById("ui").style.display="none"
 
-    const music=document.getElementById("bgMusic")
-    music.volume=0.3
-    music.play()
+    menuMusic.pause()
+
+    const gameMusic = document.getElementById("gameMusic")
+    gameMusic.volume = 0.4
+    gameMusic.play()
 
     gameRunning=true
 
@@ -388,6 +392,12 @@
   async function endGame(text){
 
     gameRunning=false
+
+    document.getElementById("gameMusic").pause()
+
+    const gameOverMusic = document.getElementById("gameOverMusic")
+    gameOverMusic.volume = 0.5
+    gameOverMusic.play()
 
     await saveScoreOnline()
     await loadLeaderboard()
@@ -569,6 +579,14 @@
   document.getElementById("startBtn").onclick=startGame
 
   loadLeaderboard()
+
+  const menuMusic = document.getElementById("menuMusic")
+  menuMusic.volume = 0.4
+  menuMusic.play()
+
+  document.body.addEventListener("click", () => {
+    menuMusic.play()
+  }, { once:true })
 
 </script>
 
