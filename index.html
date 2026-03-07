@@ -45,10 +45,11 @@
       top:60%;
       left:50%;
 
-      transform:translate(-50%,-50%);
+      /*transform:translate(-50%,-50%);*/
 
       color: white;
       text-shadow: 2px 2px black;
+      transform:translate(-50%,-50%) scale(1.1);
 
     }
 
@@ -65,8 +66,15 @@
       font-size:46px;
       color: aliceblue;
       background-color: darkred;
-      border-radius: 10%;
+      border:none;
+      box-shadow: 7px 7px 10px black;
+      border-radius: 10px;
       font-weight: bold;
+
+      text-shadow:
+          0 0 5px #ff0000,
+          0 0 10px #ff0000,
+          0 0 20px #ff0000;
 
       animation:blink 2s infinite;
 
@@ -92,6 +100,8 @@
     #leaderboard{
       margin-top:20px;
       font-size: 24px;
+      line-height: 1.5;
+      color: lawngreen;
     }
 
     #fade{
@@ -144,7 +154,7 @@
     @keyframes blink{
 
       0%{opacity:1}
-      50%{opacity:.8}
+      50%{opacity:.9}
       100%{opacity:1}
 
     }
@@ -513,7 +523,7 @@
   }
   function renderLeaderboard(){
 
-    let html="<h3>Leaderboard</h3>"
+    let html="<h3>Top Survivors</h3>"
 
     leaderboard.forEach((p,i)=>{
 
