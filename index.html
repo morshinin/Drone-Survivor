@@ -54,6 +54,20 @@
       margin-top:20px;
     }
 
+    #fade{
+      position:fixed;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      background:black;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity 0.8s;
+      z-index:999;
+    }
+
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -62,6 +76,8 @@
 <body>
 
 <canvas id="game"></canvas>
+
+<div id="fade"></div>
 
 <div id="timer"></div>
 <div id="score"></div>
@@ -94,6 +110,9 @@
     SUPABASE_KEY
   )
 
+  const menuMusic = document.getElementById("menuMusic")
+  const gameMusic = document.getElementById("gameMusic")
+  const gameOverMusic = document.getElementById("gameOverMusic")
   const canvas = document.getElementById("game")
   const ctx = canvas.getContext("2d")
 
@@ -107,6 +126,52 @@
 
   document.addEventListener("keydown",e=>keys[e.key]=true)
   document.addEventListener("keyup",e=>keys[e.key]=false)
+
+  function fadeScreen(duration=800){
+
+    const f = document.getElementById("fade")
+
+    return new Promise(resolve=>{
+
+      f.style.transition = `opacity ${duration/2}ms`
+      f.style.opacity = 1
+
+      setTimeout(()=>{
+
+        f.style.opacity = 0
+
+        setTimeout(resolve, duration/2)
+
+      }, duration/2)
+
+    })
+
+  }
+
+  async function crossfadeMusic(from, to, duration=1000){
+
+    if(to){
+      to.volume = 0
+      to.play()
+    }
+
+    const steps = 20
+    const stepTime = duration/steps
+
+    for(let i=0;i<=steps;i++){
+
+      const t = i/steps
+
+      if(from) from.volume = 0.4*(1-t)
+      if(to)   to.volume = 0.4*t
+
+      await new Promise(r=>setTimeout(r,stepTime))
+    }
+
+    if(from) from.pause()
+
+  }
+
 
   class Player{
 
@@ -353,7 +418,7 @@
 
   }
 
-  function startGame(){
+  async function startGame(){
 
     playerName=document
       .getElementById("nameInput")
@@ -364,12 +429,9 @@
       playerName="AAA"
 
     document.getElementById("ui").style.display="none"
+    await fadeScreen()
 
-    menuMusic.pause()
-
-    const gameMusic = document.getElementById("gameMusic")
-    gameMusic.volume = 0.4
-    gameMusic.play()
+    await crossfadeMusic(menuMusic, gameMusic)
 
     gameRunning=true
 
@@ -395,9 +457,9 @@
 
     document.getElementById("gameMusic").pause()
 
-    const gameOverMusic = document.getElementById("gameOverMusic")
-    gameOverMusic.volume = 0.5
-    gameOverMusic.play()
+    await fadeScreen()
+
+    await crossfadeMusic(gameMusic, gameOverMusic)
 
     await saveScoreOnline()
     await loadLeaderboard()
@@ -580,7 +642,6 @@
 
   loadLeaderboard()
 
-  const menuMusic = document.getElementById("menuMusic")
   menuMusic.volume = 0.4
   menuMusic.play()
 
