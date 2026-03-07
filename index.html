@@ -184,6 +184,7 @@
 <div id="score"></div>
 <div id="drones-alive"></div> <audio id="menuMusic" src="menu.mp3" loop></audio>
 <audio id="gameMusic" src="game.mp3" loop></audio>
+<audio id="droneSound" src="drone_sound.mp3" loop></audio>
 <audio id="gameOverMusic" src="gameover.mp3" loop></audio>
 <audio id="beep" src="beep.mp3"></audio>
 
@@ -214,6 +215,7 @@
 
   const menuMusic = document.getElementById("menuMusic")
   const gameMusic = document.getElementById("gameMusic")
+  const droneSound = document.getElementById("droneSound")
   const gameOverMusic = document.getElementById("gameOverMusic")
   const canvas = document.getElementById("game")
   const ctx = canvas.getContext("2d")
@@ -459,7 +461,7 @@
 
     player.update()
 
-    if(keys["ArrowUp"] && shootCooldown<=0){
+    if(shootCooldown<=0){
       bullets.push(new Bullet(player.x+player.size/2,player.y))
       shootCooldown=250
       playSound(600,0.1)
