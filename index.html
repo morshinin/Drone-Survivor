@@ -55,6 +55,8 @@
     }
 
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 </head>
 
 <body>
@@ -82,6 +84,13 @@
 </div>
 
 <script>
+  const SUPABASE_URL = "https://zsdwmjdalfnmvtlwoygs.supabase.co"
+  const SUPABASE_KEY = "sb_publishable_B9tdTmqKndQysFngs7vT2Q_TqYVx7bt"
+
+  const db = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  )
 
   const canvas = document.getElementById("game")
   const ctx = canvas.getContext("2d")
@@ -271,18 +280,6 @@
 
   }
 
-  function loadLeaderboard(){
-
-    let data=localStorage.getItem("droneLeaderboard")
-
-    if(data){
-      leaderboard=JSON.parse(data)
-    }
-
-    renderLeaderboard()
-
-  }
-
   function saveScore(){
 
     leaderboard.push({
@@ -301,14 +298,38 @@
     })
 
     leaderboard=leaderboard.slice(0,10)
-
-    localStorage.setItem(
-      "droneLeaderboard",
-      JSON.stringify(leaderboard)
-    )
-
   }
 
+  async function saveScoreOnline(){
+
+    const {data, error} = await db
+      .from("leaderboard")
+      .insert([
+        {
+          name: playerName,
+          score: score,
+          time: Math.floor(survivalTime)
+        }
+      ])
+
+    if(error){
+      console.error(error)
+    }
+  }
+
+  async function loadLeaderboard(){
+
+    const { data } = await db
+      .from("leaderboard")
+      .select("*")
+      .order("score", { ascending:false })
+      .limit(10)
+
+    leaderboard = data
+
+    renderLeaderboard()
+
+  }
   function renderLeaderboard(){
 
     let html="<h3>Leaderboard</h3>"
@@ -364,9 +385,13 @@
 
   }
 
-  function endGame(text){
+  async function endGame(text){
 
     gameRunning=false
+
+    await saveScoreOnline()
+    await loadLeaderboard()
+
 
     saveScore()
 
