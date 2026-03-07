@@ -185,6 +185,7 @@
 <div id="drones-alive"></div> <audio id="menuMusic" src="menu.mp3" loop></audio>
 <audio id="gameMusic" src="game.mp3" loop></audio>
 <audio id="droneSound" src="drone_sound.mp3" loop></audio>
+<audio id="droneExplosion" src="drone_explosion.mp3"></audio>
 <audio id="gameOverMusic" src="gameover.mp3" loop></audio>
 <audio id="beep" src="beep.mp3"></audio>
 
@@ -216,6 +217,7 @@
   const menuMusic = document.getElementById("menuMusic")
   const gameMusic = document.getElementById("gameMusic")
   const droneSound = document.getElementById("droneSound")
+  const droneExplosion = document.getElementById("droneExplosion")
   const gameOverMusic = document.getElementById("gameOverMusic")
   const canvas = document.getElementById("game")
   const ctx = canvas.getContext("2d")
@@ -492,7 +494,11 @@
       drones.forEach((d,di)=>{
         if(b.x<d.x+d.width && b.x+b.size>d.x && b.y<d.y+d.height && b.y+b.size>d.y){
           spawnExplosion(d.x,d.y)
-          playSound(120,0.2)
+          const randomPitch = 0.8 + Math.random() * 0.4;
+          droneExplosion.currentTime = 0; // Сбрасываем в начало, чтобы звук мог накладываться
+          droneExplosion.volume = 0.3;     // Установите комфортную громкость
+          droneExplosion.playbackRate = randomPitch;
+          droneExplosion.play();
           score++
           bullets.splice(bi,1)
           drones.splice(di,1)
@@ -534,6 +540,8 @@
     document.getElementById("drones-alive").innerText=
       "Alive: "+drones.length;
 
+    let targetVolume = 0.05 + (drones.length / 50) * 0.25;
+    droneSound.volume = targetVolume;
   }
 
   // ... (Draw and Game Loop remain the same)
