@@ -427,6 +427,9 @@
     document.getElementById("ui").style.display="none"
     await fadeScreen()
     await crossfadeMusic(menuMusic, gameMusic)
+    droneSound.volume = 0.1; // Сделаем его тихим фоном, чтобы не перебивал музыку
+    droneSound.currentTime = 0;
+    droneSound.play();
     await cinematicStart()
     gameRunning=true
     player=new Player()
@@ -438,6 +441,7 @@
   async function endGame(text){
     gameRunning=false
     document.getElementById("gameMusic").pause()
+    droneSound.pause();
     await fadeScreen()
     await crossfadeMusic(gameMusic, gameOverMusic)
     await saveScoreOnline()
