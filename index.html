@@ -186,6 +186,7 @@
 <audio id="gameMusic" src="game.mp3" loop></audio>
 <audio id="droneSound" src="drone_sound.mp3" loop></audio>
 <audio id="droneExplosion" src="drone_explosion.mp3"></audio>
+<audio id="shootSound" src="pistol_shot.mp3"></audio>
 <audio id="gameOverMusic" src="gameover.mp3" loop></audio>
 <audio id="beep" src="beep.mp3"></audio>
 
@@ -218,6 +219,7 @@
   const gameMusic = document.getElementById("gameMusic")
   const droneSound = document.getElementById("droneSound")
   const droneExplosion = document.getElementById("droneExplosion")
+  const shootSound = document.getElementById("shootSound")
   const gameOverMusic = document.getElementById("gameOverMusic")
   const canvas = document.getElementById("game")
   const ctx = canvas.getContext("2d")
@@ -470,7 +472,12 @@
     if(shootCooldown<=0){
       bullets.push(new Bullet(player.x+player.size/2,player.y))
       shootCooldown=250
-      playSound(600,0.1)
+      const randomPitch = 0.9 + Math.random() * 0.4;
+
+      shootSound.currentTime = 0; // Сбрасываем в начало, чтобы звук мог накладываться
+      shootSound.volume = 0.15;     // Установите комфортную громкость (выстрелы частые)
+      shootSound.playbackRate = randomPitch; // Устанавливаем скорость/тональность
+      shootSound.play();
     }
 
     shootCooldown-=delta
