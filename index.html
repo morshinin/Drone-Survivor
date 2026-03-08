@@ -29,12 +29,24 @@
 
       background:rgba(0,0,0,0.15);
 
-      z-index:-1;
+      /*z-index:-1;*/
     }
 
+    .game_over_bg {
+      background-image: url("game_over_bg.png");
+      background-size: cover;
+    }
+
+    .current_player_name {
+      color: darkred;
+      text-shadow: 1px 1px 0 white;
+    }
 
     #ui{
-      position:absolute;
+      /*position:absolute;*/
+      position:fixed;
+      top:0;
+      left:0;
       width:100%;
       height:100%;
       display:flex;
@@ -42,14 +54,14 @@
       justify-content:center;
       flex-direction:column;
       text-align:center;
-      top:60%;
-      left:50%;
+      /*top:60%;*/
+      /*left:50%;*/
 
       /*transform:translate(-50%,-50%);*/
 
-      color: white;
+      color: lawngreen;
       text-shadow: 2px 2px black;
-      transform:translate(-50%,-50%) scale(1.1);
+      /*transform:translate(-50%,-50%) scale(1.1);*/
 
     }
 
@@ -442,7 +454,7 @@
     score=0;survivalTime=0
   }
 
-  async function endGame(text){
+  async function endGame(){
     gameRunning=false
     document.getElementById("gameMusic").pause()
     droneSound.pause();
@@ -452,11 +464,9 @@
     await loadLeaderboard()
     saveScore()
     const ui=document.getElementById("ui")
+    ui.classList.add("game_over_bg")
     ui.innerHTML=`
-      <h1>${text}</h1>
-      <h2>${playerName}</h2>
-      <p>Drones destroyed: ${score}</p>
-      <p>Survival time: ${Math.floor(survivalTime)}s</p>
+      <h2 class="current_player_name">${playerName} - Drones destroyed: ${score}; Time: ${Math.floor(survivalTime)}s</h2>
       <div id="leaderboard"></div>
       <button onclick="location.reload()">Play Again</button>
     `
@@ -528,7 +538,7 @@
       }
       if(b.x<player.x+player.size && b.x+b.size>player.x && b.y<player.y+player.size && b.y+b.size>player.y){
         playSound(60,0.5)
-        endGame("Game Over")
+        endGame()
       }
     })
 
