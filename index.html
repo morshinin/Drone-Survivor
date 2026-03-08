@@ -70,12 +70,43 @@
       font-weight:bold;
     }
 
+    /*#score{*/
+    /*  position:absolute;*/
+    /*  top:10px;*/
+    /*  left:20px;*/
+    /*  font-size:22px;*/
+    /*  font-weight:bold;*/
+    /*}*/
     #score{
       position:absolute;
       top:10px;
       left:20px;
-      font-size:22px;
+      font-size:34px;
       font-weight:bold;
+      color:#ffe066;
+      text-shadow:3px 3px black;
+      transition:transform 0.15s;
+    }
+
+    .score-pop{
+      transform:scale(1.25);
+    }
+
+    #score-pop{
+      position:absolute;
+      top:50px;
+      left:20px;
+      font-size:28px;
+      color:#ffff66;
+      text-shadow:2px 2px black;
+      opacity:0;
+      transform:translateY(0);
+      transition:all 0.4s ease;
+    }
+
+    .score-pop-show{
+      opacity:1;
+      transform:translateY(-20px);
     }
 
     /* СТИЛЬ ДЛЯ НОВОГО СЧЕТЧИКА */
@@ -177,7 +208,9 @@
 
 <div id="timer"></div>
 <div id="score"></div>
-<div id="drones-alive"></div> <audio id="menuMusic" src="menu.mp3" loop></audio>
+<div id="score-pop"></div>
+<div id="drones-alive"></div>
+<audio id="menuMusic" src="menu.mp3" loop></audio>
 <audio id="gameMusic" src="game.mp3" loop></audio>
 <audio id="droneSound" src="drone_sound.mp3" loop></audio>
 <audio id="droneExplosion" src="drone_explosion.mp3"></audio>
@@ -265,12 +298,29 @@
   }
 
   function calculateDroneScore(){
-    const base = 100
+    const base = 10
 
     const timeMultiplier = 1 + Math.min(survivalTime / 60, 5)
     const droneMultiplier = 1 + Math.min(drones.length / 20, 4)
 
     return Math.floor(base * timeMultiplier * droneMultiplier)
+  }
+
+  function showScoreGain(points){
+    const scoreEl = document.getElementById("score")
+    const pop = document.getElementById("score-pop")
+
+    pop.innerText = "+" + points
+
+    pop.classList.remove("score-pop-show")
+    void pop.offsetWidth
+    pop.classList.add("score-pop-show")
+
+    scoreEl.classList.add("score-pop")
+
+    setTimeout(()=>{
+      scoreEl.classList.remove("score-pop")
+    },150)
   }
 
   function fadeScreen(duration=800){
@@ -636,7 +686,11 @@
           droneExplosion.volume = 0.3;     // Установите комфортную громкость
           droneExplosion.playbackRate = randomPitch;
           droneExplosion.play();
-          score += calculateDroneScore()
+          const gained = calculateDroneScore()
+
+          score += gained
+
+          showScoreGain(gained)
           bullets.splice(bi,1)
           drones.splice(di,1)
           if (drones.length < 50) {
