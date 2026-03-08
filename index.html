@@ -238,6 +238,8 @@
 
   const background = new Image()
   background.src = "game_bg.png"
+  const playerImg = new Image()
+  playerImg.src = "soldier.png"
 
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
@@ -303,20 +305,55 @@
   // ... (Classes: Player, Drone, Bullet, EnemyBullet, Particle remain the same)
   class Player{
     constructor(){
-      this.size=30
+      this.size=100
       this.x=canvas.width/2
       this.y=canvas.height-groundHeight-this.size
       this.speed=6
+      this.direction=1
     }
     update(){
-      if(keys["ArrowLeft"]) this.x-=this.speed
-      if(keys["ArrowRight"]) this.x+=this.speed
+      if(keys["ArrowLeft"]){
+        this.x-=this.speed
+        this.direction=-1
+      }
+
+      if(keys["ArrowRight"]){
+        this.x+=this.speed
+        this.direction=1
+      }
       if(this.x<0) this.x=0
       if(this.x+this.size>canvas.width) this.x=canvas.width-this.size
     }
     draw(){
-      ctx.fillStyle="black"
-      ctx.fillRect(this.x,this.y,this.size,this.size)
+
+      ctx.save()
+
+      if(this.direction === -1){
+
+        ctx.scale(-1,1)
+
+        ctx.drawImage(
+          playerImg,
+          -this.x - this.size,
+          this.y,
+          this.size,
+          this.size
+        )
+
+      }else{
+
+        ctx.drawImage(
+          playerImg,
+          this.x,
+          this.y,
+          this.size,
+          this.size
+        )
+
+      }
+
+      ctx.restore()
+
     }
   }
 
@@ -570,7 +607,7 @@
     if(background.complete){
       ctx.drawImage(background,0,0,canvas.width,canvas.height)
     }
-    ctx.fillStyle="#333"
+    ctx.fillStyle="rgba(0,0,0,0)"
     ctx.fillRect(0,canvas.height-groundHeight,canvas.width,groundHeight)
     player.draw()
     drones.forEach(d=>d.draw())
