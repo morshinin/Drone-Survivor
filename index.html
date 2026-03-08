@@ -175,6 +175,27 @@
       padding: 0;
     }
 
+    #game-info{
+      position:fixed;
+      bottom:15px;
+      left:50%;
+      transform:translateX(-50%);
+      font-size:10px;
+      color:#aaa;
+      text-align:center;
+      line-height:1.6;
+      text-shadow:1px 1px black;
+    }
+
+    #game-info a{
+      color:#7cff7c;
+      text-decoration:none;
+    }
+
+    #game-info a:hover{
+      text-decoration:underline;
+    }
+
     @keyframes bgMove{
 
       0%{
@@ -236,6 +257,17 @@
 
   <div id="leaderboard"></div>
 
+</div>
+
+<div id="game-info">
+  <div>Drone Survivor</div>
+  <div>Version <span id="game-version"></span></div>
+  <div>© 2026 Mikhail Morshinin</div>
+  <div>
+    <a href="https://github.com/morshinin/drone-survivor" target="_blank">
+      GitHub
+    </a>
+  </div>
 </div>
 
 <script>
