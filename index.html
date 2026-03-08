@@ -126,6 +126,20 @@
       z-index:1000;
     }
 
+    #muteBtn {
+      position: fixed;
+      top:40px;
+      right:20px;
+      width: 30px;
+      height: 30px;
+      background-image: url(music_icon.png);
+      background-size: cover;
+      background-color: transparent;
+      border: none;
+      margin: 0;
+      padding: 0;
+    }
+
     @keyframes bgMove{
 
       0%{
@@ -175,6 +189,7 @@
 
 <div id="ui">
 
+  <button id="muteBtn"></button>
   <div class="nes-field">
     <label for="nameInput">Enter your name (3 letters)</label>
     <input id="nameInput" maxlength="3" type="text" class="nes-input">
@@ -227,6 +242,18 @@
   // ... (Input listeners and utility functions remain the same)
   document.addEventListener("keydown",e=>keys[e.key]=true)
   document.addEventListener("keyup",e=>keys[e.key]=false)
+
+  let isMuted = false
+
+  const allMusic = [menuMusic, gameMusic, droneSound, gameOverMusic]
+
+  const muteBtn = document.getElementById("muteBtn")
+
+  muteBtn.onclick = () => {
+    isMuted = !isMuted
+    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.4) // базовый уровень для всех треков
+    isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
+  }
 
   function isColliding(a, b){
     return (
