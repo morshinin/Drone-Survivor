@@ -70,6 +70,10 @@
       font-weight:bold;
     }
 
+    .hide-cursor{
+      cursor: none;
+    }
+
     /*#score{*/
     /*  position:absolute;*/
     /*  top:10px;*/
@@ -539,6 +543,8 @@
 
     gameRunning = true
 
+    document.body.classList.add("hide-cursor")
+
     player = new Player()
 
     drones = [
@@ -618,6 +624,7 @@
     droneSound.play();
     await cinematicStart()
     gameRunning=true
+    document.body.classList.add("hide-cursor")
     player=new Player()
     drones=[new Drone(canvas.height*0.2),new Drone(canvas.height*0.35)]
     bullets=[];enemyBullets=[];particles=[]
@@ -626,6 +633,7 @@
 
   async function endGame(){
     gameRunning=false
+    document.body.classList.remove("hide-cursor")
     document.getElementById("gameMusic").pause()
     droneSound.pause();
     await fadeScreen()
