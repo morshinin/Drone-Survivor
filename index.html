@@ -242,6 +242,8 @@
   playerImg.src = "soldier.png"
   const droneImg = new Image()
   droneImg.src = "drone.png"
+  const enemyBulletImg = new Image()
+  enemyBulletImg.src = "drone_bullet.png"
 
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
@@ -401,15 +403,21 @@
 
   class EnemyBullet{
     constructor(x,y){
-      this.size=10
       this.x=x
       this.y=y
       this.speed=4
+      this.width = 16
+      this.height = 32
     }
     update(){this.y+=this.speed}
     draw(){
-      ctx.fillStyle="black"
-      ctx.fillRect(this.x,this.y,this.size,this.size)
+      ctx.drawImage(
+        enemyBulletImg,
+        this.x,
+        this.y,
+        this.width,
+        this.height
+      )
     }
   }
 
@@ -590,7 +598,12 @@
         spawnExplosion(b.x,b.y)
         enemyBullets.splice(i,1)
       }
-      if(b.x<player.x+player.size && b.x+b.size>player.x && b.y<player.y+player.size && b.y+b.size>player.y){
+      if(
+          b.x < player.x + player.size &&
+          b.x + b.width > player.x &&
+          b.y < player.y + player.size &&
+          b.y + b.height > player.y
+      ){
         playSound(60,0.5)
         endGame()
       }
