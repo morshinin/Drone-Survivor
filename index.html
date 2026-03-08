@@ -264,6 +264,15 @@
     )
   }
 
+  function calculateDroneScore(){
+    const base = 100
+
+    const timeMultiplier = 1 + Math.min(survivalTime / 60, 5)
+    const droneMultiplier = 1 + Math.min(drones.length / 20, 4)
+
+    return Math.floor(base * timeMultiplier * droneMultiplier)
+  }
+
   function fadeScreen(duration=800){
     const f = document.getElementById("fade")
     return new Promise(resolve=>{
@@ -522,7 +531,7 @@
   async function saveScoreOnline(){
     const {data, error} = await db
       .from("leaderboard")
-      .insert([{name: playerName,score: score,time: Math.floor(survivalTime)}])
+      .insert([{name: playerName,score: score}])
     if(error){console.error(error)}
   }
 
@@ -539,7 +548,7 @@
   function renderLeaderboard(){
     let html="<h3>Top Survivors</h3>"
     leaderboard.forEach((p,i)=>{
-      html+=`${i+1}. ${p.name} — ${p.score} drones — ${p.time}s<br>`
+      html+=`${i+1}. ${p.name} — ${p.score} pts<br>`
     })
     document.getElementById("leaderboard").innerHTML=html
   }
@@ -577,7 +586,7 @@
     const ui=document.getElementById("ui")
     ui.classList.add("game_over_bg")
     ui.innerHTML=`
-      <h2 class="current_player_name">${playerName} - Drones destroyed: ${score} Time: ${Math.floor(survivalTime)}s</h2>
+      <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
       <button class="nes-btn is-success" onclick="restartGame()">Play Again</button>
       <div id="leaderboard"></div>
     `
@@ -627,7 +636,7 @@
           droneExplosion.volume = 0.3;     // Установите комфортную громкость
           droneExplosion.playbackRate = randomPitch;
           droneExplosion.play();
-          score++
+          score += calculateDroneScore()
           bullets.splice(bi,1)
           drones.splice(di,1)
           if (drones.length < 50) {
@@ -662,7 +671,7 @@
       survivalTime.toFixed(1)+"s"
 
     document.getElementById("score").innerText=
-      "Drones: "+score
+      "Score: " + score
 
     // ОБНОВЛЕНИЕ НОВОГО СЧЕТЧИКА ЖИВЫХ ДРОНОВ
     document.getElementById("drones-alive").innerText=
