@@ -460,6 +460,43 @@
 
   let leaderboard=[]
 
+  async function restartGame(){
+
+    const ui = document.getElementById("ui")
+
+    ui.style.display = "none"
+    ui.classList.remove("game_over_bg")
+
+    await fadeScreen()
+
+    gameOverMusic.pause()
+
+    await crossfadeMusic(gameOverMusic, gameMusic)
+
+    droneSound.currentTime = 0
+    droneSound.play()
+
+    await cinematicStart()
+
+    gameRunning = true
+
+    player = new Player()
+
+    drones = [
+      new Drone(canvas.height*0.2),
+      new Drone(canvas.height*0.35)
+    ]
+
+    bullets = []
+    enemyBullets = []
+    particles = []
+
+    score = 0
+    survivalTime = 0
+    dropTimer = 0
+    shootCooldown = 0
+  }
+
   // ... (Sound, Scoring, Leaderboard functions remain the same)
   function playSound(freq,duration){
     let audioCtx=new (window.AudioContext||window.webkitAudioContext)()
@@ -541,7 +578,7 @@
     ui.classList.add("game_over_bg")
     ui.innerHTML=`
       <h2 class="current_player_name">${playerName} - Drones destroyed: ${score} Time: ${Math.floor(survivalTime)}s</h2>
-      <button class="nes-btn is-success" onclick="location.reload()">Play Again</button>
+      <button class="nes-btn is-success" onclick="restartGame()">Play Again</button>
       <div id="leaderboard"></div>
     `
     ui.style.display="flex"
