@@ -281,6 +281,8 @@
   )
 
   const HITBOX_PADDING = 12
+  const GAME_VERSION = "0.6.1"
+  document.getElementById("game-version").innerText = GAME_VERSION
 
   const menuMusic = document.getElementById("menuMusic")
   const gameMusic = document.getElementById("gameMusic")
@@ -323,15 +325,6 @@
     allMusic.forEach(m => m.volume = isMuted ? 0 : 0.4) // базовый уровень для всех треков
     isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
   }
-
-  fetch("version.json")
-    .then(r=>r.json())
-    .then(d=>{
-      document.getElementById("game-version").innerText = d.version  + " • " + new Date().toLocaleDateString()
-    })
-    .catch(()=>{
-      document.getElementById("game-version").innerText = "dev"
-    })
 
   function isColliding(a, b){
     return (
