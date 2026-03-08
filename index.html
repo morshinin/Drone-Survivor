@@ -228,6 +228,8 @@
     SUPABASE_KEY
   )
 
+  const HITBOX_PADDING = 12
+
   const menuMusic = document.getElementById("menuMusic")
   const gameMusic = document.getElementById("gameMusic")
   const droneSound = document.getElementById("droneSound")
@@ -257,6 +259,15 @@
   // ... (Input listeners and utility functions remain the same)
   document.addEventListener("keydown",e=>keys[e.key]=true)
   document.addEventListener("keyup",e=>keys[e.key]=false)
+
+  function isColliding(a, b){
+    return (
+      a.x + HITBOX_PADDING < b.x + b.width - HITBOX_PADDING &&
+      a.x + a.width - HITBOX_PADDING > b.x + HITBOX_PADDING &&
+      a.y + HITBOX_PADDING < b.y + b.height - HITBOX_PADDING &&
+      a.y + a.height - HITBOX_PADDING > b.y + HITBOX_PADDING
+    )
+  }
 
   function fadeScreen(duration=800){
     const f = document.getElementById("fade")
@@ -310,27 +321,33 @@
   // ... (Classes: Player, Drone, Bullet, EnemyBullet, Particle remain the same)
   class Player{
     constructor(){
-      this.size=100
-      this.x=canvas.width/2
-      this.y=canvas.height-groundHeight-this.size
-      this.speed=6
-      this.direction=1
+      this.x = canvas.width/2
+      this.y = canvas.height-groundHeight-100
+
+      this.width = 60
+      this.height = 100
+
+      this.speed = 6
+      this.direction = 1
     }
+
     update(){
       if(keys["ArrowLeft"]){
-        this.x-=this.speed
-        this.direction=-1
+        this.x -= this.speed
+        this.direction = -1
       }
 
       if(keys["ArrowRight"]){
-        this.x+=this.speed
-        this.direction=1
+        this.x += this.speed
+        this.direction = 1
       }
-      if(this.x<0) this.x=0
-      if(this.x+this.size>canvas.width) this.x=canvas.width-this.size
-    }
-    draw(){
 
+      if(this.x < 0) this.x = 0
+      if(this.x + this.width > canvas.width)
+        this.x = canvas.width - this.width
+    }
+
+    draw(){
       ctx.save()
 
       if(this.direction === -1){
@@ -339,10 +356,10 @@
 
         ctx.drawImage(
           playerImg,
-          -this.x - this.size,
+          -this.x - this.width,
           this.y,
-          this.size,
-          this.size
+          this.width,
+          this.height
         )
 
       }else{
@@ -351,14 +368,13 @@
           playerImg,
           this.x,
           this.y,
-          this.size,
-          this.size
+          this.width,
+          this.height
         )
 
       }
 
       ctx.restore()
-
     }
   }
 
@@ -543,7 +559,7 @@
     player.update()
 
     if(shootCooldown<=0){
-      bullets.push(new Bullet(player.x+player.size/2,player.y))
+      bullets.push(new Bullet(player.x + player.width/2, player.y))
       shootCooldown=250
       const randomPitch = 0.9 + Math.random() * 0.4;
 
@@ -599,12 +615,7 @@
         spawnExplosion(b.x,b.y)
         enemyBullets.splice(i,1)
       }
-      if(
-          b.x < player.x + player.size &&
-          b.x + b.width > player.x &&
-          b.y < player.y + player.size &&
-          b.y + b.height > player.y
-      ){
+      if(isColliding(b, player)){
         playSound(60,0.5)
         endGame()
       }
