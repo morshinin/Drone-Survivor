@@ -240,6 +240,8 @@
   background.src = "game_bg.png"
   const playerImg = new Image()
   playerImg.src = "soldier.png"
+  const droneImg = new Image()
+  droneImg.src = "drone.png"
 
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
@@ -370,10 +372,16 @@
       if(this.x<0 || this.x+this.width>canvas.width){
         this.speed*=-1
       }
+      this.y += Math.sin(Date.now()*0.003) * 0.3
     }
     draw(){
-      ctx.fillStyle="black"
-      ctx.fillRect(this.x,this.y,this.width,this.height)
+      ctx.drawImage(
+        droneImg,
+        this.x,
+        this.y,
+        this.width,
+        this.height
+      )
     }
   }
 
@@ -385,7 +393,10 @@
       this.speed=9
     }
     update(){this.y-=this.speed}
-    draw(){ctx.fillRect(this.x,this.y,this.size,this.size)}
+    draw(){
+      ctx.fillStyle="yellow"
+      ctx.fillRect(this.x,this.y,this.size,this.size)
+    }
   }
 
   class EnemyBullet{
@@ -396,7 +407,10 @@
       this.speed=4
     }
     update(){this.y+=this.speed}
-    draw(){ctx.fillRect(this.x,this.y,this.size,this.size)}
+    draw(){
+      ctx.fillStyle="black"
+      ctx.fillRect(this.x,this.y,this.size,this.size)
+    }
   }
 
   class Particle{
