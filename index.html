@@ -324,6 +324,15 @@
     isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
   }
 
+  fetch("version.json")
+    .then(r=>r.json())
+    .then(d=>{
+      document.getElementById("game-version").innerText = d.version  + " • " + new Date().toLocaleDateString()
+    })
+    .catch(()=>{
+      document.getElementById("game-version").innerText = "dev"
+    })
+
   function isColliding(a, b){
     return (
       a.x + HITBOX_PADDING < b.x + b.width - HITBOX_PADDING &&

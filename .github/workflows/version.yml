@@ -1,0 +1,25 @@
+name: Generate Version
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get tag version
+        run: |
+          echo "{\"version\": \"${GITHUB_REF_NAME}\"}" > version.json
+
+      - name: Commit version file
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add version.json
+          git commit -m "update version"
+          git push
