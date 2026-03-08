@@ -196,6 +196,33 @@
       text-decoration:underline;
     }
 
+    .loader {
+      width: 40px;
+      aspect-ratio: 1;
+      color: lawngreen;
+      position: relative;
+      background: radial-gradient(10px,currentColor 94%,#0000);
+    }
+    .loader:before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background:
+          radial-gradient(9px at bottom right,#0000 94%,currentColor) top    left,
+          radial-gradient(9px at bottom left ,#0000 94%,currentColor) top    right,
+          radial-gradient(9px at top    right,#0000 94%,currentColor) bottom left,
+          radial-gradient(9px at top    left ,#0000 94%,currentColor) bottom right;
+      background-size: 20px 20px;
+      background-repeat: no-repeat;
+      animation: l18 1.5s infinite cubic-bezier(0.3,1,0,1);
+    }
+    @keyframes l18 {
+      33%  {inset:-10px;transform: rotate(0deg)}
+      66%  {inset:-10px;transform: rotate(90deg)}
+      100% {inset:0    ;transform: rotate(90deg)}
+    }
+
     @keyframes bgMove{
 
       0%{
@@ -255,7 +282,14 @@
 
   <button id="startBtn" class="nes-btn is-success">Play Game</button>
 
-  <div id="leaderboard"></div>
+  <div id="leaderboard">
+
+    <div id="leaderboard-loading" class="loader">
+    </div>
+
+    <div id="leaderboard-list" style="display:none"></div>
+
+  </div>
 
 </div>
 
@@ -625,15 +659,42 @@
     if(error){console.error(error)}
   }
 
-  async function loadLeaderboard(){
-    const { data } = await db
+  // async function loadLeaderboard(){
+  //   const { data } = await db
+  //     .from("leaderboard")
+  //     .select("*")
+  //     .order("score", { ascending:false })
+  //     .limit(5)
+  //   leaderboard = data
+  //   renderLeaderboard()
+  // }
+
+  async function loadLeaderboard() {
+
+    const loading = document.getElementById("leaderboard-loading")
+    const list = document.getElementById("leaderboard-list")
+
+    loading.style.display = "block"
+    list.style.display = "none"
+
+    const { data, error } = await db
       .from("leaderboard")
       .select("*")
-      .order("score", { ascending:false })
+      .order("score", { ascending: false })
       .limit(5)
+
+    if (error) {
+      loading.innerText = "Failed to load leaderboard"
+      return
+    }
+
+    loading.style.display = "none"
+    list.style.display = "block"
+
     leaderboard = data
     renderLeaderboard()
   }
+
 
   function renderLeaderboard(){
     let html="<h3>Top Survivors</h3>"
