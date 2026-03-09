@@ -339,7 +339,7 @@
   )
 
   const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.7.0"
+  const GAME_VERSION = "0.8.0"
   document.getElementById("game-version").innerText = GAME_VERSION
 
   const menuMusic = document.getElementById("menuMusic")
@@ -534,19 +534,34 @@
 
   class Drone{
     constructor(y){
-      this.width=80
-      this.height=20
-      this.x=Math.random()*canvas.width
-      this.y=y
-      this.speed=(Math.random()*2+1)*(Math.random()<0.5?-1:1)
-    }
-    update(){
-      this.x+=this.speed
-      if(this.x<0 || this.x+this.width>canvas.width){
-        this.speed*=-1
+
+      this.width = 80
+      this.height = 20
+
+      const side = Math.random() < 0.5 ? "left" : "right"
+
+      if(side === "left"){
+        this.x = -this.width
+        this.speed = Math.random()*2 + 1
+      }else{
+        this.x = canvas.width + this.width
+        this.speed = -(Math.random()*2 + 1)
       }
+
+      this.y = y
+    }
+
+    update(){
+      this.x += this.speed
+
+      // когда полностью улетел за край — разворачиваем
+      if(this.x < -this.width || this.x > canvas.width + this.width){
+        this.speed *= -1
+      }
+
       this.y += Math.sin(Date.now()*0.003) * 0.3
     }
+
     draw(){
       ctx.drawImage(
         droneImg,
