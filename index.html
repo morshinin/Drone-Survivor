@@ -376,6 +376,8 @@
 
   const HITBOX_PADDING = 12
   const GAME_VERSION = "0.10.0"
+
+  const MAX_ENEMY_BULLETS = 120
   document.getElementById("game-version").innerText = GAME_VERSION
 
   const menuMusic = document.getElementById("menuMusic")
@@ -404,6 +406,17 @@
 
   let spawnTimer = 0
   let spawnInterval = 2000
+
+  let waveNumber = 0;       // текущая волна
+  let waveMaxInAir = 10;    // сколько дронов может быть одновременно
+  let waveTargetKills = 40; // сколько нужно сбить
+  let waveKills = 0;        // сбитые дроны в волне
+  let waveActive = true;    // можно ли спавнить дронов
+  let wavePause = false;       // идёт пауза между волнами
+  let wavePauseTimer = 0;      // таймер паузы в мс
+  const wavePauseDuration = 6000; // 6 секунд пауза
+
+  let uiTimer = 0
 
   let keys = {}
   let gameRunning = false
@@ -459,15 +472,65 @@
     },150)
   }
 
-  function showCommanderMessage(duration = 7000){
+  async function checkWaveProgress() {
+
+    if (wavePause) return;
+
+    if (waveKills >= waveTargetKills) {
+      waveActive = false;
+    }
+
+    // цель достигнута и небо чистое
+    if (!waveActive && drones.length === 0) {
+
+      wavePause = true;
+      wavePauseTimer = 0;
+
+      let msg = "";
+
+      if (waveNumber === 0) {
+
+        msg = "Отлично! Ты еще живой. Не расслабляйся. Это только первая волна. С передка передают, что к тебе летит новая группа дронов. Ладно, некогда с тобой тут говорить. Мне шавуху привезли.";
+
+        waveMaxInAir = 15;
+        waveTargetKills = 85;
+
+      } else if (waveNumber === 1) {
+
+        msg = "Эй, людоед! Глянь, этот чубрик еще не 200. Если ты думаешь, что тебе удастся выжить, то выбрось это из головы. Мы уже подали раппорт о том, что ты пропал без вести.";
+
+        waveMaxInAir = 20;
+        waveTargetKills = 130;
+
+      } else if (waveNumber === 2) {
+
+        msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
+
+      } else {
+
+        msg = "Новая волна дронов! Держись!";
+
+        waveMaxInAir += 20;
+        waveTargetKills += 50;
+      }
+
+      waveKills = 0; // ВАЖНО
+      waveNumber++;
+
+      await showCommanderMessage(8000, msg);
+    }
+  }
+
+
+  async function showCommanderMessage(duration = 7000, message = null){
     return new Promise(resolve => {
       const balloon = document.getElementById("commander-balloon");
+      const p = balloon.querySelector("p");
+      if(message) p.innerText = message;
 
-      // Показать и запустить анимацию появления
       balloon.style.display = "block";
       balloon.classList.add("show");
 
-      // Через duration убрать анимацию и скрыть
       setTimeout(() => {
         balloon.classList.remove("show");
         balloon.style.display = "none";
@@ -475,6 +538,23 @@
       }, duration);
     });
   }
+
+  // function showCommanderMessage(duration = 7000){
+  //   return new Promise(resolve => {
+  //     const balloon = document.getElementById("commander-balloon");
+  //
+  //     // Показать и запустить анимацию появления
+  //     balloon.style.display = "block";
+  //     balloon.classList.add("show");
+  //
+  //     // Через duration убрать анимацию и скрыть
+  //     setTimeout(() => {
+  //       balloon.classList.remove("show");
+  //       balloon.style.display = "none";
+  //       resolve();
+  //     }, duration);
+  //   });
+  // }
 
   function fadeScreen(duration=800){
     const f = document.getElementById("fade")
@@ -897,14 +977,38 @@
   function update(delta){
 
     player.update()
-    spawnInterval = Math.max(400, 2000 - survivalTime * 30)
+    // spawnInterval = Math.max(400, 2000 - survivalTime * 30)
+    //
+    // spawnTimer += delta
+    //
+    // if(spawnTimer >= spawnInterval){
+    //   spawnDrone()
+    //   spawnTimer = 0
+    // }
 
-    spawnTimer += delta
+    if (wavePause) {
+      wavePauseTimer += delta;
 
-    if(spawnTimer >= spawnInterval){
-      spawnDrone()
-      spawnTimer = 0
+      if (wavePauseTimer >= wavePauseDuration) {
+        // пауза окончена — новая волна может стартовать
+        wavePause = false;
+        waveActive = true;
+        wavePauseTimer = 0;
+
+        spawnTimer = 0; // важно
+      }
     }
+
+
+    spawnInterval = Math.max(400, 2000 - survivalTime * 30);
+    spawnTimer += delta;
+
+// Спавн только если волна активна и дронов в воздухе меньше лимита
+    if (spawnTimer >= spawnInterval && waveActive && drones.length < waveMaxInAir) {
+      spawnDrone();
+      spawnTimer = 0;
+    }
+
 
     if(shootCooldown<=0){
       bullets.push(new Bullet(player.x + player.width/2, player.y))
@@ -925,8 +1029,13 @@
 
     if(dropTimer>1000){
       dropTimer=0
+
       drones.forEach(d=>{
-        enemyBullets.push(new EnemyBullet(d.x+d.width/2,d.y+d.height))
+        if(enemyBullets.length < MAX_ENEMY_BULLETS){
+          enemyBullets.push(
+            new EnemyBullet(d.x+d.width/2,d.y+d.height)
+          )
+        }
       })
     }
 
@@ -936,37 +1045,67 @@
     enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
     particles.forEach(p=>p.update())
 
+    // bullets.forEach((b,bi)=>{
+    //   drones.forEach((d,di)=>{
+    //
+    //     // БЫСТРАЯ ПРОВЕРКА ПО Y (90% столкновений отсекается)
+    //     if(b.y > d.y + d.height || b.y + b.size < d.y) return
+    //
+    //     if(b.x < d.x + d.width &&
+    //       b.x + b.size > d.x &&
+    //       b.y < d.y + d.height &&
+    //       b.y + b.size > d.y){
+    //
+    //       spawnExplosion(d.x,d.y)
+    //
+    //       const randomPitch = 0.8 + Math.random() * 0.4
+    //       droneExplosion.currentTime = 0
+    //       droneExplosion.volume = 0.3
+    //       droneExplosion.playbackRate = randomPitch
+    //       droneExplosion.play()
+    //
+    //       const gained = calculateDroneScore()
+    //
+    //       score += gained
+    //       showScoreGain(gained)
+    //
+    //       bullets.splice(bi,1)
+    //       drones.splice(di,1)
+    //
+    //     }
+    //
+    //   })
+    // })
     bullets.forEach((b,bi)=>{
       drones.forEach((d,di)=>{
 
-        // БЫСТРАЯ ПРОВЕРКА ПО Y (90% столкновений отсекается)
-        if(b.y > d.y + d.height || b.y + b.size < d.y) return
+        if(b.y > d.y + d.height || b.y + b.size < d.y) return;
 
         if(b.x < d.x + d.width &&
           b.x + b.size > d.x &&
           b.y < d.y + d.height &&
           b.y + b.size > d.y){
 
-          spawnExplosion(d.x,d.y)
+          spawnExplosion(d.x,d.y);
 
-          const randomPitch = 0.8 + Math.random() * 0.4
-          droneExplosion.currentTime = 0
-          droneExplosion.volume = 0.3
-          droneExplosion.playbackRate = randomPitch
-          droneExplosion.play()
+          const randomPitch = 0.8 + Math.random() * 0.4;
+          droneExplosion.currentTime = 0;
+          droneExplosion.volume = 0.3;
+          droneExplosion.playbackRate = randomPitch;
+          droneExplosion.play();
 
-          const gained = calculateDroneScore()
+          const gained = calculateDroneScore();
+          score += gained;
+          showScoreGain(gained);
 
-          score += gained
-          showScoreGain(gained)
+          bullets.splice(bi,1);
+          drones.splice(di,1);
 
-          bullets.splice(bi,1)
-          drones.splice(di,1)
-
+          // --- увеличиваем счётчик волны ---
+          waveKills++;
         }
-
-      })
-    })
+      });
+    });
 
     enemyBullets.forEach((b,i)=>{
       if(b.y>canvas.height-groundHeight){
@@ -979,20 +1118,30 @@
       }
     })
 
-    particles = particles.filter(p => p.life > 0).slice(0,200)
+    if(particles.length < 200) {
+      particles = particles.filter(p => p.life > 0).slice(0, 200)
+    }
 
     survivalTime+=delta/1000
 
-    // ОБНОВЛЕНИЕ UI
-    document.getElementById("timer").innerText=
-      survivalTime.toFixed(1)+"s"
+    checkWaveProgress();
 
-    document.getElementById("score").innerText=
-      "Score: " + score
+    uiTimer += delta
 
-    // ОБНОВЛЕНИЕ НОВОГО СЧЕТЧИКА ЖИВЫХ ДРОНОВ
-    document.getElementById("drones-alive").innerText=
-      "Alive: "+drones.length;
+    if(uiTimer > 100) {
+      // ОБНОВЛЕНИЕ UI
+      document.getElementById("timer").innerText =
+        survivalTime.toFixed(1) + "s"
+
+      document.getElementById("score").innerText =
+        "Score: " + score
+
+      // ОБНОВЛЕНИЕ НОВОГО СЧЕТЧИКА ЖИВЫХ ДРОНОВ
+      document.getElementById("drones-alive").innerText =
+        "Alive: " + drones.length;
+
+      uiTimer = 0
+    }
 
     let targetVolume = 0.05 + (drones.length / 50) * 0.25;
     droneSound.volume = targetVolume;
