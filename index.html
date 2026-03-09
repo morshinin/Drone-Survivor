@@ -375,7 +375,7 @@
   )
 
   const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.10.0"
+  const GAME_VERSION = "0.11.0"
 
   const MAX_ENEMY_BULLETS = 120
   document.getElementById("game-version").innerText = GAME_VERSION
@@ -1076,36 +1076,35 @@
     //
     //   })
     // })
-    bullets.forEach((b,bi)=>{
-      drones.forEach((d,di)=>{
+    for(let bi = bullets.length-1; bi >= 0; bi--){
+      let b = bullets[bi]
 
-        if(b.y > d.y + d.height || b.y + b.size < d.y) return;
+      for(let di = drones.length-1; di >= 0; di--){
+        let d = drones[di]
 
-        if(b.x < d.x + d.width &&
+        if(b.y > d.y + d.height || b.y + b.size < d.y) continue
+
+        if(
+          b.x < d.x + d.width &&
           b.x + b.size > d.x &&
           b.y < d.y + d.height &&
-          b.y + b.size > d.y){
+          b.y + b.size > d.y
+        ){
 
-          spawnExplosion(d.x,d.y);
+          spawnExplosion(d.x,d.y)
 
-          const randomPitch = 0.8 + Math.random() * 0.4;
-          droneExplosion.currentTime = 0;
-          droneExplosion.volume = 0.3;
-          droneExplosion.playbackRate = randomPitch;
-          droneExplosion.play();
+          const gained = calculateDroneScore()
+          score += gained
+          showScoreGain(gained)
 
-          const gained = calculateDroneScore();
-          score += gained;
-          showScoreGain(gained);
+          bullets.splice(bi,1)
+          drones.splice(di,1)
 
-          bullets.splice(bi,1);
-          drones.splice(di,1);
-
-          // --- увеличиваем счётчик волны ---
-          waveKills++;
+          waveKills++
+          break
         }
-      });
-    });
+      }
+    }
 
     enemyBullets.forEach((b,i)=>{
       if(b.y>canvas.height-groundHeight){
@@ -1165,6 +1164,7 @@
   let last=0
   function gameLoop(t){
     let delta=t-last
+    document.title = Math.round(1000/delta) + " FPS"
     last=t
     if(gameRunning){
       update(delta)
