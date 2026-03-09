@@ -240,6 +240,26 @@
       color: white;
     }
 
+    #commander-balloon {
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    #commander-balloon.show {
+      opacity: 1;
+    }
+
+    .commander-face {
+      display: inline-block;
+      width: 100px;
+      height: 100px;
+      background-image: url('commander.png');
+      background-size: cover;
+      border-radius: 50%;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
     @keyframes bgMove{
 
       0%{
@@ -296,6 +316,22 @@
   </div>
 </div>
 
+<!--<div id="commander-balloon" class="nes-balloon from-left" style="display:none; max-width:400px; position:absolute; top:20px; left:20px; z-index:10000; font-size:14px;">-->
+<!--</div>-->
+
+<div id="commander-balloon" style="display:none; max-width:400px; position:absolute; top:20px; left:20px; z-index:10000; font-size:14px;">
+<!--  <section class="message-list">-->
+    <section class="message -left">
+      <i class="commander-face"></i>
+      <!-- Balloon -->
+      <div class="nes-balloon from-left">
+        <p>
+          Солдат! Выдвигайся на позицию. Вокруг много дронов, отстреливайся. Ни шагу назад! Если отступишь, мы тебя обнулим. Запомни: ты просто мясо... Родина тебя не забудет, сынок! Да здравствует армия Лаоса!
+        </p>
+      </div>
+    </section>
+</div>
+
 <div id="ui">
 
   <button id="muteBtn"></button>
@@ -339,7 +375,7 @@
   )
 
   const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.9.0"
+  const GAME_VERSION = "0.10.0"
   document.getElementById("game-version").innerText = GAME_VERSION
 
   const menuMusic = document.getElementById("menuMusic")
@@ -421,6 +457,23 @@
     setTimeout(()=>{
       scoreEl.classList.remove("score-pop")
     },150)
+  }
+
+  function showCommanderMessage(duration = 7000){
+    return new Promise(resolve => {
+      const balloon = document.getElementById("commander-balloon");
+
+      // Показать и запустить анимацию появления
+      balloon.style.display = "block";
+      balloon.classList.add("show");
+
+      // Через duration убрать анимацию и скрыть
+      setTimeout(() => {
+        balloon.classList.remove("show");
+        balloon.style.display = "none";
+        resolve();
+      }, duration);
+    });
   }
 
   function fadeScreen(duration=800){
@@ -764,25 +817,58 @@
 
   }
 
+  // async function startGame(){
+  //   playerName=document.getElementById("nameInput").value.toUpperCase()
+  //   if(playerName.length<3) playerName="AAA"
+  //   document.getElementById("ui").style.display="none"
+  //   gameInfo.style.display="none"
+  //   await fadeScreen()
+  //   await crossfadeMusic(menuMusic, gameMusic)
+  //   droneSound.volume = 0.1; // Сделаем его тихим фоном, чтобы не перебивал музыку
+  //   droneSound.currentTime = 0;
+  //   droneSound.play();
+  //   await cinematicStart()
+  //   gameRunning=true
+  //   document.body.classList.add("hide-cursor")
+  //   player=new Player()
+  //   await showCommanderMessage(5000)
+  //   drones=[new Drone(canvas.height*0.2),new Drone(canvas.height*0.35)]
+  //   bullets=[];enemyBullets=[];particles=[]
+  //   score=0;
+  //   survivalTime=0
+  //   spawnTimer = 0
+  // }
+
   async function startGame(){
-    playerName=document.getElementById("nameInput").value.toUpperCase()
+    playerName = document.getElementById("nameInput").value.toUpperCase()
     if(playerName.length<3) playerName="AAA"
-    document.getElementById("ui").style.display="none"
-    gameInfo.style.display="none"
+
+    document.getElementById("ui").style.display = "none"
+    gameInfo.style.display = "none"
+
+    // --- инициализация игрока и массивов до balloon ---
+    player = new Player()
+    drones = []
+    bullets = []
+    enemyBullets = []
+    particles = []
+
+    score = 0
+    survivalTime = 0
+    dropTimer = 0
+    shootCooldown = 0
+
     await fadeScreen()
     await crossfadeMusic(menuMusic, gameMusic)
-    droneSound.volume = 0.1; // Сделаем его тихим фоном, чтобы не перебивал музыку
-    droneSound.currentTime = 0;
-    droneSound.play();
-    await cinematicStart()
-    gameRunning=true
+    droneSound.volume = 0.1
+    droneSound.currentTime = 0
+    droneSound.play()
+
+    // --- показываем сообщение командира ---
+    await showCommanderMessage(8000)
+
+    gameRunning = true
     document.body.classList.add("hide-cursor")
-    player=new Player()
-    drones=[new Drone(canvas.height*0.2),new Drone(canvas.height*0.35)]
-    bullets=[];enemyBullets=[];particles=[]
-    score=0;
-    survivalTime=0
-    spawnTimer = 0
   }
 
   async function endGame(){
