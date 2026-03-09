@@ -339,7 +339,7 @@
   )
 
   const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.8.0"
+  const GAME_VERSION = "0.9.0"
   document.getElementById("game-version").innerText = GAME_VERSION
 
   const menuMusic = document.getElementById("menuMusic")
@@ -749,7 +749,7 @@
   }
 
   function spawnExplosion(x,y){
-    for(let i=0;i<12;i++) particles.push(new Particle(x,y))
+    for(let i=0;i<8;i++) particles.push(new Particle(x,y))
   }
 
   function spawnDrone(){
@@ -845,26 +845,40 @@
     }
 
     bullets.forEach(b=>b.update())
+    bullets = bullets.filter(b => b.y > -20)
     enemyBullets.forEach(b=>b.update())
+    enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
     particles.forEach(p=>p.update())
 
     bullets.forEach((b,bi)=>{
       drones.forEach((d,di)=>{
-        if(b.x<d.x+d.width && b.x+b.size>d.x && b.y<d.y+d.height && b.y+b.size>d.y){
+
+        // БЫСТРАЯ ПРОВЕРКА ПО Y (90% столкновений отсекается)
+        if(b.y > d.y + d.height || b.y + b.size < d.y) return
+
+        if(b.x < d.x + d.width &&
+          b.x + b.size > d.x &&
+          b.y < d.y + d.height &&
+          b.y + b.size > d.y){
+
           spawnExplosion(d.x,d.y)
-          const randomPitch = 0.8 + Math.random() * 0.4;
-          droneExplosion.currentTime = 0; // Сбрасываем в начало, чтобы звук мог накладываться
-          droneExplosion.volume = 0.3;     // Установите комфортную громкость
-          droneExplosion.playbackRate = randomPitch;
-          droneExplosion.play();
+
+          const randomPitch = 0.8 + Math.random() * 0.4
+          droneExplosion.currentTime = 0
+          droneExplosion.volume = 0.3
+          droneExplosion.playbackRate = randomPitch
+          droneExplosion.play()
+
           const gained = calculateDroneScore()
 
           score += gained
-
           showScoreGain(gained)
+
           bullets.splice(bi,1)
           drones.splice(di,1)
+
         }
+
       })
     })
 
@@ -879,7 +893,7 @@
       }
     })
 
-    particles=particles.filter(p=>p.life>0)
+    particles = particles.filter(p => p.life > 0).slice(0,200)
 
     survivalTime+=delta/1000
 
