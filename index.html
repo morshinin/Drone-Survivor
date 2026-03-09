@@ -366,6 +366,9 @@
 
   const groundHeight = 40
 
+  let spawnTimer = 0
+  let spawnInterval = 2000
+
   let keys = {}
   let gameRunning = false
 
@@ -651,6 +654,7 @@
 
     score = 0
     survivalTime = 0
+    spawnTimer = 0
     dropTimer = 0
     shootCooldown = 0
   }
@@ -733,6 +737,18 @@
     for(let i=0;i<12;i++) particles.push(new Particle(x,y))
   }
 
+  function spawnDrone(){
+
+    const maxDrones = 50
+
+    if(drones.length >= maxDrones) return
+
+    drones.push(
+      new Drone(Math.random() * canvas.height * 0.4)
+    )
+
+  }
+
   async function startGame(){
     playerName=document.getElementById("nameInput").value.toUpperCase()
     if(playerName.length<3) playerName="AAA"
@@ -749,7 +765,9 @@
     player=new Player()
     drones=[new Drone(canvas.height*0.2),new Drone(canvas.height*0.35)]
     bullets=[];enemyBullets=[];particles=[]
-    score=0;survivalTime=0
+    score=0;
+    survivalTime=0
+    spawnTimer = 0
   }
 
   async function endGame(){
@@ -778,6 +796,14 @@
   function update(delta){
 
     player.update()
+    spawnInterval = Math.max(400, 2000 - survivalTime * 30)
+
+    spawnTimer += delta
+
+    if(spawnTimer >= spawnInterval){
+      spawnDrone()
+      spawnTimer = 0
+    }
 
     if(shootCooldown<=0){
       bullets.push(new Bullet(player.x + player.width/2, player.y))
@@ -823,14 +849,6 @@
           showScoreGain(gained)
           bullets.splice(bi,1)
           drones.splice(di,1)
-          if (drones.length < 50) {
-            drones.push(new Drone(Math.random() * canvas.height * 0.4));
-
-            // Проверяем еще раз перед добавлением второго, чтобы точно не выйти за лимит
-            if (drones.length < 50) {
-              drones.push(new Drone(Math.random() * canvas.height * 0.4));
-            }
-          }
         }
       })
     })
