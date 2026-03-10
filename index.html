@@ -304,13 +304,13 @@
 
   <div id="effects-layer">
     <img src="smoke.gif" class="smoke" style="left:200px; bottom:80px;">
-    <img src="smoke.gif" class="smoke" style="right:60px; bottom:100px; width:220px;">
+    <img src="smoke_2.gif" class="smoke" style="right:60px; bottom:100px; width:220px;">
   </div>
 
   <div id="timer"></div>
   <div id="score"></div>
   <div id="score-pop"></div>
-  <div id="drones-alive"></div>
+<!--  <div id="drones-alive"></div>-->
 </div>
 
 <div id="fade"></div>
@@ -422,9 +422,6 @@
 
   effectsLayer.style.display = "none"
 
-  // const fireGif = new Image()
-  // fireGif.src = "fire.gif"
-
   // canvas.width = window.innerWidth
   // canvas.height = window.innerHeight
 
@@ -453,14 +450,14 @@
   const tank = {
     x: canvas.width * 0.85,
     y: canvas.height - groundHeight - 150,
-    w: 250,
+    w: 280,
     h: 180
   }
 
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
-    godMode: true,     // бессмертие
+    godMode: false,     // бессмертие
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
@@ -643,26 +640,26 @@
     if(from) from.pause()
   }
 
-  function sleep(ms){
-    return new Promise(r=>setTimeout(r,ms))
-  }
+  // function sleep(ms){
+  //   return new Promise(r=>setTimeout(r,ms))
+  // }
 
-  async function cinematicStart(){
-    const el = document.getElementById("countdown")
-    const steps = ["3","2","1","START"]
-    for(const s of steps){
-      document.getElementById("beep").currentTime=0
-      document.getElementById("beep").play()
-      el.innerText = s
-      el.style.opacity = 1
-      el.style.transform = "translate(-50%,-50%) scale(1.3)"
-      await sleep(120)
-      el.style.transform = "translate(-50%,-50%) scale(1)"
-      await sleep(650)
-      el.style.opacity = 0
-      await sleep(200)
-    }
-  }
+  // async function cinematicStart(){
+  //   const el = document.getElementById("countdown")
+  //   const steps = ["3","2","1","START"]
+  //   for(const s of steps){
+  //     document.getElementById("beep").currentTime=0
+  //     document.getElementById("beep").play()
+  //     el.innerText = s
+  //     el.style.opacity = 1
+  //     el.style.transform = "translate(-50%,-50%) scale(1.3)"
+  //     await sleep(120)
+  //     el.style.transform = "translate(-50%,-50%) scale(1)"
+  //     await sleep(650)
+  //     el.style.opacity = 0
+  //     await sleep(200)
+  //   }
+  // }
 
   // ... (Classes: Player, Drone, Bullet, EnemyBullet, Particle remain the same)
   class Player{
@@ -728,7 +725,7 @@
     constructor(y){
 
       this.width = 80
-      this.height = 40
+      this.height = 60
 
       const side = Math.random() < 0.5 ? "left" : "right"
 
@@ -801,8 +798,8 @@
 
   class BossDrone{
     constructor(){
-      this.width = 140
-      this.height = 100
+      this.width = 300
+      this.height = 260
 
       this.x = canvas.width/2 - this.width/2
       this.y = -120
@@ -925,7 +922,7 @@
     droneSound.currentTime = 0
     droneSound.play()
 
-    await cinematicStart()
+    // await cinematicStart()
 
     gameRunning = true
 
@@ -987,33 +984,6 @@
     leaderboard = data
     renderLeaderboard()
   }
-
-  // async function loadLeaderboard() {
-  //
-  //   const loading = document.getElementById("leaderboard-loading")
-  //   const list = document.getElementById("leaderboard-list")
-  //
-  //   loading.style.display = "block"
-  //   list.style.display = "none"
-  //
-  //   const { data, error } = await db
-  //     .from("leaderboard")
-  //     .select("*")
-  //     .order("score", { ascending: false })
-  //     .limit(5)
-  //
-  //   if (error) {
-  //     loading.innerText = "Failed to load leaderboard"
-  //     return
-  //   }
-  //
-  //   loading.style.display = "none"
-  //   list.style.display = "block"
-  //
-  //   leaderboard = data
-  //   renderLeaderboard()
-  // }
-
 
   function renderLeaderboard(){
     let html="<h3>Top Survivors</h3>"
@@ -1254,8 +1224,8 @@
         "Score: " + score
 
       // ОБНОВЛЕНИЕ НОВОГО СЧЕТЧИКА ЖИВЫХ ДРОНОВ
-      document.getElementById("drones-alive").innerText =
-        "Alive: " + drones.length;
+      // document.getElementById("drones-alive").innerText =
+      //   "Alive: " + drones.length;
 
       uiTimer = 0
     }
