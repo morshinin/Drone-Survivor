@@ -3,6 +3,7 @@
 0.14.0
 
 Changed drone images
+Added background effects
 
 0.13.0
 

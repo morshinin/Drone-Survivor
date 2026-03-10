@@ -18,6 +18,11 @@
       background-position:center;
       background-repeat:no-repeat;
       animation:bgMove 40s linear infinite;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
     body::before{
@@ -196,33 +201,6 @@
       text-decoration:underline;
     }
 
-    /*.loader {*/
-    /*  width: 40px;*/
-    /*  aspect-ratio: 1;*/
-    /*  color: lawngreen;*/
-    /*  position: relative;*/
-    /*  background: radial-gradient(10px,currentColor 94%,#0000);*/
-    /*}*/
-    /*.loader:before {*/
-    /*  content: '';*/
-    /*  position: absolute;*/
-    /*  inset: 0;*/
-    /*  border-radius: 50%;*/
-    /*  background:*/
-    /*      radial-gradient(9px at bottom right,#0000 94%,currentColor) top    left,*/
-    /*      radial-gradient(9px at bottom left ,#0000 94%,currentColor) top    right,*/
-    /*      radial-gradient(9px at top    right,#0000 94%,currentColor) bottom left,*/
-    /*      radial-gradient(9px at top    left ,#0000 94%,currentColor) bottom right;*/
-    /*  background-size: 20px 20px;*/
-    /*  background-repeat: no-repeat;*/
-    /*  animation: l18 1.5s infinite cubic-bezier(0.3,1,0,1);*/
-    /*}*/
-    /*@keyframes l18 {*/
-    /*  33%  {inset:-10px;transform: rotate(0deg)}*/
-    /*  66%  {inset:-10px;transform: rotate(90deg)}*/
-    /*  100% {inset:0    ;transform: rotate(90deg)}*/
-    /*}*/
-
     #loading-screen {
       position: fixed;
       inset: 0;
@@ -260,6 +238,35 @@
       vertical-align: middle;
     }
 
+    #game-container{
+      position: relative;
+      width: 1500px; /* как у канваса */
+      height: 800px;
+    }
+
+    #game{
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    #effects-layer{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:2;
+    }
+
+    .smoke{
+      position: absolute;
+      width: 80px;
+      pointer-events: none; /* чтобы клики проходили в игру */
+      z-index: 2;
+    }
+
     @keyframes bgMove{
 
       0%{
@@ -291,7 +298,15 @@
 
 <body>
 
-<canvas id="game"></canvas>
+<div id="game-container">
+  <canvas id="game" width="1500" height="800">
+  </canvas>
+
+  <div id="effects-layer">
+    <img src="smoke.gif" class="smoke" style="left:200px; bottom:30px;">
+    <img src="smoke.gif" class="smoke" style="right:60px; bottom:100px; width:220px;">
+  </div>
+</div>
 
 <div id="fade"></div>
 
@@ -382,6 +397,7 @@
   const shootSound = document.getElementById("shootSound")
   const gameOverMusic = document.getElementById("gameOverMusic")
   const gameInfo = document.getElementById("game-info")
+  const effectsLayer = document.getElementById("effects-layer")
   const canvas = document.getElementById("game")
   const ctx = canvas.getContext("2d")
 
@@ -397,9 +413,19 @@
   bossImg.src = "boss.png"
   const missileImg = new Image()
   missileImg.src = "drone_bullet.png"
+  const tankImg = new Image()
+  tankImg.src = "tank.png"
 
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
+  const smokeGif = new Image()
+  smokeGif.src = "smoke.gif"
+
+  effectsLayer.style.display = "none"
+
+  // const fireGif = new Image()
+  // fireGif.src = "fire.gif"
+
+  // canvas.width = window.innerWidth
+  // canvas.height = window.innerHeight
 
   const groundHeight = 40
 
@@ -423,10 +449,17 @@
   let boss = null
   let bossActive = false
 
+  const tank = {
+    x: canvas.width * 0.85,
+    y: canvas.height - groundHeight - 150,
+    w: 250,
+    h: 180
+  }
+
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
-    godMode: false,     // бессмертие
+    godMode: true,     // бессмертие
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
@@ -880,6 +913,7 @@
 
     ui.style.display = "none"
     ui.classList.remove("game_over_bg")
+    effectsLayer.style.display = "block"
 
     await fadeScreen()
 
@@ -1011,6 +1045,7 @@
 
     document.getElementById("ui").style.display = "none"
     gameInfo.style.display = "none"
+    effectsLayer.style.display = "block"
 
     // --- инициализация игрока и массивов до balloon ---
     player = new Player()
@@ -1236,6 +1271,13 @@
     }
     ctx.fillStyle="rgba(0,0,0,0)"
     ctx.fillRect(0,canvas.height-groundHeight,canvas.width,groundHeight)
+    ctx.drawImage(
+      tankImg,
+      tank.x,
+      tank.y,
+      tank.w,
+      tank.h
+    )
     player.draw()
     drones.forEach(d=>d.draw())
     bullets.forEach(b=>b.draw())
