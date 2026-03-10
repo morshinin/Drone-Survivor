@@ -344,11 +344,6 @@
 
   <div id="leaderboard">
 
-<!--    <div id="leaderboard-loading" class="loader">-->
-<!--    </div>-->
-
-<!--    <div id="leaderboard-list" style="display:none"></div>-->
-
   </div>
 
 </div>
@@ -375,7 +370,7 @@
   )
 
   const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.12.0"
+  const GAME_VERSION = "0.13.0"
 
   const MAX_ENEMY_BULLETS = 120
   document.getElementById("game-version").innerText = GAME_VERSION
@@ -428,9 +423,29 @@
   let boss = null
   let bossActive = false
 
+  // DEBUG режим для тестирования
+  const DEBUG = {
+    bossStart: false,   // начать игру сразу с босса
+    godMode: false,     // бессмертие
+    spawnDrones: true   // включить/выключить обычных дронов
+  }
+
   // ... (Input listeners and utility functions remain the same)
   document.addEventListener("keydown",e=>keys[e.key]=true)
   document.addEventListener("keyup",e=>keys[e.key]=false)
+
+  // DEBUG горячие клавиши
+  document.addEventListener("keydown", e => {
+
+    if(e.key === "b"){
+      spawnBoss()
+    }
+
+    if(e.key === "k"){
+      drones = []   // очистить небо
+    }
+
+  })
 
   let isMuted = false
 
@@ -989,27 +1004,6 @@
 
   }
 
-  // async function startGame(){
-  //   playerName=document.getElementById("nameInput").value.toUpperCase()
-  //   if(playerName.length<3) playerName="AAA"
-  //   document.getElementById("ui").style.display="none"
-  //   gameInfo.style.display="none"
-  //   await fadeScreen()
-  //   await crossfadeMusic(menuMusic, gameMusic)
-  //   droneSound.volume = 0.1; // Сделаем его тихим фоном, чтобы не перебивал музыку
-  //   droneSound.currentTime = 0;
-  //   droneSound.play();
-  //   await cinematicStart()
-  //   gameRunning=true
-  //   document.body.classList.add("hide-cursor")
-  //   player=new Player()
-  //   await showCommanderMessage(5000)
-  //   drones=[new Drone(canvas.height*0.2),new Drone(canvas.height*0.35)]
-  //   bullets=[];enemyBullets=[];particles=[]
-  //   score=0;
-  //   survivalTime=0
-  //   spawnTimer = 0
-  // }
 
   async function startGame(){
     playerName = document.getElementById("nameInput").value.toUpperCase()
@@ -1024,6 +1018,11 @@
     bullets = []
     enemyBullets = []
     particles = []
+
+    // DEBUG: сразу спавним босса
+    if(DEBUG.bossStart){
+      spawnBoss()
+    }
 
     score = 0
     survivalTime = 0
@@ -1069,14 +1068,6 @@
   function update(delta){
 
     player.update()
-    // spawnInterval = Math.max(400, 2000 - survivalTime * 30)
-    //
-    // spawnTimer += delta
-    //
-    // if(spawnTimer >= spawnInterval){
-    //   spawnDrone()
-    //   spawnTimer = 0
-    // }
 
     if (wavePause) {
       wavePauseTimer += delta;
@@ -1091,14 +1082,17 @@
       }
     }
 
-
     spawnInterval = Math.max(400, 2000 - survivalTime * 30);
     spawnTimer += delta;
 
-// Спавн только если волна активна и дронов в воздухе меньше лимита
-    if (spawnTimer >= spawnInterval && waveActive && drones.length < waveMaxInAir) {
-      spawnDrone();
-      spawnTimer = 0;
+    if (
+      spawnTimer >= spawnInterval &&
+      waveActive &&
+      drones.length < waveMaxInAir &&
+      DEBUG.spawnDrones
+    ){
+      spawnDrone()
+      spawnTimer = 0
     }
 
     if(bossActive && boss){
@@ -1140,37 +1134,6 @@
     enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
     particles.forEach(p=>p.update())
 
-    // bullets.forEach((b,bi)=>{
-    //   drones.forEach((d,di)=>{
-    //
-    //     // БЫСТРАЯ ПРОВЕРКА ПО Y (90% столкновений отсекается)
-    //     if(b.y > d.y + d.height || b.y + b.size < d.y) return
-    //
-    //     if(b.x < d.x + d.width &&
-    //       b.x + b.size > d.x &&
-    //       b.y < d.y + d.height &&
-    //       b.y + b.size > d.y){
-    //
-    //       spawnExplosion(d.x,d.y)
-    //
-    //       const randomPitch = 0.8 + Math.random() * 0.4
-    //       droneExplosion.currentTime = 0
-    //       droneExplosion.volume = 0.3
-    //       droneExplosion.playbackRate = randomPitch
-    //       droneExplosion.play()
-    //
-    //       const gained = calculateDroneScore()
-    //
-    //       score += gained
-    //       showScoreGain(gained)
-    //
-    //       bullets.splice(bi,1)
-    //       drones.splice(di,1)
-    //
-    //     }
-    //
-    //   })
-    // })
     for(let bi = bullets.length-1; bi >= 0; bi--){
       let b = bullets[bi]
 
@@ -1229,8 +1192,10 @@
         enemyBullets.splice(i,1)
       }
       if(isColliding(b, player)){
-        playSound(60,0.5)
-        endGame()
+        if(!DEBUG.godMode){
+          playSound(60,0.5)
+          endGame()
+        }
       }
     })
 

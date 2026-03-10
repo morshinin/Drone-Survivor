@@ -1,5 +1,9 @@
 # Version History
 
+0.13.0
+
+Added Debug Mode
+
 0.12.0
 
 Added Boss Fight
