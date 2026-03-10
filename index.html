@@ -398,6 +398,10 @@
   droneImg.src = "drone.png"
   const enemyBulletImg = new Image()
   enemyBulletImg.src = "drone_bullet.png"
+  const bossImg = new Image()
+  bossImg.src = "drone.png"
+  const missileImg = new Image()
+  missileImg.src = "drone_bullet.png"
 
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
@@ -420,6 +424,9 @@
 
   let keys = {}
   let gameRunning = false
+
+  let boss = null
+  let bossActive = false
 
   // ... (Input listeners and utility functions remain the same)
   document.addEventListener("keydown",e=>keys[e.key]=true)
@@ -506,6 +513,9 @@
 
         msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
 
+      } else if (waveNumber === 3 && !bossActive) {
+        msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
+        spawnBoss()
       } else {
 
         msg = "Новая волна дронов! Держись!";
@@ -740,6 +750,83 @@
     }
   }
 
+  class BossDrone{
+    constructor(){
+      this.width = 140
+      this.height = 100
+
+      this.x = canvas.width/2 - this.width/2
+      this.y = -120
+
+      this.speed = 1
+
+      this.hp = 200
+      this.maxHp = 200
+
+      this.spawnTimer = 0
+      this.missileTimer = 0
+    }
+
+    update(delta){
+
+      // плавный въезд на экран
+      if(this.y < 40){
+        this.y += this.speed
+      }
+
+      // спавн дронов
+      this.spawnTimer += delta
+      if(this.spawnTimer > 2000){
+        this.spawnTimer = 0
+
+        for(let i=0;i<4;i++){
+          spawnDrone()
+        }
+      }
+
+      // ракета
+      this.missileTimer += delta
+      if(this.missileTimer > 3000){
+        this.missileTimer = 0
+
+        enemyBullets.push(
+          new Missile(
+            this.x + this.width/2,
+            this.y + this.height,
+            player.x + player.width/2
+          )
+        )
+      }
+    }
+
+    draw(){
+      ctx.drawImage(bossImg,this.x,this.y,this.width,this.height)
+    }
+  }
+
+  class Missile{
+    constructor(x,y,targetX){
+      this.x = x
+      this.y = y
+
+      this.targetX = targetX
+
+      this.speed = 4
+      this.size = 12
+    }
+
+    update(){
+      if(this.x < this.targetX) this.x += 1.5
+      if(this.x > this.targetX) this.x -= 1.5
+
+      this.y += this.speed
+    }
+
+    draw(){
+      ctx.drawImage(missileImg,this.x,this.y,16,32)
+    }
+  }
+
   class Particle{
     constructor(x,y){
       this.x=x;this.y=y;this.size=4
@@ -766,6 +853,11 @@
   let playerName="AAA"
 
   let leaderboard=[]
+
+  function spawnBoss(){
+    boss = new BossDrone()
+    bossActive = true
+  }
 
   async function restartGame(){
 
@@ -1009,6 +1101,9 @@
       spawnTimer = 0;
     }
 
+    if(bossActive && boss){
+      boss.update(delta)
+    }
 
     if(shootCooldown<=0){
       bullets.push(new Bullet(player.x + player.width/2, player.y))
@@ -1104,6 +1199,28 @@
           break
         }
       }
+
+      if(bossActive && boss){
+
+        if(
+          b.x < boss.x + boss.width &&
+          b.x + b.size > boss.x &&
+          b.y < boss.y + boss.height &&
+          b.y + b.size > boss.y
+        ){
+
+          boss.hp -= 1
+          bullets.splice(bi,1)
+
+          if(boss.hp <= 0){
+            boss = null
+            bossActive = false
+
+            score += 5000
+          }
+        }
+
+      }
     }
 
     enemyBullets.forEach((b,i)=>{
@@ -1159,6 +1276,19 @@
     bullets.forEach(b=>b.draw())
     enemyBullets.forEach(b=>b.draw())
     particles.forEach(p=>p.draw())
+    if(bossActive && boss){
+      boss.draw()
+    }
+
+    if(bossActive && boss){
+
+      let barWidth = 300
+      let hpPercent = boss.hp / boss.maxHp
+
+      ctx.fillStyle="red"
+      ctx.fillRect(canvas.width/2 - barWidth/2,20,barWidth*hpPercent,10)
+
+    }
   }
 
   let last=0
