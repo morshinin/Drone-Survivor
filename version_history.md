@@ -4,6 +4,7 @@
 
 Changed drone images
 Added background effects
+Changed game background
 
 0.13.0
 
