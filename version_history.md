@@ -7,6 +7,7 @@ Added drone explosion sprite
 Added player walk animation
 Added player movement acceleration and friction
 Randomized enemy bullets cooldown
+Added new background effects
 
 0.14.0
 

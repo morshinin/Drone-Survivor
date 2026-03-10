@@ -305,6 +305,7 @@
   <div id="effects-layer">
     <img src="smoke.gif" class="smoke" style="left:200px; bottom:80px;">
     <img src="smoke_2.gif" class="smoke" style="right:60px; bottom:100px; width:220px;">
+    <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">
   </div>
 
   <div id="timer"></div>
@@ -409,6 +410,8 @@
   missileImg.src = "drone_bullet.png"
   const tankImg = new Image()
   tankImg.src = "tank.png"
+  const destroyedCityImg = new Image()
+  destroyedCityImg.src = "destroyed_city.png"
 
   const smokeGif = new Image()
   smokeGif.src = "smoke.gif"
@@ -447,6 +450,13 @@
     h: 180
   }
 
+  const destroyedCity = {
+    x: 100,
+    y: canvas.height - groundHeight - 120,
+    w: 180,
+    h: 80
+  }
+
   const explosionSprite = new Image();
   explosionSprite.src = "explosion_sprite.png";
   const EXPLOSION_FRAME_WIDTH = 100;
@@ -474,7 +484,7 @@
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
-    godMode: false,     // бессмертие
+    godMode: true,     // бессмертие
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
@@ -1374,6 +1384,13 @@
       tank.y,
       tank.w,
       tank.h
+    )
+    ctx.drawImage(
+      destroyedCityImg,
+      destroyedCity.x,
+      destroyedCity.y,
+      destroyedCity.w,
+      destroyedCity.h
     )
     player.draw()
     drones.forEach(d=>d.draw())
