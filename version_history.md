@@ -1,5 +1,9 @@
 # Version History
 
+0.15.0
+
+Added drone explosion sprite
+
 0.14.0
 
 Changed drone images

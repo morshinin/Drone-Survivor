@@ -454,6 +454,15 @@
     h: 180
   }
 
+  const explosionSprite = new Image();
+  explosionSprite.src = "explosion_sprite.png";
+  const EXPLOSION_FRAME_WIDTH = 100;
+  const EXPLOSION_FRAME_HEIGHT = 100;
+  const EXPLOSION_FRAME_COUNT = 4;
+  const EXPLOSION_FRAME_DURATION = 100;
+
+  let explosions = [];
+
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
@@ -873,6 +882,40 @@
     }
   }
 
+  class Explosion {
+    constructor(x, y, width = EXPLOSION_FRAME_WIDTH, height = EXPLOSION_FRAME_HEIGHT) {
+      this.x = x + width/2;
+      this.y = y + height/2;
+      this.frame = 0;
+      this.timer = 0;
+      this.finished = false;
+    }
+
+    update(delta) {
+      this.timer += delta;
+      if (this.timer >= EXPLOSION_FRAME_DURATION) {
+        this.timer = 0;
+        this.frame++;
+        if (this.frame >= EXPLOSION_FRAME_COUNT) {
+          this.finished = true; // взрыв закончился
+        }
+      }
+    }
+
+    draw(ctx) {
+      if (!this.finished) {
+        ctx.drawImage(
+          explosionSprite,
+          this.frame * EXPLOSION_FRAME_WIDTH, 0,
+          EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
+          this.x - EXPLOSION_FRAME_WIDTH/2,
+          this.y - EXPLOSION_FRAME_HEIGHT/2,
+          EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT
+        );
+      }
+    }
+  }
+
   class Particle{
     constructor(x,y){
       this.x=x;this.y=y;this.size=4
@@ -993,8 +1036,12 @@
     document.getElementById("leaderboard").innerHTML=html
   }
 
-  function spawnExplosion(x,y){
-    for(let i=0;i<8;i++) particles.push(new Particle(x,y))
+  // function spawnExplosion(x,y){
+  //   for(let i=0;i<8;i++) particles.push(new Particle(x,y))
+  // }
+
+  function spawnExplosion(x, y) {
+    explosions.push(new Explosion(x, y));
   }
 
   function spawnDrone(){
@@ -1209,6 +1256,9 @@
       particles = particles.filter(p => p.life > 0).slice(0, 200)
     }
 
+    explosions.forEach(e => e.update(delta));
+    explosions = explosions.filter(e => !e.finished); // убираем законченные
+
     survivalTime+=delta/1000
 
     checkWaveProgress();
@@ -1267,6 +1317,8 @@
       ctx.fillRect(canvas.width/2 - barWidth/2,20,barWidth*hpPercent,10)
 
     }
+
+    explosions.forEach(e => e.draw(ctx));
   }
 
   let last=0
