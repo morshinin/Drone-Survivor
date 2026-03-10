@@ -461,7 +461,15 @@
   const EXPLOSION_FRAME_COUNT = 4;
   const EXPLOSION_FRAME_DURATION = 100;
 
+  const groundExplosionSprite = new Image();
+  groundExplosionSprite.src = "ground_explosion_sprite.png";
+
+  const GROUND_EXPLOSION_FRAMES = 9;
+  const GROUND_EXPLOSION_FRAME_WIDTH = 100;
+  const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
+
   let explosions = [];
+  let groundExplosions = [];
 
   // DEBUG режим для тестирования
   const DEBUG = {
@@ -674,7 +682,7 @@
   class Player{
     constructor(){
       this.x = canvas.width/2
-      this.y = canvas.height-groundHeight-100
+      this.y = canvas.height-groundHeight-80
 
       this.width = 60
       this.height = 100
@@ -916,6 +924,42 @@
     }
   }
 
+  class GroundExplosion {
+    constructor(x, y){
+      this.x = x;
+      this.y = y - 30;
+      this.frame = 0;
+      this.timer = 0;
+      this.finished = false;
+    }
+
+    update(){
+      this.timer++;
+
+      if(this.timer % 3 === 0){
+        this.frame++;
+      }
+
+      if(this.frame >= GROUND_EXPLOSION_FRAMES){
+        this.finished = true;
+      }
+    }
+
+    draw(ctx){
+      ctx.drawImage(
+        groundExplosionSprite,
+        this.frame * GROUND_EXPLOSION_FRAME_WIDTH,
+        0,
+        GROUND_EXPLOSION_FRAME_WIDTH,
+        GROUND_EXPLOSION_FRAME_HEIGHT,
+        this.x - GROUND_EXPLOSION_FRAME_WIDTH/2,
+        this.y - GROUND_EXPLOSION_FRAME_HEIGHT/2,
+        GROUND_EXPLOSION_FRAME_WIDTH,
+        GROUND_EXPLOSION_FRAME_HEIGHT
+      );
+    }
+  }
+
   class Particle{
     constructor(x,y){
       this.x=x;this.y=y;this.size=4
@@ -1042,6 +1086,10 @@
 
   function spawnExplosion(x, y) {
     explosions.push(new Explosion(x, y));
+  }
+
+  function spawnGroundExplosion(x, y){
+    groundExplosions.push(new GroundExplosion(x, y));
   }
 
   function spawnDrone(){
@@ -1241,7 +1289,7 @@
 
     enemyBullets.forEach((b,i)=>{
       if(b.y>canvas.height-groundHeight){
-        spawnExplosion(b.x,b.y)
+        spawnGroundExplosion(b.x, b.y);
         enemyBullets.splice(i,1)
       }
       if(isColliding(b, player)){
@@ -1258,6 +1306,8 @@
 
     explosions.forEach(e => e.update(delta));
     explosions = explosions.filter(e => !e.finished); // убираем законченные
+    groundExplosions.forEach(e => e.update());
+    groundExplosions = groundExplosions.filter(e => !e.finished);
 
     survivalTime+=delta/1000
 
@@ -1319,6 +1369,7 @@
     }
 
     explosions.forEach(e => e.draw(ctx));
+    groundExplosions.forEach(e => e.draw(ctx));
   }
 
   let last=0
