@@ -471,6 +471,13 @@
   let explosions = [];
   let groundExplosions = [];
 
+  const playerWalkSprite = new Image();
+  playerWalkSprite.src = "soldier_walk_sprite.png";
+
+  const WALK_FRAMES = 7
+  const WALK_FRAME_WIDTH = 100
+  const WALK_FRAME_HEIGHT = 130
+
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
@@ -682,29 +689,61 @@
   class Player{
     constructor(){
       this.x = canvas.width/2
-      this.y = canvas.height-groundHeight-80
+      this.y = canvas.height-groundHeight-130
 
-      this.width = 60
-      this.height = 100
+      this.width = 100
+      this.height = 130
 
-      this.speed = 6
+      this.speed = 3.8
       this.direction = 1
+
+      this.frame = 0
+      this.frameTimer = 0
+      this.isMoving = false
+
+      this.vx = 0
+      this.acceleration = 0.45
+      this.friction = 0.88
     }
 
     update(){
       if(keys["ArrowLeft"]){
-        this.x -= this.speed
+        this.vx -= this.acceleration
         this.direction = -1
       }
 
       if(keys["ArrowRight"]){
-        this.x += this.speed
+        this.vx += this.acceleration
         this.direction = 1
       }
+
+      if(this.vx > this.speed) this.vx = this.speed
+      if(this.vx < -this.speed) this.vx = -this.speed
+
+      this.vx *= this.friction
+
+      this.x += this.vx
+      this.isMoving = Math.abs(this.vx) > 0.1
 
       if(this.x < 0) this.x = 0
       if(this.x + this.width > canvas.width)
         this.x = canvas.width - this.width
+
+      if(this.isMoving){
+
+        this.frameTimer++
+
+        if(this.frameTimer > 15){
+          this.frame++
+          this.frameTimer = 0
+        }
+
+        if(this.frame >= WALK_FRAMES){
+          this.frame = 0
+        }
+      } else {
+        this.frame = 0
+      }
     }
 
     draw(){
@@ -715,7 +754,11 @@
         ctx.scale(-1,1)
 
         ctx.drawImage(
-          playerImg,
+          playerWalkSprite,
+          this.frame * WALK_FRAME_WIDTH,
+          0,
+          WALK_FRAME_WIDTH,
+          WALK_FRAME_HEIGHT,
           -this.x - this.width,
           this.y,
           this.width,
@@ -725,13 +768,16 @@
       }else{
 
         ctx.drawImage(
-          playerImg,
+          playerWalkSprite,
+          this.frame * WALK_FRAME_WIDTH,
+          0,
+          WALK_FRAME_WIDTH,
+          WALK_FRAME_HEIGHT,
           this.x,
           this.y,
           this.width,
           this.height
         )
-
       }
 
       ctx.restore()

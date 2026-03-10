@@ -4,6 +4,8 @@
 
 Added ground explosion sprite
 Added drone explosion sprite
+Added player walk animation
+Added player movement acceleration and friction
 
 0.14.0
 
