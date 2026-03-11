@@ -8,6 +8,7 @@ Added player walk animation
 Added player movement acceleration and friction
 Randomized enemy bullets cooldown
 Added new background effects
+New explosion sounds
 
 0.14.0
 

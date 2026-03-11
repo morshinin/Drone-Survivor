@@ -321,7 +321,8 @@
 <audio id="droneSound" src="drone_sound.mp3" loop></audio>
 <audio id="shootSound" src="pistol_shot.mp3"></audio>
 <audio id="gameOverMusic" src="gameover.mp3" loop></audio>
-<audio id="beep" src="beep.mp3"></audio>
+<audio id="droneExplosionSound" src="drone_explosion.mp3"></audio>
+<audio id="groundExplosionSound" src="ground_explosion.mp3"></audio>
 
 <div id="countdown"></div>
 
@@ -390,6 +391,8 @@
   const menuMusic = document.getElementById("menuMusic")
   const gameMusic = document.getElementById("gameMusic")
   const droneSound = document.getElementById("droneSound")
+  const droneExplosionSound = document.getElementById("droneExplosionSound")
+  const groundExplosionSound = document.getElementById("groundExplosionSound")
   const shootSound = document.getElementById("shootSound")
   const gameOverMusic = document.getElementById("gameOverMusic")
   const gameInfo = document.getElementById("game-info")
@@ -1113,16 +1116,20 @@
     document.getElementById("leaderboard").innerHTML=html
   }
 
-  // function spawnExplosion(x,y){
-  //   for(let i=0;i<8;i++) particles.push(new Particle(x,y))
-  // }
-
   function spawnExplosion(x, y) {
     explosions.push(new Explosion(x, y));
+
+    const s = droneExplosionSound.cloneNode()
+    s.volume = 0.2
+    s.play()
   }
 
   function spawnGroundExplosion(x, y){
     groundExplosions.push(new GroundExplosion(x, y));
+
+    const s = groundExplosionSound.cloneNode()
+    s.volume = 0.1
+    s.play()
   }
 
   function spawnDrone(){
