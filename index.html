@@ -511,6 +511,10 @@
   document.addEventListener("keydown",e=>keys[e.key]=true)
   document.addEventListener("keyup",e=>keys[e.key]=false)
 
+  function isFirePressed(){
+    return keys[" "] || keys["Space"]
+  }
+
   // DEBUG горячие клавиши
   document.addEventListener("keydown", e => {
 
@@ -522,6 +526,11 @@
       drones = []   // очистить небо
     }
 
+    if(e.code === "Space"){
+      e.preventDefault()
+    }
+
+    keys[e.key] = true
   })
 
   let isMuted = false
@@ -532,8 +541,25 @@
 
   muteBtn.onclick = () => {
     isMuted = !isMuted
-    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.6) // базовый уровень для всех треков
+    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.8) // базовый уровень для всех треков
     isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
+  }
+
+  function getShootDirection(){
+
+    let dx = 0
+    let dy = 0
+
+    if(keys["ArrowLeft"])  dx = -1
+    if(keys["ArrowRight"]) dx = 1
+    if(keys["ArrowUp"])    dy = -1
+    if(keys["ArrowDown"])  dy = 1
+
+    if(dx === 0 && dy === 0){
+      return null
+    }
+
+    return {dx,dy}
   }
 
   function isColliding(a, b){
@@ -690,6 +716,10 @@
     }
 
     update(){
+      if(isFirePressed()){
+        this.vx *= 0
+      }
+
       if(keys["ArrowLeft"]){
         this.vx -= this.acceleration
         this.direction = -1
@@ -830,13 +860,30 @@
   }
 
   class Bullet{
-    constructor(x,y){
-      this.size=6
-      this.x=x
-      this.y=y
-      this.speed=9
+
+    constructor(x,y,dx,dy){
+
+      this.x = x
+      this.y = y
+
+      this.dx = dx
+      this.dy = dy
+
+      const speed = 9
+
+      const len = Math.hypot(dx,dy) || 1
+
+      this.vx = dx/len * speed
+      this.vy = dy/len * speed
+
+      this.size = 6
     }
-    update(){this.y-=this.speed}
+
+    update(){
+      this.x += this.vx
+      this.y += this.vy
+    }
+
     draw(){
       ctx.fillStyle="yellow"
       ctx.fillRect(this.x,this.y,this.size,this.size)
@@ -1259,15 +1306,29 @@
       boss.update(delta)
     }
 
-    if(shootCooldown<=0){
-      bullets.push(new Bullet(player.x + player.width/2, player.y))
-      shootCooldown=250
-      const randomPitch = 0.9 + Math.random() * 0.4;
+    if(isFirePressed() && shootCooldown <= 0){
 
-      shootSound.currentTime = 0; // Сбрасываем в начало, чтобы звук мог накладываться
-      shootSound.volume = 0.15;     // Установите комфортную громкость (выстрелы частые)
-      shootSound.playbackRate = randomPitch; // Устанавливаем скорость/тональность
-      shootSound.play();
+      const dir = getShootDirection()
+
+      if (dir) {
+        bullets.push(
+          new Bullet(
+            player.x + player.width/2,
+            player.y + 20,
+            dir.dx,
+            dir.dy
+          )
+        )
+      }
+
+      shootCooldown = 100
+
+      const randomPitch = 0.9 + Math.random() * 0.4
+
+      shootSound.currentTime = 0
+      shootSound.volume = 0.15
+      shootSound.playbackRate = randomPitch
+      shootSound.play()
     }
 
     shootCooldown-=delta

@@ -1,5 +1,12 @@
 # Version History
 
+0.16.0
+
+Lower shoot cooldown
+Change game music
+Shoot by pressing space
+Shoot direction
+
 0.15.0
 
 Added ground explosion sprite
