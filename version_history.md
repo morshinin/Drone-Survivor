@@ -1,6 +1,6 @@
 # Version History
 
-0.16.0
+## 0.16.0
 
 Lower shoot cooldown
 Change game music
@@ -9,42 +9,43 @@ Shoot direction
 Radio chatter sound for commander message
 Enemy bullets cooldown longer
 Ammo and reload
+Screen shake
 
-0.15.0
+## 0.15.0
 
-Added ground explosion sprite
-Added drone explosion sprite
-Added player walk animation
-Added player movement acceleration and friction
-Randomized enemy bullets cooldown
-Added new background effects
+ground explosion sprite
+drone explosion sprite
+player walk animation
+player movement acceleration and friction
+Random enemy bullets cooldown
+new background effects
 New explosion sounds
 
-0.14.0
+## 0.14.0
 
 Changed drone images
-Added background effects
+background effects
 Changed game background
 
-0.13.0
+## 0.13.0
 
-Added Debug Mode
+Debug Mode
 
-0.12.0
+## 0.12.0
 
-Added Boss Fight
+Boss Fight
 
-0.11.0
+## 0.11.0
 
-Added drone waves mechanic
+drone waves mechanic
 Optimized FPS
 
-0.10.0
+## 0.10.0
 
-Add commander balloon
+commander balloon
 Change music
 
-0.9.0
+## 0.9.0
 
 Optimized FPS
-Added version history file
+version history file
