@@ -519,7 +519,7 @@
 
   for(const key in waveMusic){
     waveMusic[key].loop = false
-    waveMusic[key].volume = 0.25
+    waveMusic[key].volume = 0.1
   }
 
   const reloadSound = new Audio("reload.mp3")
@@ -570,7 +570,7 @@
 
   muteBtn.onclick = () => {
     isMuted = !isMuted
-    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.8) // базовый уровень для всех треков
+    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.1) // базовый уровень для всех треков
     isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
   }
 
@@ -1199,6 +1199,8 @@
     await crossfadeMusic(gameOverMusic, gameMusic)
 
     droneSound.currentTime = 0
+    droneSound.playbackRate = 0.8
+    droneSound.volume = 0.001
     droneSound.play()
 
     // await cinematicStart()
@@ -1682,7 +1684,7 @@
 
   loadLeaderboard()
 
-  menuMusic.volume = 0.4
+  menuMusic.volume = 0.1
   menuMusic.play()
 
   document.body.addEventListener("click", () => {
