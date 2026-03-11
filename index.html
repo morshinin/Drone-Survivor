@@ -1235,6 +1235,25 @@
     document.getElementById("leaderboard").innerHTML=html
   }
 
+  let screenShake = {
+    intensity: 0,   // сила тряски
+    duration: 0,    // сколько кадров тряска длится
+    update() {
+      if(this.duration > 0){
+        this.duration--
+        return {
+          x: (Math.random() - 0.5) * this.intensity,
+          y: (Math.random() - 0.5) * this.intensity
+        }
+      }
+      return {x:0, y:0}
+    },
+    shake(intensity = 10, duration = 15){
+      this.intensity = intensity
+      this.duration = duration
+    }
+  }
+
   function spawnExplosion(x, y) {
     explosions.push(new Explosion(x, y));
 
@@ -1249,6 +1268,8 @@
     const s = groundExplosionSound.cloneNode()
     s.volume = 0.3
     s.play()
+
+    screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
   }
 
   function spawnDrone(){
@@ -1540,6 +1561,12 @@
       tank.w,
       tank.h
     )
+
+    const shakeOffset = screenShake.update()
+
+    ctx.save()
+    ctx.translate(shakeOffset.x, shakeOffset.y)
+
     ctx.drawImage(
       destroyedCityImg,
       destroyedCity.x,
@@ -1590,6 +1617,8 @@
       ctx.fillText("RELOADING...",20,100)
 
     }
+
+    ctx.restore()
   }
 
   let last=0
