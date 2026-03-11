@@ -10,6 +10,7 @@ Radio chatter sound for commander message
 Enemy bullets cooldown longer
 Ammo and reload
 Screen shake
+Different music for every drone wave
 
 ## 0.15.0
 

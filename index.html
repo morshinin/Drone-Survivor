@@ -510,6 +510,18 @@
   const WALK_FRAME_WIDTH = 100
   const WALK_FRAME_HEIGHT = 130
 
+  let waveMusic = {
+    1: new Audio("wave1.mp3"),
+    2: new Audio("wave2.mp3"),
+    3: new Audio("wave3.mp3"),
+    boss: new Audio("boss.mp3")
+  }
+
+  for(const key in waveMusic){
+    waveMusic[key].loop = false
+    waveMusic[key].volume = 0.25
+  }
+
   const reloadSound = new Audio("reload.mp3")
   reloadSound.volume = 0.5
 
@@ -560,6 +572,24 @@
     isMuted = !isMuted
     allMusic.forEach(m => m.volume = isMuted ? 0 : 0.8) // базовый уровень для всех треков
     isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
+  }
+
+  let currentMusic = null
+
+  function playWaveMusic(wave){
+
+    if(currentMusic){
+      currentMusic.pause()
+      currentMusic.currentTime = 0
+    }
+
+    const music = waveMusic[wave]
+
+    if(music){
+      music.play()
+      currentMusic = music
+    }
+
   }
 
   function getShootDirection(){
@@ -646,6 +676,10 @@
 
       if (waveNumber === 0) {
 
+        gameMusic.pause()
+
+        playWaveMusic(1)
+
         msg = "Отлично! Ты еще живой. Не расслабляйся. Это только первая волна. С передка передают, что к тебе летит новая группа дронов. Ладно, некогда с тобой тут говорить. Мне шавуху привезли.";
 
         waveMaxInAir = 15;
@@ -654,6 +688,7 @@
 
       } else if (waveNumber === 1) {
 
+        playWaveMusic(2)
         msg = "Эй, людоед! Глянь, этот чубрик еще не 200. Если ты думаешь, что тебе удастся выжить, то выбрось это из головы. Мы уже подали раппорт о том, что ты пропал без вести.";
 
         waveMaxInAir = 20;
@@ -662,10 +697,12 @@
 
       } else if (waveNumber === 2) {
 
+        playWaveMusic(3)
         msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
         magazines = 12;
 
       } else if (waveNumber === 3 && !bossActive) {
+        playWaveMusic("boss")
         msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
         spawnBoss()
         magazines = 12;
@@ -1328,6 +1365,12 @@
     document.body.classList.remove("hide-cursor")
     document.getElementById("gameMusic").pause()
     droneSound.pause();
+
+    Object.values(waveMusic).forEach(track => {
+      track.pause();
+      track.currentTime = 0;
+    });
+
     await fadeScreen()
     await crossfadeMusic(gameMusic, gameOverMusic)
     await saveScoreOnline()
