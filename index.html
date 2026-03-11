@@ -400,7 +400,7 @@
   const HITBOX_PADDING = 12
   const GAME_VERSION = "0.15.0"
 
-  const MAX_ENEMY_BULLETS = 120
+  const MAX_ENEMY_BULLETS = 60
   document.getElementById("game-version").innerText = GAME_VERSION
 
   const menuMusic = document.getElementById("menuMusic")
@@ -482,6 +482,7 @@
   const EXPLOSION_FRAME_HEIGHT = 100;
   const EXPLOSION_FRAME_COUNT = 4;
   const EXPLOSION_FRAME_DURATION = 100;
+  const MAX_ATTACKING_DRONES = 5
 
   const groundExplosionSprite = new Image();
   groundExplosionSprite.src = "ground_explosion_sprite.png";
@@ -651,7 +652,13 @@
 
 
   async function showCommanderMessage(duration = 7000, message = null){
+    const commanderSound = new Audio("radio_chatter.mp3")
+    commanderSound.volume = 0.4
+
     return new Promise(resolve => {
+      commanderSound.currentTime = 0
+      commanderSound.play()
+
       const balloon = document.getElementById("commander-balloon");
       const p = balloon.querySelector("p");
       if(message) p.innerText = message;
@@ -816,7 +823,7 @@
       this.y = y
 
       this.fireTimer = Math.random()*1000
-      this.fireCooldown = 800 + Math.random()*1200
+      this.fireCooldown = 1000 + Math.random()*1200
     }
 
     update(delta){
@@ -830,7 +837,20 @@
 
       this.fireTimer += delta
 
-      if(this.fireTimer > this.fireCooldown && globalEnemyFireCooldown <= 0){
+      const attackingDrones = drones
+        .slice()
+        .sort((a,b)=>{
+          const da = Math.abs(a.x - player.x)
+          const db = Math.abs(b.x - player.x)
+          return da - db
+        })
+        .slice(0, MAX_ATTACKING_DRONES)
+
+      if(
+        attackingDrones.includes(this) &&
+        this.fireTimer > this.fireCooldown &&
+        globalEnemyFireCooldown <= 0
+      ){
         this.fireTimer = 0
 
         if (enemyBullets.length < MAX_ENEMY_BULLETS) {
@@ -1292,6 +1312,7 @@
     spawnInterval = Math.max(400, 2000 - survivalTime * 30);
     spawnTimer += delta;
 
+
     if (
       spawnTimer >= spawnInterval &&
       waveActive &&
@@ -1334,20 +1355,6 @@
     shootCooldown-=delta
 
     drones.forEach(d=>d.update(delta))
-
-    dropTimer+=delta
-
-    if(dropTimer>1000){
-      dropTimer=0
-
-      drones.forEach(d=>{
-        if(enemyBullets.length < MAX_ENEMY_BULLETS){
-          enemyBullets.push(
-            new EnemyBullet(d.x+d.width/2,d.y+d.height)
-          )
-        }
-      })
-    }
 
     bullets.forEach(b=>b.update())
     bullets = bullets.filter(b => b.y > -20)

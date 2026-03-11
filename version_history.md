@@ -6,6 +6,8 @@ Lower shoot cooldown
 Change game music
 Shoot by pressing space
 Shoot direction
+Radio chatter sound for commander message
+Enemy bullets cooldown longer
 
 0.15.0
 
