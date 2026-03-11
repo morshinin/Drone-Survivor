@@ -532,7 +532,7 @@
 
   muteBtn.onclick = () => {
     isMuted = !isMuted
-    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.4) // базовый уровень для всех треков
+    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.6) // базовый уровень для всех треков
     isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
   }
 
