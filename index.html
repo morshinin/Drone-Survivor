@@ -1247,7 +1247,7 @@
     groundExplosions.push(new GroundExplosion(x, y));
 
     const s = groundExplosionSound.cloneNode()
-    s.volume = 0.2
+    s.volume = 0.3
     s.play()
   }
 
@@ -1396,6 +1396,13 @@
           )
         }
 
+        const randomPitch = 0.9 + Math.random() * 0.4
+
+        shootSound.currentTime = 0
+        shootSound.volume = 0.15
+        shootSound.playbackRate = randomPitch
+        shootSound.play()
+
         ammoInMagazine--
 
       } else if(ammoInMagazine <= 0 && !isReloading){
@@ -1404,25 +1411,9 @@
 
       }
 
-      // if(isReloading) return
-      //
-      // if(ammoInMagazine <= 0){
-      //   startReload()
-      //   return
-      // }
-      //
-      //
-      //
-      // ammoInMagazine--
-
       shootCooldown = 100
 
-      const randomPitch = 0.9 + Math.random() * 0.4
 
-      shootSound.currentTime = 0
-      shootSound.volume = 0.15
-      shootSound.playbackRate = randomPitch
-      shootSound.play()
     }
 
     shootCooldown-=delta
