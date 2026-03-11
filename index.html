@@ -454,6 +454,15 @@
   let wavePauseTimer = 0;      // таймер паузы в мс
   const wavePauseDuration = 6000; // 6 секунд пауза
 
+  let magazineSize = 30
+  let ammoInMagazine = 30
+
+  let magazines = 6
+
+  let isReloading = false
+  let reloadTime = 2000
+  let reloadTimer = 0
+
   let uiTimer = 0
 
   let keys = {}
@@ -501,10 +510,13 @@
   const WALK_FRAME_WIDTH = 100
   const WALK_FRAME_HEIGHT = 130
 
+  const reloadSound = new Audio("reload.mp3")
+  reloadSound.volume = 0.5
+
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
-    godMode: true,     // бессмертие
+    godMode: false,     // бессмертие
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
@@ -529,6 +541,10 @@
 
     if(e.code === "Space"){
       e.preventDefault()
+    }
+
+    if(e.code === "KeyR"){
+      startReload()
     }
 
     keys[e.key] = true
@@ -561,6 +577,20 @@
     }
 
     return {dx,dy}
+  }
+
+  function startReload(){
+
+    if(isReloading) return
+    if(magazines <= 0) return
+    if(ammoInMagazine === magazineSize) return
+
+    isReloading = true
+    reloadTimer = 0
+
+    reloadSound.currentTime = 0
+    reloadSound.play()
+
   }
 
   function isColliding(a, b){
@@ -620,6 +650,7 @@
 
         waveMaxInAir = 15;
         waveTargetKills = 85;
+        magazines = 8;
 
       } else if (waveNumber === 1) {
 
@@ -627,18 +658,22 @@
 
         waveMaxInAir = 20;
         waveTargetKills = 130;
+        magazines = 10;
 
       } else if (waveNumber === 2) {
 
         msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
+        magazines = 12;
 
       } else if (waveNumber === 3 && !bossActive) {
         msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
         spawnBoss()
+        magazines = 12;
       } else {
 
-        msg = "Новая волна дронов! Держись!";
+        msg = "Поздравь меня. Меня представили к награде.";
 
+        magazines = 12;
         waveMaxInAir += 20;
         waveTargetKills += 50;
       }
@@ -646,12 +681,14 @@
       waveKills = 0; // ВАЖНО
       waveNumber++;
 
-      await showCommanderMessage(8000, msg);
+      ammoInMagazine = 30
+
+      await showCommanderMessage(10000, msg);
     }
   }
 
 
-  async function showCommanderMessage(duration = 7000, message = null){
+  async function showCommanderMessage(duration = 10000, message = null){
     const commanderSound = new Audio("radio_chatter.mp3")
     commanderSound.volume = 0.4
 
@@ -823,7 +860,7 @@
       this.y = y
 
       this.fireTimer = Math.random()*1000
-      this.fireCooldown = 1000 + Math.random()*1200
+      this.fireCooldown = 800 + Math.random()*1200
     }
 
     update(delta){
@@ -1210,7 +1247,7 @@
     groundExplosions.push(new GroundExplosion(x, y));
 
     const s = groundExplosionSound.cloneNode()
-    s.volume = 0.1
+    s.volume = 0.2
     s.play()
   }
 
@@ -1305,6 +1342,21 @@
       }
     }
 
+    if(isReloading){
+
+      reloadTimer += delta
+
+      if(reloadTimer > reloadTime){
+
+        ammoInMagazine = magazineSize
+        magazines--
+
+        isReloading = false
+
+      }
+
+    }
+
     if(globalEnemyFireCooldown > 0){
       globalEnemyFireCooldown -= delta
     }
@@ -1331,6 +1383,13 @@
 
       const dir = getShootDirection()
 
+      if(isReloading) return
+
+      if(ammoInMagazine <= 0){
+        startReload()
+        return
+      }
+
       if (dir) {
         bullets.push(
           new Bullet(
@@ -1341,6 +1400,8 @@
           )
         )
       }
+
+      ammoInMagazine--
 
       shootCooldown = 100
 
@@ -1504,6 +1565,28 @@
 
     explosions.forEach(e => e.draw(ctx));
     groundExplosions.forEach(e => e.draw(ctx));
+
+    ctx.fillStyle = "white"
+    ctx.font = "20px monospace"
+
+    ctx.fillText(
+      "Ammo: " + ammoInMagazine + " / " + magazineSize,
+      20,
+      240
+    )
+
+    ctx.fillText(
+      "Magazines: " + magazines,
+      20,
+      270
+    )
+
+    if(isReloading){
+
+      ctx.fillStyle = "yellow"
+      ctx.fillText("RELOADING...",20,100)
+
+    }
   }
 
   let last=0

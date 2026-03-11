@@ -8,6 +8,7 @@ Shoot by pressing space
 Shoot direction
 Radio chatter sound for commander message
 Enemy bullets cooldown longer
+Ammo and reload
 
 0.15.0
 
