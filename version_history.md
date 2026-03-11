@@ -4,6 +4,8 @@
 
 Small UI adjustments
 Mute button
+Kamikaze drones
+Grenadier drones
 
 ## 0.16.0
 

@@ -424,6 +424,10 @@
   tankImg.src = "tank.png"
   const destroyedCityImg = new Image()
   destroyedCityImg.src = "destroyed_city.png"
+  const grenadeImg = new Image()
+  grenadeImg.src = "grenade.png"
+  const kamikazeImg = new Image()
+  kamikazeImg.src = "kamikaze.png"
 
   const smokeGif = new Image()
   smokeGif.src = "smoke.gif"
@@ -495,6 +499,8 @@
 
   let explosions = [];
   let groundExplosions = [];
+  let grenades = []
+  let kamikazeDrones = []
 
   const playerWalkSprite = new Image();
   playerWalkSprite.src = "soldier_walk_sprite.png";
@@ -549,6 +555,7 @@
     }
 
     if(e.code === "KeyR"){
+      if(isReloading) return
       startReload()
     }
 
@@ -928,6 +935,12 @@
 
       this.fireTimer = Math.random()*1000
       this.fireCooldown = 800 + Math.random()*1200
+
+      this.type = Math.random() < 0.2 ? "grenadier" : "normal"
+
+      if(this.type === "grenadier"){
+        this.dropTimer = 120 + Math.random()*120
+      }
     }
 
     update(delta){
@@ -937,7 +950,7 @@
         this.speed *= -1
       }
 
-      this.y += Math.sin(Date.now()*0.003) * 0.3
+      this.y += Math.sin(performance.now()*0.003) * 0.3
 
       this.fireTimer += delta
 
@@ -969,6 +982,19 @@
         }
 
         this.fireCooldown = 1800 + Math.random() * 1200
+      }
+
+      if(this.type === "grenadier"){
+
+        this.dropTimer--
+
+        if(this.dropTimer <= 0){
+
+          grenades.push(new Grenade(this.x,this.y))
+
+          this.dropTimer = 180 + Math.random()*120
+        }
+
       }
     }
 
@@ -1142,6 +1168,121 @@
           EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT
         );
       }
+    }
+  }
+
+  class Grenade{
+    constructor(x,y){
+      this.x = x
+      this.y = y
+
+      this.vy = 3
+
+      this.width = 20
+      this.height = 20
+
+      this.timer = 180 // 3 секунды при 60fps
+      this.onGround = false
+    }
+
+    update(){
+
+      if(!this.onGround){
+
+        this.y += this.vy
+
+        if(this.y >= canvas.height - groundHeight - this.height){
+          this.y = canvas.height - groundHeight - this.height
+          this.onGround = true
+        }
+
+      }else{
+
+        this.timer--
+
+        if(this.timer <= 0){
+          spawnGroundExplosion(this.x,this.y)
+          this.dead = true
+        }
+
+      }
+
+    }
+
+    draw(){
+      if(this.onGround && this.timer < 60){
+
+        if(Math.floor(this.timer/10)%2===0){
+          ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
+
+          ctx.beginPath()
+          ctx.arc(this.x+10,this.y+10,30,0,Math.PI*2)
+          ctx.strokeStyle="red"
+          ctx.stroke()
+        }
+
+      }else{
+
+        ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
+
+      }
+    }
+  }
+
+  class KamikazeDrone{
+
+    constructor(){
+
+      const side = Math.random()
+
+      if(side < 0.25){
+        this.x = -50
+        this.y = Math.random()*200
+      }
+      else if(side < 0.5){
+        this.x = canvas.width + 50
+        this.y = Math.random()*200
+      }
+      else{
+        this.x = Math.random()*canvas.width
+        this.y = -50
+      }
+
+      const dx = player.x - this.x
+      const dy = player.y - this.y
+
+      const dist = Math.hypot(dx,dy)
+
+      this.vx = dx/dist * 4
+      this.vy = dy/dist * 4
+
+      this.width = 60
+      this.height = 60
+    }
+
+    update(){
+
+      this.x += this.vx
+      this.y += this.vy
+
+      // столкновение с игроком
+      if(isColliding(this,player)) {
+        playSound(60,0.5)
+        endGame()
+      }
+
+      // удар о землю
+      if(this.y > canvas.height - groundHeight){
+
+        spawnGroundExplosion(this.x,this.y)
+        this.dead = true
+
+      }
+
+    }
+
+    draw(){
+      ctx.drawImage(kamikazeImg,this.x,this.y,this.width,this.height)
     }
   }
 
@@ -1329,6 +1470,7 @@
     const s = droneExplosionSound.cloneNode()
     s.volume = 0.2
     s.play()
+    s.onended = () => s.remove()
   }
 
   function spawnGroundExplosion(x, y){
@@ -1351,6 +1493,9 @@
       new Drone(Math.random() * canvas.height * 0.4)
     )
 
+    if(Math.random() < 0.08){
+      kamikazeDrones.push(new KamikazeDrone())
+    }
   }
 
 
@@ -1519,6 +1664,10 @@
     bullets.forEach(b=>b.update())
     bullets = bullets.filter(b => b.y > -20)
     enemyBullets.forEach(b=>b.update())
+    grenades.forEach(g => g.update())
+    grenades = grenades.filter(g => !g.dead)
+    kamikazeDrones.forEach(d => d.update())
+    kamikazeDrones = kamikazeDrones.filter(d => !d.dead)
     enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
     particles.forEach(p=>p.update())
 
@@ -1653,6 +1802,8 @@
     drones.forEach(d=>d.draw())
     bullets.forEach(b=>b.draw())
     enemyBullets.forEach(b=>b.draw())
+    grenades.forEach(g => g.draw())
+    kamikazeDrones.forEach(d => d.draw())
     particles.forEach(p=>p.draw())
     if(bossActive && boss){
       boss.draw()
