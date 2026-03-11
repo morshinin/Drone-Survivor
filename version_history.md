@@ -1,5 +1,10 @@
 # Version History
 
+## 0.17.0
+
+Small UI adjustments
+Mute button
+
 ## 0.16.0
 
 Lower shoot cooldown

@@ -562,12 +562,47 @@
   const muteBtn = document.getElementById("muteBtn")
 
   muteBtn.onclick = () => {
-    isMuted = !isMuted
-    allMusic.forEach(m => m.volume = isMuted ? 0 : 0.1) // базовый уровень для всех треков
-    isMuted ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
+    // isMuted = !isMuted
+    // allMusic.forEach(m => m.volume = isMuted ? 0 : 0.1) // базовый уровень для всех треков
+    toggleMusic(); // если музыка выключена, остановим все треки
+
+    !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
   }
 
   let currentMusic = null
+
+  let isMusicOn = localStorage.getItem("musicOn");
+  if (!isMusicOn === null) {
+    isMusicOn = true; // по умолчанию музыка включена
+  } else {
+    isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
+  }
+
+  function playTrack(track) {
+    if (isMusicOn) {
+      track.play();
+    }
+  }
+
+  function pauseTrack(track) {
+    track.pause();
+    track.currentTime = 0;
+  }
+
+  function toggleMusic() {
+    isMusicOn = !isMusicOn;
+    localStorage.setItem("musicOn", isMusicOn);
+
+    if (!isMusicOn) {
+      // выключаем всю музыку
+      gameMusic.pause();
+      gameOverMusic.pause();
+      menuMusic.pause();
+      Object.values(waveMusic).forEach(track => pauseTrack(track));
+    } else {
+      menuMusic.play()
+    }
+  }
 
   function playWaveMusic(wave){
 
@@ -578,7 +613,7 @@
 
     const music = waveMusic[wave]
 
-    if(music){
+    if(music && isMusicOn){
       music.play()
       currentMusic = music
     }
@@ -673,7 +708,7 @@
 
         playWaveMusic(1)
 
-        msg = "Отлично! Ты еще живой. Не расслабляйся. Это только первая волна. С передка передают, что к тебе летит новая группа дронов. Ладно, некогда с тобой тут говорить. Мне шавуху привезли.";
+        msg = "Ты еще живой? С передка передают, что к тебе летит новая группа дронов. Некогда с тобой тут говорить. Мне шавуху привезли.";
 
         waveMaxInAir = 15;
         waveTargetKills = 85;
@@ -756,7 +791,9 @@
   async function crossfadeMusic(from, to, duration=1000){
     if(to){
       to.volume = 0
-      to.play()
+      if (isMusicOn) {
+        to.play()
+      }
     }
     const steps = 20
     const stepTime = duration/steps
@@ -1678,10 +1715,14 @@
   loadLeaderboard()
 
   menuMusic.volume = 0.1
-  menuMusic.play()
+  if (isMusicOn) {
+    menuMusic.play()
+  }
 
   document.body.addEventListener("click", () => {
-    menuMusic.play()
+    if(isMusicOn){
+      menuMusic.play()
+    }
   }, { once:true })
 
   const bar = document.getElementById("loading-bar")
