@@ -1383,25 +1383,37 @@
 
       const dir = getShootDirection()
 
-      if(isReloading) return
+      if(!isReloading && ammoInMagazine > 0){
 
-      if(ammoInMagazine <= 0){
-        startReload()
-        return
-      }
-
-      if (dir) {
-        bullets.push(
-          new Bullet(
-            player.x + player.width/2,
-            player.y + 20,
-            dir.dx,
-            dir.dy
+        if (dir) {
+          bullets.push(
+            new Bullet(
+              player.x + player.width/2,
+              player.y + 20,
+              dir.dx,
+              dir.dy
+            )
           )
-        )
+        }
+
+        ammoInMagazine--
+
+      } else if(ammoInMagazine <= 0 && !isReloading){
+
+        startReload()
+
       }
 
-      ammoInMagazine--
+      // if(isReloading) return
+      //
+      // if(ammoInMagazine <= 0){
+      //   startReload()
+      //   return
+      // }
+      //
+      //
+      //
+      // ammoInMagazine--
 
       shootCooldown = 100
 
