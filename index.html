@@ -267,6 +267,20 @@
       z-index: 2;
     }
 
+    .background-moto {
+      position: absolute;
+      bottom: 90px; /* чтобы «мотоцикл» был на земле */
+      right: -200px;  /* старт за экраном */
+      width: 30px;
+      animation: motoMove 40s linear alternate; /* туда-сюда */
+    }
+
+    @keyframes motoMove {
+      0% { right: -200px; }
+      50% { right: calc(100% - 200px); }
+      100% { right: -200px; }
+    }
+
     @keyframes bgMove{
 
       0%{
@@ -307,6 +321,7 @@
     <img src="smoke_2.gif" class="smoke" style="right:60px; bottom:100px; width:220px;">
     <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">
     <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">
+    <img src="moto_chase.png" class="background-moto">
   </div>
 
   <div id="timer"></div>
@@ -488,7 +503,7 @@
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
-    godMode: false,     // бессмертие
+    godMode: true,     // бессмертие
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
@@ -833,8 +848,8 @@
       this.x=x
       this.y=y
       this.speed=4
-      this.width = 16
-      this.height = 32
+      this.width = 12
+      this.height = 20
     }
     update(){this.y+=this.speed}
     draw(){
