@@ -1017,8 +1017,20 @@
       this.deathTimer = 2000
     }
 
-    death() {
+    die() {
+      player.alive = false
 
+      timeScale = 0.25
+      screenShake.shake(20, 500)
+
+      spawnExplosion(
+        player.x + player.width/2,
+        player.y + player.height/2
+      )
+
+      const s = PLAYER_SOUNDS['death'].cloneNode()
+      s.volume = 0.4
+      s.play()
     }
 
     update(){
@@ -1437,9 +1449,10 @@
     const dist = Math.sqrt(dx*dx + dy*dy)
 
     if(dist < explosionRadius){
-      if(!DEBUG.godMode){
-        playSound(60,0.5)
-        endGame()
+      if(!DEBUG.godMode && player.alive){
+        player.die()
+        // playSound(60,0.5)
+        // endGame()
       }
     }
   }
@@ -1482,9 +1495,9 @@
 
       // столкновение с игроком
       if(isColliding(this,player)) {
-        if (!DEBUG.godMode) {
-          playSound(60,0.5)
-          endGame()
+        if (!DEBUG.godMode && player.alive) {
+          player.die()
+          this.alive = false
         }
       }
 
@@ -1865,19 +1878,7 @@
 
         if(isColliding(obj, player)){
           if(!DEBUG.godMode && player.alive){
-            player.alive = false
-
-            timeScale = 0.25
-            screenShake.shake(20, 500)
-
-            spawnExplosion(
-              player.x + player.width/2,
-              player.y + player.height/2
-            )
-
-            const s = PLAYER_SOUNDS['death'].cloneNode()
-            s.volume = 0.4
-            s.play()
+            player.die()
             // playSound(60,0.5)
             // endGame()
           }
@@ -1999,11 +2000,11 @@
     }
 
     if(!player.alive){
-      ctx.fillStyle = "rgba(0,0,0,0.4)"
+      ctx.fillStyle = "rgba(0,0,0,0.7)"
       ctx.fillRect(0,0,canvas.width,canvas.height)
 
       ctx.fillStyle = "red"
-      ctx.font = "60px 'Press Start 2P'"
+      ctx.font = "96px 'Press Start 2P'"
       ctx.textAlign = "center"
 
       ctx.fillText(
