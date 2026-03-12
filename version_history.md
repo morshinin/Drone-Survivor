@@ -1,5 +1,10 @@
 # Version History
 
+## 0.17.3
+
+Fix boss drone bugs
+Add favicon
+
 ## 0.17.2
 
 Fix bugs

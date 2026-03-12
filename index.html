@@ -6,6 +6,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
 
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+
   <style>
 
     body{
@@ -391,7 +396,7 @@
   )
 
   const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.17.2"
+  const GAME_VERSION = "0.17.3"
 
   const MAX_ENEMY_BULLETS = 60
   document.getElementById("game-version").innerText = GAME_VERSION
@@ -448,16 +453,9 @@
   const wavePauseDuration = 6000; // 6 секунд пауза
 
   let gameObjects = []
-
   let isReloading = false
-
   let uiTimer = 0
-
   let keys = {}
-  // let gameRunning = false
-
-  // let boss = null
-  let bossActive = false
 
   const tank = {
     x: canvas.width * 0.85,
@@ -488,17 +486,25 @@
   const GROUND_EXPLOSION_FRAME_WIDTH = 100;
   const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
 
-  // let explosions = [];
-  // let groundExplosions = [];
-  // let grenades = []
-  // let kamikazeDrones = []
-
   const playerWalkSprite = new Image();
   playerWalkSprite.src = "soldier_walk_sprite.png";
 
   const WALK_FRAMES = 7
   const WALK_FRAME_WIDTH = 100
   const WALK_FRAME_HEIGHT = 130
+
+
+  let player
+  let playerName="AAA"
+
+  let dropTimer=0
+  let shootCooldown=0
+  let globalEnemyFireCooldown = 0
+
+  let score=0
+  let survivalTime=0
+
+  let leaderboard=[]
 
   let waveMusic = {
     1: new Audio("wave1.mp3"),
@@ -511,9 +517,6 @@
     waveMusic[key].loop = false
     waveMusic[key].volume = 0.1
   }
-
-  // const reloadSound = new Audio("reload.mp3")
-  // reloadSound.volume = 0.5
 
   // DEBUG режим для тестирования
   const DEBUG = {
@@ -580,9 +583,6 @@
     if(e.key === "m"){
       setWeapon('machinegun')
     }
-    // get rifle
-    // get shotgun
-    // get machinegun
 
     if(e.code === "Space"){
       e.preventDefault()
@@ -592,6 +592,8 @@
       if(isReloading) return
       startReload()
     }
+
+    // infinite ammo
 
     keys[e.key] = true
   })
@@ -717,17 +719,8 @@
 
       const speed = currentWeapon.bulletSpeed
 
-      const bullet = new Bullet(
-        player.x + player.width/2,
-        player.y + player.height/2,
-        dx * speed,
-        dy * speed,
-      )
-
       const x = player.x + player.width/2
       const y = player.y + player.height/2
-
-      // bullets.push(bullet)
 
       spawn(new Bullet(x,y,dx * speed,dy * speed))
     }
@@ -820,9 +813,6 @@
     isReloading = true
     const currentWeaponName = currentWeapon.name
 
-    console.log('Current weapon name ', currentWeaponName)
-    console.log('Weapon sounds ', WEAPON_SOUNDS[currentWeaponName])
-
     if (WEAPON_SOUNDS[currentWeaponName]) {
       const r = WEAPON_SOUNDS[currentWeaponName].reload.cloneNode()
       r.volume = 0.5
@@ -854,7 +844,6 @@
 
     const timeMultiplier = 1 + Math.min(survivalTime / 60, 5)
     const droneMultiplier = 1 + Math.min(countDrones() / 20, 4)
-    // const droneMultiplier = gameObjects.filter(o => o instanceof Drone).length
 
     return Math.floor(base * timeMultiplier * droneMultiplier)
   }
@@ -877,6 +866,7 @@
   }
 
   async function checkWaveProgress() {
+    const boss = gameObjects.find(o => o instanceof BossDrone)
     if (wavePause) return;
 
     if (waveKills >= waveTargetKills) {
@@ -900,8 +890,8 @@
 
         msg = "Ты еще живой? С передка передают, что к тебе летит новая группа дронов. Некогда с тобой тут говорить. Мне шавуху привезли.";
 
-        waveMaxInAir = 15;
-        waveTargetKills = 85;
+        waveMaxInAir = 5;
+        waveTargetKills = 20;
         magazines = 8;
 
       } else if (waveNumber === 1) {
@@ -910,18 +900,16 @@
         playWaveMusic(2)
         msg = "Эй, людоед! Глянь, этот чубрик еще не 200. Если ты думаешь, что тебе удастся выжить, то выбрось это из головы. Мы уже подали раппорт о том, что ты пропал без вести.";
 
-        waveMaxInAir = 20;
-        waveTargetKills = 130;
+        waveMaxInAir = 10;
+        waveTargetKills = 40;
         magazines = 10;
 
       } else if (waveNumber === 2) {
-
         setWeapon('shotgun')
         playWaveMusic(3)
         msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
         magazines = 12;
-
-      } else if (waveNumber === 3 && !bossActive) {
+      } else if (waveNumber === 3 && !boss) {
         setWeapon('machinegun')
         playWaveMusic("boss")
         msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
@@ -932,14 +920,12 @@
         msg = "Поздравь меня. Меня представили к награде.";
 
         magazines = 12;
-        waveMaxInAir += 20;
-        waveTargetKills += 50;
+        waveMaxInAir += 5;
+        waveTargetKills += 30;
       }
 
       waveKills = 0; // ВАЖНО
       waveNumber++;
-
-      ammoInMagazine = 30
 
       await showCommanderMessage(10000, msg);
     }
@@ -1162,12 +1148,6 @@
         this.fireTimer = 0
 
         if (countEnemyBullets() < MAX_ENEMY_BULLETS) {
-          // enemyBullets.push(
-          //   new EnemyBullet(
-          //     this.x + this.width / 2,
-          //     this.y + this.height
-          //   )
-          // )
           spawn(
             new EnemyBullet(
               this.x + this.width / 2,
@@ -1184,8 +1164,6 @@
         this.dropTimer--
 
         if(this.dropTimer <= 0){
-
-          // grenades.push(new Grenade(this.x,this.y))
           spawn(new Grenade(this.x,this.y))
 
           this.dropTimer = 180 + Math.random()*120
@@ -1277,16 +1255,16 @@
       this.spawnTimer = 0
       this.missileTimer = 0
 
+      this.active = false
+
       this.alive = true
     }
 
     update(delta){
-
       // плавный въезд на экран
       if(this.y < 40){
         this.y += this.speed
       }
-
       // спавн дронов
       this.spawnTimer += delta
       if(this.spawnTimer > 2000){
@@ -1301,14 +1279,6 @@
       this.missileTimer += delta
       if(this.missileTimer > 3000){
         this.missileTimer = 0
-
-        // enemyBullets.push(
-        //   new Missile(
-        //     this.x + this.width/2,
-        //     this.y + this.height,
-        //     player.x + player.width/2
-        //   )
-        // )
 
         spawn(
           new Missile(
@@ -1356,7 +1326,6 @@
       this.y = y + height/2;
       this.frame = 0;
       this.timer = 0;
-      // this.finished = false;
 
       this.alive = true
     }
@@ -1527,7 +1496,6 @@
       this.y = y - 30;
       this.frame = 0;
       this.timer = 0;
-      // this.finished = false;
 
       this.alive = true
     }
@@ -1559,27 +1527,10 @@
     }
   }
 
-  let player
-  // let drones
-  // let bullets
-  // let enemyBullets
-  // let particles
-
-  let dropTimer=0
-  let shootCooldown=0
-  let globalEnemyFireCooldown = 0
-
-  let score=0
-  let survivalTime=0
-
-  let playerName="AAA"
-
-  let leaderboard=[]
-
   function spawnBoss(){
-    const boss = new BossDrone()
-    bossActive = true
-    spawn(boss)
+    spawn(new BossDrone())
+    const boss = gameObjects.find(o => o instanceof BossDrone)
+    boss.active = true
   }
 
   function countDrones(){
@@ -1611,20 +1562,6 @@
 
     player = new Player()
 
-    // drones = [
-    //   new Drone(canvas.height*0.2),
-    //   new Drone(canvas.height*0.35)
-    // ]
-
-    // bullets = []
-    // enemyBullets = []
-    // particles = []
-
-    // score = 0
-    // survivalTime = 0
-    // spawnTimer = 0
-    // dropTimer = 0
-    // shootCooldown = 0
     gameObjects = []
     spawnDrone()
   }
@@ -1696,7 +1633,6 @@
   }
 
   function spawnExplosion(x, y) {
-    // explosions.push(new Explosion(x, y));
     spawn(new Explosion(x,y))
 
     const s = droneExplosionSound.cloneNode()
@@ -1706,7 +1642,6 @@
   }
 
   function spawnGroundExplosion(x, y){
-    // groundExplosions.push(new GroundExplosion(x, y));
     spawn(new GroundExplosion(x, y))
 
     const s = groundExplosionSound.cloneNode()
@@ -1721,36 +1656,18 @@
 
     if(countDrones() >= maxDrones) return
 
-    // drones.push(
-    //   new Drone(Math.random() * canvas.height * 0.4)
-    // )
     spawn(
       new Drone(Math.random() * canvas.height * 0.4)
     )
 
     if(Math.random() < 0.08){
       spawn(new KamikazeDrone())
-      // kamikazeDrones.push(new KamikazeDrone())
     }
   }
 
   function initGame(){
-
     // игрок
     player = new Player()
-
-    // массивы объектов
-    // bullets = []
-    // drones = []
-    // kamikazeDrones = []
-    // enemyBullets = []
-    // grenades = []
-    // explosions = []
-    // groundExplosions = []
-
-    // волны
-    // currentWave = 1
-    // waveTimer = 0
 
     // оружие
     currentWeapon = structuredClone(WEAPONS.pistol)
@@ -1860,10 +1777,6 @@
       spawnTimer = 0
     }
 
-    // if(bossActive && boss){
-    //   boss.update(delta)
-    // }
-
     shootCooldown-=delta
 
     const dir = getShootDirection()
@@ -1872,11 +1785,9 @@
       shoot(dir.dx,dir.dy)
     }
 
-    const boss = gameObjects.filter(o => o instanceof BossDrone)
+    const boss = gameObjects.find(o => o instanceof BossDrone)
     const bullets = gameObjects.filter(o => o instanceof Bullet)
     const drones = gameObjects.filter(o => o instanceof Drone)
-
-    console.log('boss active: ', bossActive)
 
     bullets.forEach(b => {
       drones.forEach(d => {
@@ -1899,21 +1810,21 @@
         }
       })
 
-      if(bossActive && boss){
+      if(boss && boss.alive){
         if(
           b.x < boss.x + boss.width &&
           b.x + b.size > boss.x &&
           b.y < boss.y + boss.height &&
           b.y + b.size > boss.y
         ){
-
+          b.alive = false
           boss.hp -= 1
           score += 10
-          // bullets.splice(bi,1)
 
           if(boss.hp <= 0){
             boss.alive = false
-            bossActive = false
+            boss.active = false
+            spawnExplosion(boss.x + boss.width/2, boss.y + boss.height/2)
 
             score += 5000
           }
@@ -1921,82 +1832,11 @@
       }
     })
 
-    // drones.forEach(d=>d.update(delta))
-
-    // bullets.forEach(b=>{
-    //   if(b.update){
-    //     b.update()
-    //   }
-    // })
-    // bullets = bullets.filter(b =>
-    //   b.x > -50 &&
-    //   b.x < canvas.width + 50 &&
-    //   b.y > -50 &&
-    //   b.y < canvas.height + 50
-    // )
-    // enemyBullets.forEach(b=>b.update())
-    // grenades.forEach(g => g.update())
-    // grenades = grenades.filter(g => !g.exploded)
-    // kamikazeDrones.forEach(d => d.update())
-    // kamikazeDrones = kamikazeDrones.filter(d => !d.dead)
-    // enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
-
     gameObjects.forEach(obj=>{
       obj.update(delta)
     })
 
     gameObjects = gameObjects.filter(obj => obj.alive)
-
-    // for(let bi = bullets.length-1; bi >= 0; bi--){
-    //   let b = bullets[bi]
-    //
-    //   for(let di = drones.length-1; di >= 0; di--){
-    //     let d = drones[di]
-    //
-    //     if(b.y > d.y + d.height || b.y + b.size < d.y) continue
-    //
-    //     if(
-    //       b.x < d.x + d.width &&
-    //       b.x + b.size > d.x &&
-    //       b.y < d.y + d.height &&
-    //       b.y + b.size > d.y
-    //     ){
-    //
-    //       spawnExplosion(d.x,d.y)
-    //
-    //       const gained = calculateDroneScore()
-    //       score += gained
-    //       showScoreGain(gained)
-    //
-    //       // bullets.splice(bi,1)
-    //       drones.splice(di,1)
-    //
-    //       waveKills++
-    //       break
-    //     }
-    //   }
-
-      // if(bossActive && boss){
-      //   if(
-      //     b.x < boss.x + boss.width &&
-      //     b.x + b.size > boss.x &&
-      //     b.y < boss.y + boss.height &&
-      //     b.y + b.size > boss.y
-      //   ){
-      //
-      //     boss.hp -= 1
-      //     // bullets.splice(bi,1)
-      //
-      //     if(boss.hp <= 0){
-      //       boss.alive = false
-      //       bossActive = false
-      //
-      //       score += 5000
-      //     }
-      //   }
-      // }
-
-    // }
 
     gameObjects.forEach(obj => {
       if(obj instanceof EnemyBullet){
@@ -2014,24 +1854,6 @@
       }
     })
 
-    // enemyBullets.forEach((b,i)=>{
-    //   if(b.y>canvas.height-groundHeight){
-    //     spawnGroundExplosion(b.x, b.y);
-    //     enemyBullets.splice(i,1)
-    //   }
-    //   if(isColliding(b, player)){
-    //     if(!DEBUG.godMode){
-    //       playSound(60,0.5)
-    //       endGame()
-    //     }
-    //   }
-    // })
-
-    // explosions.forEach(e => e.update(delta));
-    // explosions = explosions.filter(e => !e.finished); // убираем законченные
-    // groundExplosions.forEach(e => e.update());
-    // groundExplosions = groundExplosions.filter(e => !e.finished);
-
     survivalTime+=delta/1000
 
     checkWaveProgress();
@@ -2045,10 +1867,6 @@
 
       document.getElementById("score").innerText =
         "Score: " + score
-
-      // ОБНОВЛЕНИЕ НОВОГО СЧЕТЧИКА ЖИВЫХ ДРОНОВ
-      // document.getElementById("drones-alive").innerText =
-      //   "Alive: " + drones.length;
 
       uiTimer = 0
     }
@@ -2087,33 +1905,39 @@
     )
 
     player.draw()
-    // drones.forEach(d=>d.draw())
-    // bullets.forEach(b=>b.draw())
-    // enemyBullets.forEach(b=>b.draw())
-    // grenades.forEach(g => g.draw())
-    // kamikazeDrones.forEach(d => d.draw())
 
     gameObjects.forEach(obj=>{
       obj.draw(ctx)
     })
 
-    const boss = gameObjects.filter(o => o instanceof BossDrone)
+    const boss = gameObjects.find(o => o instanceof BossDrone && o.alive);
 
-    // if(bossActive && boss){
-    //   boss.draw()
-    // }
+    if (boss && boss.active) {
+      const barWidth = 400;
+      const barHeight = 20;
+      const x = (canvas.width - barWidth) / 2;
+      const y = 20;
 
-    if(bossActive && boss){
+      // Фон полоски (красный)
+      ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
+      ctx.fillRect(x, y, barWidth, barHeight);
 
-      let barWidth = 300
-      let hpPercent = boss.hp / boss.maxHp
+      // Текущее здоровье (зеленый)
+      const healthPercent = boss.hp / boss.maxHp;
+      ctx.fillStyle = "#00ff00";
+      ctx.fillRect(x, y, barWidth * healthPercent, barHeight);
 
-      ctx.fillStyle="red"
-      ctx.fillRect(canvas.width/2 - barWidth/2,20,barWidth*hpPercent,10)
+      // Рамка
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, barWidth, barHeight);
+
+      // Надпись
+      ctx.fillStyle = "white";
+      ctx.font = "14px 'Press Start 2P', cursive";
+      ctx.textAlign = "center";
+      ctx.fillText("BOSS: NEURAL REAPER", canvas.width / 2, y + 40);
     }
-
-    // explosions.forEach(e => e.draw(ctx));
-    // groundExplosions.forEach(e => e.draw(ctx));
 
     ctx.fillStyle = "white"
     ctx.font = "20px monospace"
