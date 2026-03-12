@@ -3,6 +3,7 @@
 ## 0.17.1
 
 Fix grenades
+Better music quality
 
 ## 0.17.0
 
