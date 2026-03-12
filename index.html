@@ -391,7 +391,7 @@
   )
 
   const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.17.1"
+  const GAME_VERSION = "0.17.2"
 
   const MAX_ENEMY_BULLETS = 60
   document.getElementById("game-version").innerText = GAME_VERSION
@@ -401,7 +401,6 @@
   const droneSound = document.getElementById("droneSound")
   const droneExplosionSound = document.getElementById("droneExplosionSound")
   const groundExplosionSound = document.getElementById("groundExplosionSound")
-  const shootSound = document.getElementById("shootSound")
   const gameOverMusic = document.getElementById("gameOverMusic")
   const gameInfo = document.getElementById("game-info")
   const effectsLayer = document.getElementById("effects-layer")
@@ -434,9 +433,6 @@
 
   effectsLayer.style.display = "none"
 
-  // canvas.width = window.innerWidth
-  // canvas.height = window.innerHeight
-
   const groundHeight = 40
 
   let spawnTimer = 0
@@ -451,19 +447,12 @@
   let wavePauseTimer = 0;      // таймер паузы в мс
   const wavePauseDuration = 6000; // 6 секунд пауза
 
-  let magazineSize = 30
-  // let ammoInMagazine = 30
-
-  // let magazines = 6
-
   let isReloading = false
-  let reloadTime = 2000
-  let reloadTimer = 0
 
   let uiTimer = 0
 
   let keys = {}
-  let gameRunning = false
+  // let gameRunning = false
 
   let boss = null
   let bossActive = false
@@ -531,6 +520,14 @@
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
+  const GameState = {
+    MENU: "menu",
+    GAME: "game",
+    GAME_OVER: "game_over"
+  }
+
+  let currentState = GameState.MENU
+
   // ... (Input listeners and utility functions remain the same)
   document.addEventListener("keydown",e=> {
     if(e.code === "Space"){
@@ -557,7 +554,6 @@
 
   // DEBUG горячие клавиши
   document.addEventListener("keydown", e => {
-
     if(e.key === "b"){
       spawnBoss()
     }
@@ -579,7 +575,6 @@
   })
 
   const WEAPONS = {
-
     pistol: {
       name: "Pistol",
       magazineSize: 15,
@@ -630,12 +625,10 @@
   }
 
   const WEAPON_SOUNDS = {
-
     'Pistol':{
       shoot: new Audio("pistol_shot.mp3"),
       reload: new Audio("pistol_reload.mp3")
     },
-
     'Assault Rifle':{
       shoot: new Audio("rifle_shot.mp3"),
       reload: new Audio("rifle_reload.mp3")
@@ -651,12 +644,11 @@
 
   }
 
-  let currentWeapon = structuredClone(WEAPONS.pistol)
-  let ammoInMagazine = currentWeapon.magazineSize
-  let magazines = currentWeapon.magazines
+  let currentWeapon
+  let ammoInMagazine
+  let magazines
 
   function setWeapon(type){
-
     currentWeapon = structuredClone(WEAPONS[type])
 
     ammoInMagazine = currentWeapon.magazineSize
@@ -723,15 +715,9 @@
 
   let shooting = false
 
-  let isMuted = false
-
-  const allMusic = [menuMusic, gameMusic, droneSound, gameOverMusic]
-
   const muteBtn = document.getElementById("muteBtn")
 
   muteBtn.onclick = () => {
-    // isMuted = !isMuted
-    // allMusic.forEach(m => m.volume = isMuted ? 0 : 0.1) // базовый уровень для всех треков
     toggleMusic(); // если музыка выключена, остановим все треки
 
     !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
@@ -773,7 +759,6 @@
   }
 
   function playWaveMusic(wave){
-
     if(currentMusic){
       currentMusic.pause()
       currentMusic.currentTime = 0
@@ -785,11 +770,9 @@
       music.play()
       currentMusic = music
     }
-
   }
 
   function getShootDirection(){
-
     let dx = 0
     let dy = 0
 
@@ -805,22 +788,7 @@
     return {dx,dy}
   }
 
-  // function startReload(){
-  //
-  //   if(isReloading) return
-  //   if(magazines <= 0) return
-  //   if(ammoInMagazine === magazineSize) return
-  //
-  //   isReloading = true
-  //   reloadTimer = 0
-  //
-  //   reloadSound.currentTime = 0
-  //   reloadSound.play()
-  //
-  // }
-
   function startReload(){
-
     if(isReloading) return
     if(magazines <= 0) return
     if(ammoInMagazine === currentWeapon.magazineSize) return
@@ -884,7 +852,6 @@
   }
 
   async function checkWaveProgress() {
-
     if (wavePause) return;
 
     if (waveKills >= waveTargetKills) {
@@ -1091,7 +1058,6 @@
         )
 
       }else{
-
         ctx.drawImage(
           playerWalkSprite,
           this.frame * WALK_FRAME_WIDTH,
@@ -1104,7 +1070,6 @@
           this.height
         )
       }
-
       ctx.restore()
     }
   }
@@ -1174,12 +1139,10 @@
 
           globalEnemyFireCooldown = 1800 + Math.random()*400
         }
-
         this.fireCooldown = 1800 + Math.random() * 1200
       }
 
       if(this.type === "grenadier"){
-
         this.dropTimer--
 
         if(this.dropTimer <= 0){
@@ -1188,7 +1151,6 @@
 
           this.dropTimer = 180 + Math.random()*120
         }
-
       }
     }
 
@@ -1366,7 +1328,6 @@
   }
 
   class Grenade {
-
     constructor(x,y){
       this.x = x
       this.y = y
@@ -1384,14 +1345,12 @@
     update(){
 
       if(!this.onGround){
-
         this.y += this.vy
 
         if(this.y >= canvas.height - groundHeight - this.height){
           this.y = canvas.height - groundHeight - this.height
           this.onGround = true
         }
-
         return
       }
 
@@ -1399,16 +1358,13 @@
       this.timer--
 
       if(this.timer <= 0 && !this.exploded){
-
         this.exploded = true
 
         explodeGrenade(this)
-
       }
     }
     draw(){
       if(this.onGround && this.timer < 60){
-
         if(Math.floor(this.timer/10)%2===0){
           ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
 
@@ -1417,17 +1373,13 @@
           ctx.strokeStyle="red"
           ctx.stroke()
         }
-
-      }else{
-
+      } else {
         ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
-
       }
     }
   }
 
   function explodeGrenade(g){
-
     spawnGroundExplosion(g.x,g.y)
 
     const explosionRadius = 80
@@ -1444,20 +1396,15 @@
     const dist = Math.sqrt(dx*dx + dy*dy)
 
     if(dist < explosionRadius){
-
       if(!DEBUG.godMode){
         playSound(60,0.5)
         endGame()
       }
-
     }
-
   }
 
   class KamikazeDrone{
-
     constructor(){
-
       const side = Math.random()
 
       if(side < 0.25){
@@ -1500,12 +1447,9 @@
 
       // удар о землю
       if(this.y > canvas.height - groundHeight){
-
         spawnGroundExplosion(this.x,this.y)
         this.dead = true
-
       }
-
     }
 
     draw(){
@@ -1583,6 +1527,8 @@
   }
 
   async function restartGame(){
+    initGame()
+    currentState = GameState.GAME
 
     const ui = document.getElementById("ui")
 
@@ -1600,10 +1546,6 @@
     droneSound.playbackRate = 0.8
     droneSound.volume = 0.001
     droneSound.play()
-
-    // await cinematicStart()
-
-    gameRunning = true
 
     document.body.classList.add("hide-cursor")
 
@@ -1725,8 +1667,45 @@
     }
   }
 
+  function initGame(){
+
+    // игрок
+    player = new Player()
+
+    // массивы объектов
+    bullets = []
+    drones = []
+    kamikazeDrones = []
+    enemyBullets = []
+    grenades = []
+    explosions = []
+    groundExplosions = []
+
+    // волны
+    // currentWave = 1
+    // waveTimer = 0
+
+    // оружие
+    currentWeapon = structuredClone(WEAPONS.pistol)
+    ammoInMagazine = currentWeapon.magazineSize
+    magazines = currentWeapon.magazines
+
+    isReloading = false
+    lastShotTime = 0
+
+    // игра
+    score = 0
+    survivalTime = 0
+    dropTimer = 0
+    shootCooldown = 0
+
+    // музыка
+  }
 
   async function startGame(){
+    initGame()
+    currentState = GameState.GAME
+
     playerName = document.getElementById("nameInput").value.toUpperCase()
     if(playerName.length<3) playerName="AAA"
 
@@ -1734,22 +1713,10 @@
     gameInfo.style.display = "none"
     effectsLayer.style.display = "block"
 
-    // --- инициализация игрока и массивов до balloon ---
-    player = new Player()
-    drones = []
-    bullets = []
-    enemyBullets = []
-    particles = []
-
     // DEBUG: сразу спавним босса
     if(DEBUG.bossStart){
       spawnBoss()
     }
-
-    score = 0
-    survivalTime = 0
-    dropTimer = 0
-    shootCooldown = 0
 
     await fadeScreen()
     await crossfadeMusic(menuMusic, gameMusic)
@@ -1760,12 +1727,13 @@
     // --- показываем сообщение командира ---
     await showCommanderMessage(8000)
 
-    gameRunning = true
     document.body.classList.add("hide-cursor")
   }
 
   async function endGame(){
-    gameRunning=false
+
+    currentState = GameState.GAME_OVER
+
     document.body.classList.remove("hide-cursor")
     document.getElementById("gameMusic").pause()
     droneSound.pause();
@@ -1810,21 +1778,6 @@
       }
     }
 
-    // if(isReloading){
-    //
-    //   reloadTimer += delta
-    //
-    //   if(reloadTimer > reloadTime){
-    //
-    //     ammoInMagazine = magazineSize
-    //     magazines--
-    //
-    //     isReloading = false
-    //
-    //   }
-    //
-    // }
-
     if(globalEnemyFireCooldown > 0){
       globalEnemyFireCooldown -= delta
     }
@@ -1847,41 +1800,6 @@
       boss.update(delta)
     }
 
-    // if(isFirePressed() && shootCooldown <= 0){
-    //
-    //   const dir = getShootDirection()
-    //
-    //   if(!isReloading && ammoInMagazine > 0){
-    //
-    //     if (dir) {
-    //       bullets.push(
-    //         new Bullet(
-    //           player.x + player.width/2,
-    //           player.y + 20,
-    //           dir.dx,
-    //           dir.dy
-    //         )
-    //       )
-    //     }
-    //
-    //     const randomPitch = 0.9 + Math.random() * 0.4
-    //
-    //     shootSound.currentTime = 0
-    //     shootSound.volume = 0.15
-    //     shootSound.playbackRate = randomPitch
-    //     shootSound.play()
-    //
-    //     ammoInMagazine--
-    //
-    //   } else if(ammoInMagazine <= 0 && !isReloading){
-    //
-    //     startReload()
-    //
-    //   }
-    //
-    //   shootCooldown = 100
-    // }
-
     shootCooldown-=delta
 
     const dir = getShootDirection()
@@ -1892,12 +1810,10 @@
 
     drones.forEach(d=>d.update(delta))
 
-    bullets.forEach(b=> {
-      bullets.forEach(b=>{
-        if(b.update){
-          b.update()
-        }
-      })
+    bullets.forEach(b=>{
+      if(b.update){
+        b.update()
+      }
     })
     bullets = bullets.filter(b =>
       b.x > -50 &&
@@ -1911,7 +1827,6 @@
     kamikazeDrones.forEach(d => d.update())
     kamikazeDrones = kamikazeDrones.filter(d => !d.dead)
     enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
-    particles.forEach(p=>p.update())
 
     for(let bi = bullets.length-1; bi >= 0; bi--){
       let b = bullets[bi]
@@ -1978,10 +1893,6 @@
       }
     })
 
-    if(particles.length < 200) {
-      particles = particles.filter(p => p.life > 0).slice(0, 200)
-    }
-
     explosions.forEach(e => e.update(delta));
     explosions = explosions.filter(e => !e.finished); // убираем законченные
     groundExplosions.forEach(e => e.update());
@@ -2046,7 +1957,6 @@
     enemyBullets.forEach(b=>b.draw())
     grenades.forEach(g => g.draw())
     kamikazeDrones.forEach(d => d.draw())
-    particles.forEach(p=>p.draw())
     if(bossActive && boss){
       boss.draw()
     }
@@ -2096,15 +2006,55 @@
   }
 
   let last=0
+
   function gameLoop(t){
-    let delta=t-last
-    document.title = Math.round(1000/delta) + " FPS"
-    last=t
-    if(gameRunning){
-      update(delta)
-      draw()
+
+    const delta = t - last
+    last = t
+
+    switch(currentState){
+
+      case GameState.MENU:
+        updateMenu(delta)
+        drawMenu()
+        break
+
+      case GameState.GAME:
+        updateGame(delta)
+        drawGame()
+        break
+
+      case GameState.GAME_OVER:
+        updateGameOver(delta)
+        drawGameOver()
+        break
     }
+
     requestAnimationFrame(gameLoop)
+  }
+
+  function updateMenu(delta){
+
+  }
+
+  function drawMenu(){
+
+  }
+
+  function updateGame(delta){
+    update(delta)
+  }
+
+  function drawGame(){
+    draw()
+  }
+
+  function updateGameOver(delta){
+
+  }
+
+  function drawGameOver(){
+
   }
 
   requestAnimationFrame(gameLoop)

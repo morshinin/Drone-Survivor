@@ -1,5 +1,11 @@
 # Version History
 
+## 0.17.2
+
+Fix bugs
+Game state
+Refactor
+
 ## 0.17.1
 
 Fix grenades
