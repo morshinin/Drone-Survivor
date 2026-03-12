@@ -1365,7 +1365,89 @@
     }
   }
 
-  class Grenade{
+  // class Grenade{
+  //   constructor(x,y){
+  //     this.x = x
+  //     this.y = y
+  //
+  //     this.vy = 3
+  //
+  //     this.width = 20
+  //     this.height = 20
+  //
+  //     this.timer = 180 // 3 секунды при 60fps
+  //     this.onGround = false
+  //     this.exploded = false
+  //   }
+  //
+  //   update(){
+  //
+  //     if(!this.onGround){
+  //
+  //       this.y += this.vy
+  //
+  //       if(this.y >= canvas.height - groundHeight - this.height){
+  //         this.y = canvas.height - groundHeight - this.height
+  //         this.onGround = true
+  //       }
+  //
+  //     }else{
+  //
+  //       this.timer--
+  //
+  //       if(this.timer <= 0 && !this.exploded){
+  //
+  //         this.exploded = true
+  //
+  //         spawnGroundExplosion(this.x,this.y)
+  //
+  //         const explosionRadius = 80
+  //
+  //         const gx = this.x + this.width/2
+  //         const gy = this.y + this.height/2
+  //
+  //         const px = player.x + player.width/2
+  //         const py = player.y + player.height/2
+  //
+  //         const dx = px - gx
+  //         const dy = py - gy
+  //
+  //         const distance = Math.sqrt(dx*dx + dy*dy)
+  //
+  //         if(distance < explosionRadius){
+  //
+  //           if(!DEBUG.godMode){
+  //             playSound(60,0.5)
+  //             endGame()
+  //           }
+  //         }
+  //       }
+  //     }
+  //
+  //   }
+  //
+  //   draw(){
+  //     if(this.onGround && this.timer < 60){
+  //
+  //       if(Math.floor(this.timer/10)%2===0){
+  //         ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
+  //
+  //         ctx.beginPath()
+  //         ctx.arc(this.x+10,this.y+10,30,0,Math.PI*2)
+  //         ctx.strokeStyle="red"
+  //         ctx.stroke()
+  //       }
+  //
+  //     }else{
+  //
+  //       ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
+  //
+  //     }
+  //   }
+  // }
+
+  class Grenade {
+
     constructor(x,y){
       this.x = x
       this.y = y
@@ -1375,7 +1457,7 @@
       this.width = 20
       this.height = 20
 
-      this.timer = 180 // 3 секунды при 60fps
+      this.timer = 180
       this.onGround = false
       this.exploded = false
     }
@@ -1391,41 +1473,20 @@
           this.onGround = true
         }
 
-      }else{
-
-        this.timer--
-
-        if(this.timer <= 0 && !this.exploded){
-
-          this.exploded = true
-
-          spawnGroundExplosion(this.x,this.y)
-
-          const explosionRadius = 60
-
-          const gx = this.x + this.width/2
-          const gy = this.y + this.height/2
-
-          const px = player.x + player.width/2
-          const py = player.y + player.height/2
-
-          const dx = px - gx
-          const dy = py - gy
-
-          const distance = Math.sqrt(dx*dx + dy*dy)
-
-          if(distance < explosionRadius){
-
-            if(!DEBUG.godMode){
-              playSound(60,0.5)
-              endGame()
-            }
-          }
-        }
+        return
       }
 
-    }
+      // лежит на земле
+      this.timer--
 
+      if(this.timer <= 0 && !this.exploded){
+
+        this.exploded = true
+
+        explodeGrenade(this)
+
+      }
+    }
     draw(){
       if(this.onGround && this.timer < 60){
 
@@ -1444,6 +1505,34 @@
 
       }
     }
+  }
+
+  function explodeGrenade(g){
+
+    spawnGroundExplosion(g.x,g.y)
+
+    const explosionRadius = 80
+
+    const gx = g.x + g.width/2
+    const gy = g.y + g.height/2
+
+    const px = player.x + player.width/2
+    const py = player.y + player.height/2
+
+    const dx = px - gx
+    const dy = py - gy
+
+    const dist = Math.sqrt(dx*dx + dy*dy)
+
+    if(dist < explosionRadius){
+
+      if(!DEBUG.godMode){
+        playSound(60,0.5)
+        endGame()
+      }
+
+    }
+
   }
 
   class KamikazeDrone{
@@ -1899,7 +1988,7 @@
     )
     enemyBullets.forEach(b=>b.update())
     grenades.forEach(g => g.update())
-    grenades = grenades.filter(g => !g.dead)
+    grenades = grenades.filter(g => !g.exploded)
     kamikazeDrones.forEach(d => d.update())
     kamikazeDrones = kamikazeDrones.filter(d => !d.dead)
     enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
