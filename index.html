@@ -457,6 +457,7 @@
   let uiTimer = 0
   let keys = {}
   let timeScale = 1
+  let hitFreeze = 0
 
   const tank = {
     x: canvas.width * 0.85,
@@ -553,6 +554,10 @@
     }
     keys[e.key]=false
   })
+
+  function freeze(ms){
+    hitFreeze = ms
+  }
 
   function spawn(obj){
     gameObjects.push(obj)
@@ -1028,6 +1033,9 @@
         player.y + player.height/2
       )
 
+      droneSound.pause();
+      gameMusic.pause()
+      Object.values(waveMusic).forEach(track => pauseTrack(track));
       const s = PLAYER_SOUNDS['death'].cloneNode()
       s.volume = 0.4
       s.play()
@@ -1742,12 +1750,13 @@
 
     document.body.classList.remove("hide-cursor")
     document.getElementById("gameMusic").pause()
-    droneSound.pause();
 
     Object.values(waveMusic).forEach(track => {
       track.pause();
       track.currentTime = 0;
     });
+
+    gameOverMusic.play()
 
     // await fadeScreen()
     // await crossfadeMusic(gameMusic, gameOverMusic)
@@ -1767,6 +1776,11 @@
   }
 
   function update(delta){
+    if(hitFreeze > 0){
+      hitFreeze -= delta
+      return
+    }
+
     if(!player.alive){
       player.deathTimer -= delta
 
@@ -1830,6 +1844,9 @@
         ){
           b.alive = false
           d.alive = false
+
+          freeze(40)
+          screenShake.shake(4,4)
 
           spawnExplosion(d.x,d.y)
 
