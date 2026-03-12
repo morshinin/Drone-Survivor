@@ -1,11 +1,18 @@
 # Version History
 
+## 0.17.1
+
+Fix grenades
+
 ## 0.17.0
 
 Small UI adjustments
 Mute button
 Kamikaze drones
 Grenadier drones
+Pistol
+Shotgun
+Machine gun
 
 ## 0.16.0
 

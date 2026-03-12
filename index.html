@@ -452,9 +452,9 @@
   const wavePauseDuration = 6000; // 6 секунд пауза
 
   let magazineSize = 30
-  let ammoInMagazine = 30
+  // let ammoInMagazine = 30
 
-  let magazines = 6
+  // let magazines = 6
 
   let isReloading = false
   let reloadTime = 2000
@@ -532,8 +532,24 @@
   }
 
   // ... (Input listeners and utility functions remain the same)
-  document.addEventListener("keydown",e=>keys[e.key]=true)
-  document.addEventListener("keyup",e=>keys[e.key]=false)
+  document.addEventListener("keydown",e=> {
+    if(e.code === "Space"){
+      shooting = true
+
+      const dir = getShootDirection()
+
+      if(dir && !currentWeapon.auto){
+        shoot(dir.dx,dir.dy)
+      }
+    }
+    keys[e.key]=true
+  })
+  document.addEventListener("keyup",e=> {
+    if(e.code === "Space"){
+      shooting = false
+    }
+    keys[e.key]=false
+  })
 
   function isFirePressed(){
     return keys[" "] || keys["Space"]
@@ -561,6 +577,151 @@
 
     keys[e.key] = true
   })
+
+  const WEAPONS = {
+
+    pistol: {
+      name: "Pistol",
+      magazineSize: 15,
+      magazines: 8,
+      fireRate: 400, // ms
+      reloadTime: 1000,
+      auto: false,
+      bulletsPerShot: 1,
+      bulletSpeed: 11,
+      spread: 0,
+    },
+
+    rifle: {
+      name: "Assault Rifle",
+      magazineSize: 30,
+      magazines: 6,
+      fireRate: 200,
+      reloadTime: 2000,
+      auto: true,
+      bulletsPerShot: 1,
+      bulletSpeed: 13,
+      spread: 0,
+    },
+
+    shotgun: {
+      name: "Shotgun",
+      magazineSize: 12,
+      magazines: 5,
+      fireRate: 600,
+      reloadTime: 2600,
+      auto: false,
+      bulletsPerShot: 6,
+      bulletSpeed: 10,
+      spread: 30,
+    },
+
+    machinegun: {
+      name: "Machine Gun",
+      magazineSize: 120,
+      magazines: 2,
+      fireRate: 100,
+      reloadTime: 5000,
+      auto: true,
+      bulletsPerShot: 1,
+      bulletSpeed: 15,
+      spread: 5,
+    }
+  }
+
+  const WEAPON_SOUNDS = {
+
+    'Pistol':{
+      shoot: new Audio("pistol_shot.mp3"),
+      reload: new Audio("pistol_reload.mp3")
+    },
+
+    'Assault Rifle':{
+      shoot: new Audio("rifle_shot.mp3"),
+      reload: new Audio("rifle_reload.mp3")
+    },
+    'Shotgun':{
+      shoot: new Audio("shotgun_shot.mp3"),
+      reload: new Audio("shotgun_reload.mp3")
+    },
+    'Machine Gun':{
+      shoot: new Audio("machinegun_shot.mp3"),
+      reload: new Audio("machinegun_reload.mp3")
+    }
+
+  }
+
+  let currentWeapon = structuredClone(WEAPONS.pistol)
+  let ammoInMagazine = currentWeapon.magazineSize
+  let magazines = currentWeapon.magazines
+
+  function setWeapon(type){
+
+    currentWeapon = structuredClone(WEAPONS[type])
+
+    ammoInMagazine = currentWeapon.magazineSize
+    magazines = currentWeapon.magazines
+
+    // можно сбросить перезарядку
+    isReloading = false
+  }
+
+  let lastShotTime = 0
+
+  function shoot(dirX,dirY){
+    if(dirX === 0 && dirY === 0) return
+    if(isReloading) return
+    if(ammoInMagazine <= 0) return
+
+    if(Date.now() - lastShotTime < currentWeapon.fireRate) return
+
+    lastShotTime = Date.now()
+
+    ammoInMagazine--
+    const currentWeaponName = currentWeapon.name
+    console.log('Current weapon name ', currentWeaponName)
+    console.log('Weapon sounds ', WEAPON_SOUNDS[currentWeaponName])
+    if (WEAPON_SOUNDS[currentWeaponName]) {
+      const s = WEAPON_SOUNDS[currentWeaponName].shoot.cloneNode()
+      s.volume = 0.4
+      s.play()
+    }
+
+    for(let i=0;i<currentWeapon.bulletsPerShot;i++){
+
+      let angle = Math.atan2(dirY,dirX)
+
+      if(currentWeapon.spread > 0){
+
+        const spreadRad =
+          (Math.random()*currentWeapon.spread -
+            currentWeapon.spread/2) * Math.PI/180
+
+        angle += spreadRad
+      }
+
+      const dx = Math.cos(angle)
+      const dy = Math.sin(angle)
+
+      const speed = currentWeapon.bulletSpeed
+
+      const bullet = new Bullet(
+        player.x + player.width/2,
+        player.y + player.height/2,
+        dx * speed,
+        dy * speed,
+      )
+
+      bullets.push(bullet)
+
+    }
+
+    if(ammoInMagazine <= 0 && magazines > 0){
+      startReload()
+    }
+  }
+
+  let shooting = false
 
   let isMuted = false
 
@@ -644,17 +805,46 @@
     return {dx,dy}
   }
 
+  // function startReload(){
+  //
+  //   if(isReloading) return
+  //   if(magazines <= 0) return
+  //   if(ammoInMagazine === magazineSize) return
+  //
+  //   isReloading = true
+  //   reloadTimer = 0
+  //
+  //   reloadSound.currentTime = 0
+  //   reloadSound.play()
+  //
+  // }
+
   function startReload(){
 
     if(isReloading) return
     if(magazines <= 0) return
-    if(ammoInMagazine === magazineSize) return
+    if(ammoInMagazine === currentWeapon.magazineSize) return
 
     isReloading = true
-    reloadTimer = 0
+    const currentWeaponName = currentWeapon.name
 
-    reloadSound.currentTime = 0
-    reloadSound.play()
+    console.log('Current weapon name ', currentWeaponName)
+    console.log('Weapon sounds ', WEAPON_SOUNDS[currentWeaponName])
+
+    if (WEAPON_SOUNDS[currentWeaponName]) {
+      const r = WEAPON_SOUNDS[currentWeaponName].reload.cloneNode()
+      r.volume = 0.5
+      r.play()
+    }
+
+    setTimeout(()=>{
+
+      ammoInMagazine = currentWeapon.magazineSize
+      magazines--
+
+      isReloading = false
+
+    },currentWeapon.reloadTime)
 
   }
 
@@ -713,6 +903,7 @@
 
         gameMusic.pause()
 
+        setWeapon('pistol')
         playWaveMusic(1)
 
         msg = "Ты еще живой? С передка передают, что к тебе летит новая группа дронов. Некогда с тобой тут говорить. Мне шавуху привезли.";
@@ -723,6 +914,7 @@
 
       } else if (waveNumber === 1) {
 
+        setWeapon('rifle')
         playWaveMusic(2)
         msg = "Эй, людоед! Глянь, этот чубрик еще не 200. Если ты думаешь, что тебе удастся выжить, то выбрось это из головы. Мы уже подали раппорт о том, что ты пропал без вести.";
 
@@ -732,11 +924,13 @@
 
       } else if (waveNumber === 2) {
 
+        setWeapon('shotgun')
         playWaveMusic(3)
         msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
         magazines = 12;
 
       } else if (waveNumber === 3 && !bossActive) {
+        setWeapon('machinegun')
         playWaveMusic("boss")
         msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
         spawnBoss()
@@ -1183,6 +1377,7 @@
 
       this.timer = 180 // 3 секунды при 60fps
       this.onGround = false
+      this.exploded = false
     }
 
     update(){
@@ -1200,11 +1395,33 @@
 
         this.timer--
 
-        if(this.timer <= 0){
-          spawnGroundExplosion(this.x,this.y)
-          this.dead = true
-        }
+        if(this.timer <= 0 && !this.exploded){
 
+          this.exploded = true
+
+          spawnGroundExplosion(this.x,this.y)
+
+          const explosionRadius = 60
+
+          const gx = this.x + this.width/2
+          const gy = this.y + this.height/2
+
+          const px = player.x + player.width/2
+          const py = player.y + player.height/2
+
+          const dx = px - gx
+          const dy = py - gy
+
+          const distance = Math.sqrt(dx*dx + dy*dy)
+
+          if(distance < explosionRadius){
+
+            if(!DEBUG.godMode){
+              playSound(60,0.5)
+              endGame()
+            }
+          }
+        }
       }
 
     }
@@ -1267,8 +1484,10 @@
 
       // столкновение с игроком
       if(isColliding(this,player)) {
-        playSound(60,0.5)
-        endGame()
+        if (!DEBUG.godMode) {
+          playSound(60,0.5)
+          endGame()
+        }
       }
 
       // удар о землю
@@ -1583,20 +1802,20 @@
       }
     }
 
-    if(isReloading){
-
-      reloadTimer += delta
-
-      if(reloadTimer > reloadTime){
-
-        ammoInMagazine = magazineSize
-        magazines--
-
-        isReloading = false
-
-      }
-
-    }
+    // if(isReloading){
+    //
+    //   reloadTimer += delta
+    //
+    //   if(reloadTimer > reloadTime){
+    //
+    //     ammoInMagazine = magazineSize
+    //     magazines--
+    //
+    //     isReloading = false
+    //
+    //   }
+    //
+    // }
 
     if(globalEnemyFireCooldown > 0){
       globalEnemyFireCooldown -= delta
@@ -1620,49 +1839,64 @@
       boss.update(delta)
     }
 
-    if(isFirePressed() && shootCooldown <= 0){
-
-      const dir = getShootDirection()
-
-      if(!isReloading && ammoInMagazine > 0){
-
-        if (dir) {
-          bullets.push(
-            new Bullet(
-              player.x + player.width/2,
-              player.y + 20,
-              dir.dx,
-              dir.dy
-            )
-          )
-        }
-
-        const randomPitch = 0.9 + Math.random() * 0.4
-
-        shootSound.currentTime = 0
-        shootSound.volume = 0.15
-        shootSound.playbackRate = randomPitch
-        shootSound.play()
-
-        ammoInMagazine--
-
-      } else if(ammoInMagazine <= 0 && !isReloading){
-
-        startReload()
-
-      }
-
-      shootCooldown = 100
-
-
-    }
+    // if(isFirePressed() && shootCooldown <= 0){
+    //
+    //   const dir = getShootDirection()
+    //
+    //   if(!isReloading && ammoInMagazine > 0){
+    //
+    //     if (dir) {
+    //       bullets.push(
+    //         new Bullet(
+    //           player.x + player.width/2,
+    //           player.y + 20,
+    //           dir.dx,
+    //           dir.dy
+    //         )
+    //       )
+    //     }
+    //
+    //     const randomPitch = 0.9 + Math.random() * 0.4
+    //
+    //     shootSound.currentTime = 0
+    //     shootSound.volume = 0.15
+    //     shootSound.playbackRate = randomPitch
+    //     shootSound.play()
+    //
+    //     ammoInMagazine--
+    //
+    //   } else if(ammoInMagazine <= 0 && !isReloading){
+    //
+    //     startReload()
+    //
+    //   }
+    //
+    //   shootCooldown = 100
+    // }
 
     shootCooldown-=delta
 
+    const dir = getShootDirection()
+
+    if(shooting && currentWeapon.auto && dir){
+      shoot(dir.dx,dir.dy)
+    }
+
     drones.forEach(d=>d.update(delta))
 
-    bullets.forEach(b=>b.update())
-    bullets = bullets.filter(b => b.y > -20)
+    bullets.forEach(b=> {
+      bullets.forEach(b=>{
+        if(b.update){
+          b.update()
+        }
+      })
+    })
+    bullets = bullets.filter(b =>
+      b.x > -50 &&
+      b.x < canvas.width + 50 &&
+      b.y > -50 &&
+      b.y < canvas.height + 50
+    )
     enemyBullets.forEach(b=>b.update())
     grenades.forEach(g => g.update())
     grenades = grenades.filter(g => !g.dead)
@@ -1826,7 +2060,7 @@
     ctx.font = "20px monospace"
 
     ctx.fillText(
-      "Ammo: " + ammoInMagazine + " / " + magazineSize,
+      "Ammo: " + ammoInMagazine + " / " + currentWeapon.magazineSize,
       20,
       240
     )
@@ -1835,6 +2069,12 @@
       "Magazines: " + magazines,
       20,
       270
+    )
+
+    ctx.fillText(
+      currentWeapon.name,
+      20,
+      200
     )
 
     if(isReloading){
