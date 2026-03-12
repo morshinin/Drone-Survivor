@@ -456,6 +456,7 @@
   let isReloading = false
   let uiTimer = 0
   let keys = {}
+  let timeScale = 1
 
   const tank = {
     x: canvas.width * 0.85,
@@ -1014,6 +1015,10 @@
 
       this.alive = true
       this.deathTimer = 2000
+    }
+
+    death() {
+
     }
 
     update(){
@@ -1731,8 +1736,8 @@
       track.currentTime = 0;
     });
 
-    await fadeScreen()
-    await crossfadeMusic(gameMusic, gameOverMusic)
+    // await fadeScreen()
+    // await crossfadeMusic(gameMusic, gameOverMusic)
     await saveScoreOnline()
     await loadLeaderboard()
     saveScore()
@@ -1748,8 +1753,16 @@
     renderLeaderboard()
   }
 
-  // --- ОБНОВЛЕННАЯ ФУНКЦИЯ UPDATE ---
   function update(delta){
+    if(!player.alive){
+      player.deathTimer -= delta
+
+      if(player.deathTimer <= 0){
+        timeScale = 1
+        endGame()
+      }
+    }
+
     player.update()
 
     if (wavePause) {
@@ -1784,9 +1797,9 @@
 
     shootCooldown-=delta
 
-    const dir = getShootDirection()
 
-    if(shooting && currentWeapon.auto && dir){
+    if(player.alive && shooting && currentWeapon.auto) {
+      const dir = getShootDirection()
       shoot(dir.dx,dir.dy)
     }
 
@@ -1851,15 +1864,21 @@
         }
 
         if(isColliding(obj, player)){
-          if(!DEBUG.godMode && !player.alive){
+          if(!DEBUG.godMode && player.alive){
             player.alive = false
+
+            timeScale = 0.25
+            screenShake.shake(20, 500)
 
             spawnExplosion(
               player.x + player.width/2,
               player.y + player.height/2
             )
 
-            playSound(60,0.5)
+            const s = PLAYER_SOUNDS['death'].cloneNode()
+            s.volume = 0.4
+            s.play()
+            // playSound(60,0.5)
             // endGame()
           }
         }
@@ -1916,7 +1935,9 @@
       destroyedCity.h
     )
 
-    player.draw()
+    if (player.alive){
+      player.draw()
+    }
 
     gameObjects.forEach(obj=>{
       obj.draw(ctx)
@@ -1973,10 +1994,23 @@
     )
 
     if(isReloading){
-
       ctx.fillStyle = "yellow"
       ctx.fillText("RELOADING...",20,100)
+    }
 
+    if(!player.alive){
+      ctx.fillStyle = "rgba(0,0,0,0.4)"
+      ctx.fillRect(0,0,canvas.width,canvas.height)
+
+      ctx.fillStyle = "red"
+      ctx.font = "60px 'Press Start 2P'"
+      ctx.textAlign = "center"
+
+      ctx.fillText(
+        "Ты 200!",
+        canvas.width/2,
+        canvas.height/2
+      )
     }
 
     ctx.restore()
@@ -1985,7 +2019,9 @@
   let last=0
 
   function gameLoop(t){
-    const delta = t - last
+    // const delta = t - last
+    const rawDelta = t - last
+    const delta = rawDelta * timeScale
     last = t
 
     switch(currentState){
