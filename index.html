@@ -447,6 +447,8 @@
   let wavePauseTimer = 0;      // таймер паузы в мс
   const wavePauseDuration = 6000; // 6 секунд пауза
 
+  let gameObjects = []
+
   let isReloading = false
 
   let uiTimer = 0
@@ -454,7 +456,7 @@
   let keys = {}
   // let gameRunning = false
 
-  let boss = null
+  // let boss = null
   let bossActive = false
 
   const tank = {
@@ -486,10 +488,10 @@
   const GROUND_EXPLOSION_FRAME_WIDTH = 100;
   const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
 
-  let explosions = [];
-  let groundExplosions = [];
-  let grenades = []
-  let kamikazeDrones = []
+  // let explosions = [];
+  // let groundExplosions = [];
+  // let grenades = []
+  // let kamikazeDrones = []
 
   const playerWalkSprite = new Image();
   playerWalkSprite.src = "soldier_walk_sprite.png";
@@ -510,13 +512,13 @@
     waveMusic[key].volume = 0.1
   }
 
-  const reloadSound = new Audio("reload.mp3")
-  reloadSound.volume = 0.5
+  // const reloadSound = new Audio("reload.mp3")
+  // reloadSound.volume = 0.5
 
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
-    godMode: false,     // бессмертие
+    godMode: true,     // бессмертие
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
@@ -548,19 +550,39 @@
     keys[e.key]=false
   })
 
+  function spawn(obj){
+    gameObjects.push(obj)
+  }
+
   function isFirePressed(){
     return keys[" "] || keys["Space"]
   }
 
   // DEBUG горячие клавиши
   document.addEventListener("keydown", e => {
+    // spawn boss
     if(e.key === "b"){
       spawnBoss()
     }
 
+    // Kill all
     if(e.key === "k"){
-      drones = []   // очистить небо
     }
+
+    if(e.key === "i"){
+      setWeapon('rifle')
+    }
+
+    if(e.key === "s"){
+      setWeapon('shotgun')
+    }
+
+    if(e.key === "m"){
+      setWeapon('machinegun')
+    }
+    // get rifle
+    // get shotgun
+    // get machinegun
 
     if(e.code === "Space"){
       e.preventDefault()
@@ -671,8 +693,6 @@
 
     ammoInMagazine--
     const currentWeaponName = currentWeapon.name
-    console.log('Current weapon name ', currentWeaponName)
-    console.log('Weapon sounds ', WEAPON_SOUNDS[currentWeaponName])
     if (WEAPON_SOUNDS[currentWeaponName]) {
       const s = WEAPON_SOUNDS[currentWeaponName].shoot.cloneNode()
       s.volume = 0.4
@@ -704,8 +724,12 @@
         dy * speed,
       )
 
-      bullets.push(bullet)
+      const x = player.x + player.width/2
+      const y = player.y + player.height/2
 
+      // bullets.push(bullet)
+
+      spawn(new Bullet(x,y,dx * speed,dy * speed))
     }
 
     if(ammoInMagazine <= 0 && magazines > 0){
@@ -829,7 +853,8 @@
     const base = 10
 
     const timeMultiplier = 1 + Math.min(survivalTime / 60, 5)
-    const droneMultiplier = 1 + Math.min(drones.length / 20, 4)
+    const droneMultiplier = 1 + Math.min(countDrones() / 20, 4)
+    // const droneMultiplier = gameObjects.filter(o => o instanceof Drone).length
 
     return Math.floor(base * timeMultiplier * droneMultiplier)
   }
@@ -859,7 +884,7 @@
     }
 
     // цель достигнута и небо чистое
-    if (!waveActive && drones.length === 0) {
+    if (!waveActive && countDrones() === 0) {
 
       wavePause = true;
       wavePauseTimer = 0;
@@ -918,6 +943,10 @@
 
       await showCommanderMessage(10000, msg);
     }
+  }
+
+  function countEnemyBullets(){
+    return gameObjects.filter(o => o instanceof EnemyBullet).length
   }
 
 
@@ -992,6 +1021,8 @@
       this.vx = 0
       this.acceleration = 0.45
       this.friction = 0.88
+
+      this.alive = true
     }
 
     update(){
@@ -1042,7 +1073,6 @@
       ctx.save()
 
       if(this.direction === -1){
-
         ctx.scale(-1,1)
 
         ctx.drawImage(
@@ -1056,8 +1086,7 @@
           this.width,
           this.height
         )
-
-      }else{
+      } else {
         ctx.drawImage(
           playerWalkSprite,
           this.frame * WALK_FRAME_WIDTH,
@@ -1076,7 +1105,6 @@
 
   class Drone{
     constructor(y){
-
       this.width = 80
       this.height = 60
 
@@ -1100,6 +1128,8 @@
       if(this.type === "grenadier"){
         this.dropTimer = 120 + Math.random()*120
       }
+
+      this.alive = true
     }
 
     update(delta){
@@ -1112,6 +1142,8 @@
       this.y += Math.sin(performance.now()*0.003) * 0.3
 
       this.fireTimer += delta
+
+      const drones = gameObjects.filter(o => o instanceof Drone)
 
       const attackingDrones = drones
         .slice()
@@ -1129,8 +1161,14 @@
       ){
         this.fireTimer = 0
 
-        if (enemyBullets.length < MAX_ENEMY_BULLETS) {
-          enemyBullets.push(
+        if (countEnemyBullets() < MAX_ENEMY_BULLETS) {
+          // enemyBullets.push(
+          //   new EnemyBullet(
+          //     this.x + this.width / 2,
+          //     this.y + this.height
+          //   )
+          // )
+          spawn(
             new EnemyBullet(
               this.x + this.width / 2,
               this.y + this.height
@@ -1147,7 +1185,8 @@
 
         if(this.dropTimer <= 0){
 
-          grenades.push(new Grenade(this.x,this.y))
+          // grenades.push(new Grenade(this.x,this.y))
+          spawn(new Grenade(this.x,this.y))
 
           this.dropTimer = 180 + Math.random()*120
         }
@@ -1166,9 +1205,7 @@
   }
 
   class Bullet{
-
     constructor(x,y,dx,dy){
-
       this.x = x
       this.y = y
 
@@ -1183,11 +1220,17 @@
       this.vy = dy/len * speed
 
       this.size = 6
+
+      this.alive = true
     }
 
     update(){
       this.x += this.vx
       this.y += this.vy
+
+      if(this.x > canvas.width){
+        this.alive = false
+      }
     }
 
     draw(){
@@ -1203,6 +1246,8 @@
       this.speed=4
       this.width = 12
       this.height = 20
+
+      this.alive = true
     }
     update(){this.y+=this.speed}
     draw(){
@@ -1231,6 +1276,8 @@
 
       this.spawnTimer = 0
       this.missileTimer = 0
+
+      this.alive = true
     }
 
     update(delta){
@@ -1255,7 +1302,15 @@
       if(this.missileTimer > 3000){
         this.missileTimer = 0
 
-        enemyBullets.push(
+        // enemyBullets.push(
+        //   new Missile(
+        //     this.x + this.width/2,
+        //     this.y + this.height,
+        //     player.x + player.width/2
+        //   )
+        // )
+
+        spawn(
           new Missile(
             this.x + this.width/2,
             this.y + this.height,
@@ -1279,6 +1334,8 @@
 
       this.speed = 4
       this.size = 12
+
+      this.alive = true
     }
 
     update(){
@@ -1299,7 +1356,9 @@
       this.y = y + height/2;
       this.frame = 0;
       this.timer = 0;
-      this.finished = false;
+      // this.finished = false;
+
+      this.alive = true
     }
 
     update(delta) {
@@ -1308,13 +1367,13 @@
         this.timer = 0;
         this.frame++;
         if (this.frame >= EXPLOSION_FRAME_COUNT) {
-          this.finished = true; // взрыв закончился
+          this.alive = false; // взрыв закончился
         }
       }
     }
 
     draw(ctx) {
-      if (!this.finished) {
+      if (this.alive) {
         ctx.drawImage(
           explosionSprite,
           this.frame * EXPLOSION_FRAME_WIDTH, 0,
@@ -1340,10 +1399,11 @@
       this.timer = 180
       this.onGround = false
       this.exploded = false
+
+      this.alive = true
     }
 
     update(){
-
       if(!this.onGround){
         this.y += this.vy
 
@@ -1361,6 +1421,8 @@
         this.exploded = true
 
         explodeGrenade(this)
+
+        this.alive = false
       }
     }
     draw(){
@@ -1430,6 +1492,8 @@
 
       this.width = 60
       this.height = 60
+
+      this.alive = true
     }
 
     update(){
@@ -1448,7 +1512,7 @@
       // удар о землю
       if(this.y > canvas.height - groundHeight){
         spawnGroundExplosion(this.x,this.y)
-        this.dead = true
+        this.alive = false
       }
     }
 
@@ -1463,7 +1527,9 @@
       this.y = y - 30;
       this.frame = 0;
       this.timer = 0;
-      this.finished = false;
+      // this.finished = false;
+
+      this.alive = true
     }
 
     update(){
@@ -1474,7 +1540,7 @@
       }
 
       if(this.frame >= GROUND_EXPLOSION_FRAMES){
-        this.finished = true;
+        this.alive = false;
       }
     }
 
@@ -1493,22 +1559,11 @@
     }
   }
 
-  class Particle{
-    constructor(x,y){
-      this.x=x;this.y=y;this.size=4
-      this.vx=(Math.random()-0.5)*6
-      this.vy=(Math.random()-0.5)*6
-      this.life=30
-    }
-    update(){this.x+=this.vx;this.y+=this.vy;this.life--}
-    draw(){ctx.fillRect(this.x,this.y,this.size,this.size)}
-  }
-
   let player
-  let drones
-  let bullets
-  let enemyBullets
-  let particles
+  // let drones
+  // let bullets
+  // let enemyBullets
+  // let particles
 
   let dropTimer=0
   let shootCooldown=0
@@ -1522,8 +1577,13 @@
   let leaderboard=[]
 
   function spawnBoss(){
-    boss = new BossDrone()
+    const boss = new BossDrone()
     bossActive = true
+    spawn(boss)
+  }
+
+  function countDrones(){
+    return gameObjects.filter(o => o instanceof Drone).length
   }
 
   async function restartGame(){
@@ -1551,20 +1611,22 @@
 
     player = new Player()
 
-    drones = [
-      new Drone(canvas.height*0.2),
-      new Drone(canvas.height*0.35)
-    ]
+    // drones = [
+    //   new Drone(canvas.height*0.2),
+    //   new Drone(canvas.height*0.35)
+    // ]
 
-    bullets = []
-    enemyBullets = []
-    particles = []
+    // bullets = []
+    // enemyBullets = []
+    // particles = []
 
-    score = 0
-    survivalTime = 0
-    spawnTimer = 0
-    dropTimer = 0
-    shootCooldown = 0
+    // score = 0
+    // survivalTime = 0
+    // spawnTimer = 0
+    // dropTimer = 0
+    // shootCooldown = 0
+    gameObjects = []
+    spawnDrone()
   }
 
   // ... (Sound, Scoring, Leaderboard functions remain the same)
@@ -1634,7 +1696,8 @@
   }
 
   function spawnExplosion(x, y) {
-    explosions.push(new Explosion(x, y));
+    // explosions.push(new Explosion(x, y));
+    spawn(new Explosion(x,y))
 
     const s = droneExplosionSound.cloneNode()
     s.volume = 0.2
@@ -1643,7 +1706,8 @@
   }
 
   function spawnGroundExplosion(x, y){
-    groundExplosions.push(new GroundExplosion(x, y));
+    // groundExplosions.push(new GroundExplosion(x, y));
+    spawn(new GroundExplosion(x, y))
 
     const s = groundExplosionSound.cloneNode()
     s.volume = 0.3
@@ -1653,17 +1717,20 @@
   }
 
   function spawnDrone(){
-
     const maxDrones = 50
 
-    if(drones.length >= maxDrones) return
+    if(countDrones() >= maxDrones) return
 
-    drones.push(
+    // drones.push(
+    //   new Drone(Math.random() * canvas.height * 0.4)
+    // )
+    spawn(
       new Drone(Math.random() * canvas.height * 0.4)
     )
 
     if(Math.random() < 0.08){
-      kamikazeDrones.push(new KamikazeDrone())
+      spawn(new KamikazeDrone())
+      // kamikazeDrones.push(new KamikazeDrone())
     }
   }
 
@@ -1673,13 +1740,13 @@
     player = new Player()
 
     // массивы объектов
-    bullets = []
-    drones = []
-    kamikazeDrones = []
-    enemyBullets = []
-    grenades = []
-    explosions = []
-    groundExplosions = []
+    // bullets = []
+    // drones = []
+    // kamikazeDrones = []
+    // enemyBullets = []
+    // grenades = []
+    // explosions = []
+    // groundExplosions = []
 
     // волны
     // currentWave = 1
@@ -1731,7 +1798,6 @@
   }
 
   async function endGame(){
-
     currentState = GameState.GAME_OVER
 
     document.body.classList.remove("hide-cursor")
@@ -1762,7 +1828,6 @@
 
   // --- ОБНОВЛЕННАЯ ФУНКЦИЯ UPDATE ---
   function update(delta){
-
     player.update()
 
     if (wavePause) {
@@ -1785,20 +1850,19 @@
     spawnInterval = Math.max(400, 2000 - survivalTime * 30);
     spawnTimer += delta;
 
-
     if (
       spawnTimer >= spawnInterval &&
       waveActive &&
-      drones.length < waveMaxInAir &&
+      countDrones() < waveMaxInAir &&
       DEBUG.spawnDrones
     ){
       spawnDrone()
       spawnTimer = 0
     }
 
-    if(bossActive && boss){
-      boss.update(delta)
-    }
+    // if(bossActive && boss){
+    //   boss.update(delta)
+    // }
 
     shootCooldown-=delta
 
@@ -1808,40 +1872,22 @@
       shoot(dir.dx,dir.dy)
     }
 
-    drones.forEach(d=>d.update(delta))
+    const boss = gameObjects.filter(o => o instanceof BossDrone)
+    const bullets = gameObjects.filter(o => o instanceof Bullet)
+    const drones = gameObjects.filter(o => o instanceof Drone)
 
-    bullets.forEach(b=>{
-      if(b.update){
-        b.update()
-      }
-    })
-    bullets = bullets.filter(b =>
-      b.x > -50 &&
-      b.x < canvas.width + 50 &&
-      b.y > -50 &&
-      b.y < canvas.height + 50
-    )
-    enemyBullets.forEach(b=>b.update())
-    grenades.forEach(g => g.update())
-    grenades = grenades.filter(g => !g.exploded)
-    kamikazeDrones.forEach(d => d.update())
-    kamikazeDrones = kamikazeDrones.filter(d => !d.dead)
-    enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
+    console.log('boss active: ', bossActive)
 
-    for(let bi = bullets.length-1; bi >= 0; bi--){
-      let b = bullets[bi]
-
-      for(let di = drones.length-1; di >= 0; di--){
-        let d = drones[di]
-
-        if(b.y > d.y + d.height || b.y + b.size < d.y) continue
-
+    bullets.forEach(b => {
+      drones.forEach(d => {
         if(
           b.x < d.x + d.width &&
           b.x + b.size > d.x &&
           b.y < d.y + d.height &&
           b.y + b.size > d.y
         ){
+          b.alive = false
+          d.alive = false
 
           spawnExplosion(d.x,d.y)
 
@@ -1849,16 +1895,11 @@
           score += gained
           showScoreGain(gained)
 
-          bullets.splice(bi,1)
-          drones.splice(di,1)
-
           waveKills++
-          break
         }
-      }
+      })
 
       if(bossActive && boss){
-
         if(
           b.x < boss.x + boss.width &&
           b.x + b.size > boss.x &&
@@ -1867,36 +1908,129 @@
         ){
 
           boss.hp -= 1
-          bullets.splice(bi,1)
+          score += 10
+          // bullets.splice(bi,1)
 
           if(boss.hp <= 0){
-            boss = null
+            boss.alive = false
             bossActive = false
 
             score += 5000
           }
         }
-
       }
-    }
+    })
 
-    enemyBullets.forEach((b,i)=>{
-      if(b.y>canvas.height-groundHeight){
-        spawnGroundExplosion(b.x, b.y);
-        enemyBullets.splice(i,1)
-      }
-      if(isColliding(b, player)){
-        if(!DEBUG.godMode){
-          playSound(60,0.5)
-          endGame()
+    // drones.forEach(d=>d.update(delta))
+
+    // bullets.forEach(b=>{
+    //   if(b.update){
+    //     b.update()
+    //   }
+    // })
+    // bullets = bullets.filter(b =>
+    //   b.x > -50 &&
+    //   b.x < canvas.width + 50 &&
+    //   b.y > -50 &&
+    //   b.y < canvas.height + 50
+    // )
+    // enemyBullets.forEach(b=>b.update())
+    // grenades.forEach(g => g.update())
+    // grenades = grenades.filter(g => !g.exploded)
+    // kamikazeDrones.forEach(d => d.update())
+    // kamikazeDrones = kamikazeDrones.filter(d => !d.dead)
+    // enemyBullets = enemyBullets.filter(b => b.y < canvas.height + 50)
+
+    gameObjects.forEach(obj=>{
+      obj.update(delta)
+    })
+
+    gameObjects = gameObjects.filter(obj => obj.alive)
+
+    // for(let bi = bullets.length-1; bi >= 0; bi--){
+    //   let b = bullets[bi]
+    //
+    //   for(let di = drones.length-1; di >= 0; di--){
+    //     let d = drones[di]
+    //
+    //     if(b.y > d.y + d.height || b.y + b.size < d.y) continue
+    //
+    //     if(
+    //       b.x < d.x + d.width &&
+    //       b.x + b.size > d.x &&
+    //       b.y < d.y + d.height &&
+    //       b.y + b.size > d.y
+    //     ){
+    //
+    //       spawnExplosion(d.x,d.y)
+    //
+    //       const gained = calculateDroneScore()
+    //       score += gained
+    //       showScoreGain(gained)
+    //
+    //       // bullets.splice(bi,1)
+    //       drones.splice(di,1)
+    //
+    //       waveKills++
+    //       break
+    //     }
+    //   }
+
+      // if(bossActive && boss){
+      //   if(
+      //     b.x < boss.x + boss.width &&
+      //     b.x + b.size > boss.x &&
+      //     b.y < boss.y + boss.height &&
+      //     b.y + b.size > boss.y
+      //   ){
+      //
+      //     boss.hp -= 1
+      //     // bullets.splice(bi,1)
+      //
+      //     if(boss.hp <= 0){
+      //       boss.alive = false
+      //       bossActive = false
+      //
+      //       score += 5000
+      //     }
+      //   }
+      // }
+
+    // }
+
+    gameObjects.forEach(obj => {
+      if(obj instanceof EnemyBullet){
+        if(obj.y > canvas.height - groundHeight){
+          spawnGroundExplosion(obj.x, obj.y)
+          obj.alive = false
+        }
+
+        if(isColliding(obj, player)){
+          if(!DEBUG.godMode){
+            playSound(60,0.5)
+            endGame()
+          }
         }
       }
     })
 
-    explosions.forEach(e => e.update(delta));
-    explosions = explosions.filter(e => !e.finished); // убираем законченные
-    groundExplosions.forEach(e => e.update());
-    groundExplosions = groundExplosions.filter(e => !e.finished);
+    // enemyBullets.forEach((b,i)=>{
+    //   if(b.y>canvas.height-groundHeight){
+    //     spawnGroundExplosion(b.x, b.y);
+    //     enemyBullets.splice(i,1)
+    //   }
+    //   if(isColliding(b, player)){
+    //     if(!DEBUG.godMode){
+    //       playSound(60,0.5)
+    //       endGame()
+    //     }
+    //   }
+    // })
+
+    // explosions.forEach(e => e.update(delta));
+    // explosions = explosions.filter(e => !e.finished); // убираем законченные
+    // groundExplosions.forEach(e => e.update());
+    // groundExplosions = groundExplosions.filter(e => !e.finished);
 
     survivalTime+=delta/1000
 
@@ -1919,7 +2053,7 @@
       uiTimer = 0
     }
 
-    let targetVolume = 0.05 + (drones.length / 50) * 0.25;
+    let targetVolume = 0.05 + (countDrones() / 50) * 0.25;
     droneSound.volume = targetVolume;
   }
 
@@ -1951,15 +2085,23 @@
       destroyedCity.w,
       destroyedCity.h
     )
+
     player.draw()
-    drones.forEach(d=>d.draw())
-    bullets.forEach(b=>b.draw())
-    enemyBullets.forEach(b=>b.draw())
-    grenades.forEach(g => g.draw())
-    kamikazeDrones.forEach(d => d.draw())
-    if(bossActive && boss){
-      boss.draw()
-    }
+    // drones.forEach(d=>d.draw())
+    // bullets.forEach(b=>b.draw())
+    // enemyBullets.forEach(b=>b.draw())
+    // grenades.forEach(g => g.draw())
+    // kamikazeDrones.forEach(d => d.draw())
+
+    gameObjects.forEach(obj=>{
+      obj.draw(ctx)
+    })
+
+    const boss = gameObjects.filter(o => o instanceof BossDrone)
+
+    // if(bossActive && boss){
+    //   boss.draw()
+    // }
 
     if(bossActive && boss){
 
@@ -1968,11 +2110,10 @@
 
       ctx.fillStyle="red"
       ctx.fillRect(canvas.width/2 - barWidth/2,20,barWidth*hpPercent,10)
-
     }
 
-    explosions.forEach(e => e.draw(ctx));
-    groundExplosions.forEach(e => e.draw(ctx));
+    // explosions.forEach(e => e.draw(ctx));
+    // groundExplosions.forEach(e => e.draw(ctx));
 
     ctx.fillStyle = "white"
     ctx.font = "20px monospace"
@@ -2008,7 +2149,6 @@
   let last=0
 
   function gameLoop(t){
-
     const delta = t - last
     last = t
 
