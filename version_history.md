@@ -1,5 +1,10 @@
 # Version History
 
+## 0.18.0
+
+Shoot mechanic
+Death screen
+
 ## 0.17.3
 
 Fix boss drone bugs

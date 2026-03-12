@@ -665,7 +665,10 @@
       shoot: new Audio("machinegun_shot.mp3"),
       reload: new Audio("machinegun_reload.mp3")
     }
+  }
 
+  const PLAYER_SOUNDS = {
+    death: new Audio("death.mp3"),
   }
 
   let currentWeapon
@@ -791,18 +794,19 @@
 
   function getShootDirection(){
     let dx = 0
-    let dy = 0
+    let dy = -1   // по умолчанию вверх
 
-    if(keys["ArrowLeft"])  dx = -1
-    if(keys["ArrowRight"]) dx = 1
-    if(keys["ArrowUp"])    dy = -1
-    if(keys["ArrowDown"])  dy = 1
-
-    if(dx === 0 && dy === 0){
-      return null
+    if(keys["ArrowRight"]){
+      dx = 0.7
+      dy = -0.7
     }
 
-    return {dx,dy}
+    if(keys["ArrowLeft"]){
+      dx = -0.7
+      dy = -0.7
+    }
+
+    return {dx, dy}
   }
 
   function startReload(){
@@ -1009,6 +1013,7 @@
       this.friction = 0.88
 
       this.alive = true
+      this.deathTimer = 2000
     }
 
     update(){
@@ -1846,9 +1851,16 @@
         }
 
         if(isColliding(obj, player)){
-          if(!DEBUG.godMode){
+          if(!DEBUG.godMode && !player.alive){
+            player.alive = false
+
+            spawnExplosion(
+              player.x + player.width/2,
+              player.y + player.height/2
+            )
+
             playSound(60,0.5)
-            endGame()
+            // endGame()
           }
         }
       }
