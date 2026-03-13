@@ -12,6 +12,7 @@ Moving clouds
 Smoke sprites
 Fire sprite
 Text changes
+Optimization
 
 ## 0.17.3
 
