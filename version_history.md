@@ -7,6 +7,7 @@ Death screen
 Intro sequence
 CRT screen effect
 Commander balloon improve
+New music tracks
 
 ## 0.17.3
 
