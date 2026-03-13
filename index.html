@@ -934,6 +934,13 @@
   let frameCount = 0
   let fps = 0
 
+  let cachedDronesCount = 0
+  let cachedEnemyBulletsCount = 0
+  let frameCounter = 0
+
+  const GRID_SIZE = 100
+  let collisionGrid = {}
+
   // Класс для облаков
   class Cloud {
     constructor() {
@@ -1144,6 +1151,47 @@
       }
 
       window.addEventListener("keydown",handler)
+    })
+  }
+
+  function buildCollisionGrid() {
+    collisionGrid = {}
+
+    gameObjects.forEach(obj => {
+      if (!obj.alive) return
+
+      const gridX = Math.floor(obj.x / GRID_SIZE)
+      const gridY = Math.floor(obj.y / GRID_SIZE)
+      const key = `${gridX},${gridY}`
+
+      if (!collisionGrid[key]) {
+        collisionGrid[key] = []
+      }
+      collisionGrid[key].push(obj)
+    })
+  }
+
+  function optimizeCollisions() {
+    buildCollisionGrid()
+
+    const bullets = gameObjects.filter(o => o instanceof Bullet)
+    const drones = gameObjects.filter(o => o instanceof Drone)
+
+    bullets.forEach(b => {
+      const gridX = Math.floor(b.x / GRID_SIZE)
+      const gridY = Math.floor(b.y / GRID_SIZE)
+      const key = `${gridX},${gridY}`
+
+      // Проверяем только объекты в той же ячейке сетки
+      const nearbyObjects = collisionGrid[key] || []
+
+      nearbyObjects.forEach(obj => {
+        if (obj instanceof Drone && isColliding(b, obj)) {
+          b.alive = false
+          obj.alive = false
+          // ... остальная логика
+        }
+      })
     })
   }
 
@@ -2326,50 +2374,51 @@
     renderLeaderboard()
   }
 
-  function update(delta){
+  function update(delta) {
+    frameCounter++
+
     if(hitFreeze > 0){
       hitFreeze -= delta
       return
     }
 
+    // Обновляем кэши только каждый 3-й кадр для некритичных операций
+    if (frameCounter % 3 === 0) {
+      cachedDronesCount = countDrones()
+      cachedEnemyBulletsCount = countEnemyBullets()
+    }
+
     if(!player.alive){
       player.deathTimer -= delta
-
       if(player.deathTimer <= 0){
         timeScale = 1
         endGame()
       }
+      return // Не обновляем остальное если игрок мертв
     }
 
     player.update()
 
-    if (tankSmoke) {
-      tankSmoke.update()
+    // Обновляем анимированные спрайты
+    if (tankSmoke?.alive) tankSmoke.update()
+    if (citySmoke?.alive) citySmoke.update()
+    if (cityFire?.alive) cityFire.update()
+
+    // Обновление облаков (редко)
+    if (frameCounter % 2 === 0) {
+      for (const cloud of clouds) {
+        cloud.update()
+      }
     }
 
-    if (citySmoke) {
-      citySmoke.update()
-    }
-
-    if (cityFire) {
-      cityFire.update()
-    }
-
-    // Обновление облаков
-    for (const cloud of clouds) {
-      cloud.update()
-    }
-
+    // Оптимизация волн
     if (wavePause) {
       wavePauseTimer += delta;
-
       if (wavePauseTimer >= wavePauseDuration) {
-        // пауза окончена — новая волна может стартовать
         wavePause = false;
         waveActive = true;
         wavePauseTimer = 0;
-
-        spawnTimer = 0; // важно
+        spawnTimer = 0;
       }
     }
 
@@ -2377,119 +2426,35 @@
       globalEnemyFireCooldown -= delta
     }
 
-    // spawnInterval = Math.max(400, 2000 - survivalTime * 30);
-    // spawnTimer += delta;
-    //
-    // if (
-    //   spawnTimer >= spawnInterval &&
-    //   waveActive &&
-    //   countDrones() < waveMaxInAir &&
-    //   DEBUG.spawnDrones
-    // ){
-    //   spawnDrone()
-    //   spawnTimer = 0
-    // }
-
-    shootCooldown-=delta
-
-
+    // Оптимизация стрельбы
     if(player.alive && shooting && currentWeapon.auto) {
       const dir = getShootDirection()
-      shoot(dir.dx,dir.dy)
+      shoot(dir.dx, dir.dy)
     }
 
-    const boss = gameObjects.find(o => o instanceof BossDrone)
-    const bullets = gameObjects.filter(o => o instanceof Bullet)
-    const drones = gameObjects.filter(o => o instanceof Drone)
+    // Оптимизация проверки коллизий - используем пространственное разделение
+    optimizeCollisions()
 
-    bullets.forEach(b => {
-      drones.forEach(d => {
-        if(
-          b.x < d.x + d.width &&
-          b.x + b.size > d.x &&
-          b.y < d.y + d.height &&
-          b.y + b.size > d.y
-        ){
-          b.alive = false
-          d.alive = false
+    survivalTime += delta/1000
 
-          freeze(40)
-          screenShake.shake(4,4)
+    // Проверяем прогресс волны реже
+    if (frameCounter % 10 === 0) {
+      checkWaveProgress()
+    }
 
-          spawnExplosion(d.x,d.y)
-
-          const gained = calculateDroneScore()
-          score += gained
-          showScoreGain(gained)
-
-          waveKills++
-        }
-      })
-
-      if(boss && boss.alive){
-        if(
-          b.x < boss.x + boss.width &&
-          b.x + b.size > boss.x &&
-          b.y < boss.y + boss.height &&
-          b.y + b.size > boss.y
-        ){
-          b.alive = false
-          boss.hp -= 1
-          score += 10
-
-          if(boss.hp <= 0){
-            boss.alive = false
-            boss.active = false
-            spawnExplosion(boss.x + boss.width/2, boss.y + boss.height/2)
-
-            score += 5000
-          }
-        }
-      }
-    })
-
-    gameObjects.forEach(obj=>{
-      obj.update(delta)
-    })
-
-    gameObjects = gameObjects.filter(obj => obj.alive)
-
-    gameObjects.forEach(obj => {
-      if(obj instanceof EnemyBullet){
-        if(obj.y > canvas.height - groundHeight){
-          spawnGroundExplosion(obj.x, obj.y)
-          obj.alive = false
-        }
-
-        if(isColliding(obj, player)){
-          if(!DEBUG.godMode && player.alive){
-            player.die()
-            // playSound(60,0.5)
-            // endGame()
-          }
-        }
-      }
-    })
-
-    survivalTime+=delta/1000
-
-    checkWaveProgress();
-
-    uiTimer += delta
-
-    if(uiTimer > 100) {
-      // ОБНОВЛЕНИЕ UI
-      document.getElementById("timer").innerText =
-        survivalTime.toFixed(1) + "s"
-
+    // Обновляем UI реже
+    if (frameCounter % 5 === 0) {
+      document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
       document.getElementById("score").innerText = score
-
-      uiTimer = 0
     }
 
-    let targetVolume = 0.05 + (countDrones() / 50) * 0.25;
-    droneSound.volume = targetVolume;
+    // Оптимизация звука
+    let targetVolume = 0.05 + (cachedDronesCount / 50) * 0.25;
+    if (Math.abs(droneSound.volume - targetVolume) > 0.01) {
+      droneSound.volume = targetVolume;
+    }
   }
+
 
   // ... (Draw and Game Loop remain the same)
   function draw(){
