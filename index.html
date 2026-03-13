@@ -929,6 +929,10 @@
   }
 
   let currentState = GameState.MENU
+  let gameLoopRunning = true
+  let lastFrameTime = 0
+  let frameCount = 0
+  let fps = 0
 
   // Класс для облаков
   class Cloud {
@@ -2638,17 +2642,34 @@
 
   let last=0
 
-  function gameLoop(t){
-    perfMonitor.update()
-    
-    const rawDelta = t - last
+  function gameLoop(t) {
+    if (!gameLoopRunning) {
+      // Если игра не активна, делаем длинные паузы
+      setTimeout(() => requestAnimationFrame(gameLoop), 100)
+      return
+    }
+
+    // FPS контроль
+    frameCount++
+    if (t - lastFrameTime > 1000) {
+      fps = frameCount
+      frameCount = 0
+      lastFrameTime = t
+      // Можно показать FPS для отладки
+      // console.log('FPS:', fps)
+    }
+
+    const rawDelta = Math.min(t - last, 100) // Ограничиваем дельту
     const delta = rawDelta * timeScale
     last = t
 
-    switch(currentState){
+    switch(currentState) {
       case GameState.MENU:
-        updateMenu(delta)
-        drawMenu()
+        // В меню обновляемся реже
+        if (frameCount % 3 === 0) { // Каждый 3-й кадр
+          updateMenu(delta)
+          drawMenu()
+        }
         break
 
       case GameState.GAME:
@@ -2657,8 +2678,10 @@
         break
 
       case GameState.GAME_OVER:
-        updateGameOver(delta)
-        drawGameOver()
+        if (frameCount % 3 === 0) {
+          updateGameOver(delta)
+          drawGameOver()
+        }
         break
     }
 
