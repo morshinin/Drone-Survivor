@@ -446,7 +446,7 @@
   </canvas>
 
   <div id="effects-layer">
-    <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">
+<!--    <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">-->
     <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">
   </div>
 
@@ -733,6 +733,8 @@
   citySmokeSprite.src = "city_smoke.png"
   const cloudsImg = new Image()
   cloudsImg.src = "clouds_bg.png" // Замените на путь к вашей картинке с облаками
+  const fireSprite = new Image()
+  fireSprite.src = "fire_sprite.png"
 
   let SMOKE_FRAME_WIDTH
   let SMOKE_FRAME_HEIGHT
@@ -745,6 +747,7 @@
   // И добавьте правильную инициализацию:
   let citySmoke = null
   let tankSmoke = null
+  let cityFire = null
 
   // Инициализация дыма от города
   function initCitySmoke() {
@@ -790,6 +793,35 @@
           frameDelay: 8,
           scale: 1.2,
           opacity: 0.4,
+          loop: true
+        })
+      }
+    }
+  }
+
+  // Инициализация огня
+  function initFire() {
+    if (fireSprite.complete) {
+      cityFire = new AnimatedSprite(100, 600, fireSprite, {
+        columns: 2,
+        totalFrames: 8,
+        frameDelay: 8,
+        scale: 1,
+        opacity: 0.9,
+        width: 144,
+        height: 144,
+        loop: true
+      })
+    } else {
+      fireSprite.onload = () => {
+        cityFire = new AnimatedSprite(100, 600, fireSprite, {
+          columns: 2,
+          totalFrames: 8,
+          frameDelay: 8,
+          scale: 1,
+          opacity: 0.9,
+          width: 144,
+          height: 144,
           loop: true
         })
       }
@@ -2242,6 +2274,7 @@
     initClouds(3)
     initCitySmoke()
     initTankSmoke()
+    initFire()
 
     // музыка
   }
@@ -2312,6 +2345,10 @@
 
     if (citySmoke) {
       citySmoke.update()
+    }
+
+    if (cityFire) {
+      cityFire.update()
     }
 
     // Обновление облаков
@@ -2469,6 +2506,10 @@
 
     if (citySmoke) {
       citySmoke.draw(ctx)
+    }
+
+    if (cityFire) {
+      cityFire.draw(ctx)
     }
 
     // Рисуем землю
