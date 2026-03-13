@@ -90,6 +90,51 @@
       }
     }
 
+    /* Добавьте после .crt */
+    .crt::before,
+    .crt::after {
+      content: "";
+      transform: translateZ(0);
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      left: 0;
+      top: 0;
+      z-index: 1;
+    }
+
+    .crt::before {
+      background: repeating-linear-gradient(
+          var(--crt-red) 0px,
+          var(--crt-green) 2px,
+          var(--crt-blue) 4px
+      );
+    }
+
+    .crt::after {
+      background: repeating-linear-gradient(
+          90deg,
+          var(--crt-red) 1px,
+          var(--crt-green) 2px,
+          var(--crt-blue) 3px
+      );
+    }
+
+    /* Класс для отключения CRT эффектов */
+    .no-crt {
+      background-image: none !important;
+      background-color: transparent !important;
+      animation: none !important;
+      text-shadow: none !important;
+    }
+
+    .no-crt::before,
+    .no-crt::after {
+      display: none !important;
+    }
+
     #ui{
       position:fixed;
       top:0;
@@ -307,6 +352,11 @@
           rgba(0,0,0,0.55) 100%
       );
       z-index: 5;
+    }
+
+    #game-container.no-bg {
+      background-image: none !important;
+      background-color: transparent;
     }
 
     #game{
@@ -828,9 +878,6 @@
     }
   }
 
-  const smokeGif = new Image()
-  smokeGif.src = "smoke.gif"
-
   effectsLayer.style.display = "none"
 
   const groundHeight = 40
@@ -918,7 +965,7 @@
   // DEBUG режим для тестирования
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
-    godMode: false,     // бессмертие
+    godMode: true,     // бессмертие
     spawnDrones: true   // включить/выключить обычных дронов
   }
 
@@ -940,6 +987,38 @@
 
   const GRID_SIZE = 100
   let collisionGrid = {}
+
+  const EffectsManager = {
+    // Отключить все визуальные эффекты для игры
+    disableForGame() {
+      const container = document.getElementById('game-container')
+      const ui = document.getElementById('ui')
+
+      // Убираем CRT класс и добавляем no-crt
+      container.classList.remove('crt')
+      container.classList.add('no-crt')
+
+      // Отключаем анимацию UI
+      ui.style.animation = 'none'
+
+      console.log('Visual effects disabled for game')
+    },
+
+    // Включить эффекты для меню
+    enableForMenu() {
+      const container = document.getElementById('game-container')
+      const ui = document.getElementById('ui')
+
+      // Возвращаем CRT класс и убираем no-crt
+      container.classList.add('crt')
+      container.classList.remove('no-crt')
+
+      // Возвращаем анимацию UI
+      ui.style.animation = 'glitch1 1s infinite'
+
+      console.log('Visual effects enabled for menu')
+    }
+  }
 
   // Класс для облаков
   class Cloud {
@@ -1015,12 +1094,17 @@
     fadeEl.style.opacity = "1"
     fadeEl.style.transition = "opacity 3s"
   }
+
   async function startGameSequence() {
     await new Promise(r => setTimeout(r, 5000))
     const ui = document.getElementById("ui")
     fadeEl.style.opacity = "0"
     ui.style.display = "none"
     effectsLayer.style.display = "block"
+
+    // Отключаем все визуальные эффекты
+    EffectsManager.disableForGame()
+
     currentState = GameState.GAME
     await new Promise(r => setTimeout(r, 1000))
   }
@@ -2177,19 +2261,19 @@
   }
 
   async function restartGame(){
+    // Отключаем эффекты для игры
+    EffectsManager.disableForGame()
+
     initGame()
     currentState = GameState.GAME
 
     const ui = document.getElementById("ui")
-
     ui.style.display = "none"
     ui.classList.remove("game_over_bg")
     effectsLayer.style.display = "block"
 
     await fadeScreen()
-
     gameOverMusic.pause()
-
     await crossfadeMusic(gameOverMusic, gameMusic)
 
     droneSound.currentTime = 0
@@ -2198,9 +2282,7 @@
     droneSound.play()
 
     document.body.classList.add("hide-cursor")
-
     player = new Player()
-
     gameObjects = []
     spawnDrone()
   }
@@ -2291,6 +2373,7 @@
   }
 
   function spawnDrone(){
+    console.log("spawn drone")
     const maxDrones = 50
 
     if(countDrones() >= maxDrones) return
@@ -2347,6 +2430,9 @@
   async function endGame(){
     currentState = GameState.GAME_OVER
 
+    // Включаем эффекты обратно для меню
+    EffectsManager.enableForMenu()
+
     document.body.classList.remove("hide-cursor")
     document.getElementById("gameMusic").pause()
 
@@ -2357,252 +2443,307 @@
 
     gameOverMusic.play()
 
-    // await fadeScreen()
-    // await crossfadeMusic(gameMusic, gameOverMusic)
     await saveScoreOnline()
     await loadLeaderboard()
     saveScore()
-    const ui=document.getElementById("ui")
+
+    const ui = document.getElementById("ui")
     ui.classList.add("game_over_bg")
     ui.innerHTML=`
-      <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
-      <button class="nes-btn is-success" onclick="restartGame()">Try Again</button>
-      <div id="leaderboard"></div>
-    `
+    <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
+    <button class="nes-btn is-success" onclick="restartGame()">Try Again</button>
+    <div id="leaderboard"></div>
+  `
     ui.style.display="flex"
     gameInfo.style.display="block"
     renderLeaderboard()
   }
 
   function update(delta) {
-    frameCounter++
-
-    if(hitFreeze > 0){
+    if (hitFreeze > 0) {
       hitFreeze -= delta
       return
     }
 
-    // Обновляем кэши только каждый 3-й кадр для некритичных операций
-    if (frameCounter % 3 === 0) {
-      cachedDronesCount = countDrones()
-      cachedEnemyBulletsCount = countEnemyBullets()
-    }
-
-    if(!player.alive){
+    if (!player.alive) {
       player.deathTimer -= delta
-      if(player.deathTimer <= 0){
+      if (player.deathTimer <= 0) {
         timeScale = 1
         endGame()
       }
-      return // Не обновляем остальное если игрок мертв
+      return
     }
 
     player.update()
 
-    // Обновляем анимированные спрайты
+    // Обновление анимированных спрайтов
     if (tankSmoke?.alive) tankSmoke.update()
     if (citySmoke?.alive) citySmoke.update()
     if (cityFire?.alive) cityFire.update()
 
-    // Обновление облаков (редко)
-    if (frameCounter % 2 === 0) {
-      for (const cloud of clouds) {
-        cloud.update()
+    // Обновление облаков
+    for (const cloud of clouds) {
+      cloud.update()
+    }
+
+    // ===== ВАЖНО: СПАВН ДРОНОВ =====
+    if (waveActive && DEBUG.spawnDrones) {
+      spawnTimer += delta
+      if (spawnTimer >= 2000 && countDrones() < waveMaxInAir) {
+        spawnDrone()
+        spawnTimer = 0
       }
     }
 
-    // Оптимизация волн
+    // ===== ВАЖНО: ПАУЗА МЕЖДУ ВОЛНАМИ =====
     if (wavePause) {
-      wavePauseTimer += delta;
+      wavePauseTimer += delta
       if (wavePauseTimer >= wavePauseDuration) {
-        wavePause = false;
-        waveActive = true;
-        wavePauseTimer = 0;
-        spawnTimer = 0;
+        wavePause = false
+        waveActive = true
+        wavePauseTimer = 0
+        spawnTimer = 0
       }
     }
 
-    if(globalEnemyFireCooldown > 0){
+    // ===== ВАЖНО: КУЛДАУН ВРАГОВ =====
+    if (globalEnemyFireCooldown > 0) {
       globalEnemyFireCooldown -= delta
     }
 
-    // Оптимизация стрельбы
-    if(player.alive && shooting && currentWeapon.auto) {
+    // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
+    shootCooldown -= delta
+
+    if (player.alive && shooting && currentWeapon?.auto) {
       const dir = getShootDirection()
       shoot(dir.dx, dir.dy)
     }
 
-    // Оптимизация проверки коллизий - используем пространственное разделение
-    optimizeCollisions()
+    // ===== ВАЖНО: КОЛЛИЗИИ ПУЛЬ И ДРОНОВ =====
+    const boss = gameObjects.find(o => o instanceof BossDrone)
+    const bullets = gameObjects.filter(o => o instanceof Bullet)
+    const drones = gameObjects.filter(o => o instanceof Drone)
 
-    survivalTime += delta/1000
+    bullets.forEach(b => {
+      drones.forEach(d => {
+        if (b.x < d.x + d.width &&
+          b.x + b.size > d.x &&
+          b.y < d.y + d.height &&
+          b.y + b.size > d.y) {
 
-    // Проверяем прогресс волны реже
-    if (frameCounter % 10 === 0) {
-      checkWaveProgress()
-    }
+          b.alive = false
+          d.alive = false
 
-    // Обновляем UI реже
-    if (frameCounter % 5 === 0) {
+          freeze(40)
+          screenShake.shake(4, 4)
+          spawnExplosion(d.x, d.y)
+
+          const gained = calculateDroneScore()
+          score += gained
+          showScoreGain(gained)
+          waveKills++
+        }
+      })
+
+      if (boss?.alive) {
+        if (b.x < boss.x + boss.width &&
+          b.x + b.size > boss.x &&
+          b.y < boss.y + boss.height &&
+          b.y + b.size > boss.y) {
+
+          b.alive = false
+          boss.hp -= 1
+          score += 10
+
+          if (boss.hp <= 0) {
+            boss.alive = false
+            boss.active = false
+            spawnExplosion(boss.x + boss.width / 2, boss.y + boss.height / 2)
+            score += 5000
+          }
+        }
+      }
+    })
+
+    // ===== ВАЖНО: ОБНОВЛЕНИЕ ВСЕХ ОБЪЕКТОВ =====
+    gameObjects.forEach(obj => {
+      if (obj.alive) {
+        obj.update(delta)
+      }
+    })
+
+    // ===== ВАЖНО: УДАЛЕНИЕ МЕРТВЫХ ОБЪЕКТОВ =====
+    gameObjects = gameObjects.filter(obj => obj.alive)
+
+    // ===== ВАЖНО: ПРОВЕРКА ПУЛЬ ВРАГОВ =====
+    gameObjects.forEach(obj => {
+      if (obj instanceof EnemyBullet) {
+        if (obj.y > canvas.height - groundHeight) {
+          spawnGroundExplosion(obj.x, obj.y)
+          obj.alive = false
+        }
+
+        if (isColliding(obj, player)) {
+          if (!DEBUG.godMode && player.alive) {
+            player.die()
+          }
+        }
+      }
+    })
+
+    // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
+    survivalTime += delta / 1000
+    checkWaveProgress()
+
+    // ===== ВАЖНО: UI ОБНОВЛЕНИЕ =====
+    uiTimer += delta
+    if (uiTimer > 100) {
       document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
       document.getElementById("score").innerText = score
+      uiTimer = 0
     }
 
-    // Оптимизация звука
-    let targetVolume = 0.05 + (cachedDronesCount / 50) * 0.25;
-    if (Math.abs(droneSound.volume - targetVolume) > 0.01) {
-      droneSound.volume = targetVolume;
-    }
+    // ===== ВАЖНО: ЗВУК ДРОНОВ =====
+    let targetVolume = 0.05 + (countDrones() / 50) * 0.25
+    droneSound.volume = targetVolume
   }
 
 
+
   // ... (Draw and Game Loop remain the same)
-  function draw(){
-    // Очистка основного канваса
-    ctx.clearRect(0,0,canvas.width,canvas.height)
+  function draw() {
+    // Очистка основного канваса - ТОЛЬКО ОДИН РАЗ
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Рисуем фон
-    if(background.complete){
-      ctx.drawImage(background,0,0,canvas.width,canvas.height)
+    // Рисуем фон - ТОЛЬКО ЕСЛИ ОН ЗАГРУЖЕН
+    if (background.complete) {
+      ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
     }
 
-    // Рисуем облака ПОВЕРХ фона, но ПОД всеми объектами
-    drawClouds(ctx)  // Передаем основной контекст
+    // Рисуем облака
+    drawClouds(ctx)
 
-    if (tankSmoke) {
-      tankSmoke.draw(ctx)
-    }
-
-    if (citySmoke) {
-      citySmoke.draw(ctx)
-    }
-
-    if (cityFire) {
-      cityFire.draw(ctx)
-    }
+    // Рисуем анимированные спрайты
+    if (tankSmoke?.alive) tankSmoke.draw(ctx)
+    if (citySmoke?.alive) citySmoke.draw(ctx)
+    if (cityFire?.alive) cityFire.draw(ctx)
 
     // Рисуем землю
-    ctx.fillStyle="rgba(0,0,0,0)"
-    ctx.fillRect(0,canvas.height-groundHeight,canvas.width,groundHeight)
+    ctx.fillStyle = "rgba(0,0,0,0)"
+    ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight)
 
     // Рисуем танк
-    ctx.drawImage(
-      tankImg,
-      tank.x,
-      tank.y,
-      tank.w,
-      tank.h
-    )
+    if (tankImg.complete) {
+      ctx.drawImage(tankImg, tank.x, tank.y, tank.w, tank.h)
+    }
 
+    // Тряска камеры
     const shakeOffset = screenShake.update()
-
     ctx.save()
     ctx.translate(shakeOffset.x, shakeOffset.y)
 
     // Рисуем разрушенный город
-    ctx.drawImage(
-      destroyedCityImg,
-      destroyedCity.x,
-      destroyedCity.y,
-      destroyedCity.w,
-      destroyedCity.h
-    )
+    if (destroyedCityImg.complete) {
+      ctx.drawImage(destroyedCityImg, destroyedCity.x, destroyedCity.y, destroyedCity.w, destroyedCity.h)
+    }
 
     // Рисуем игрока
-    if (player.alive){
+    if (player?.alive) {
       player.draw()
     }
 
     // Рисуем игровые объекты
-    gameObjects.forEach(obj=>{
-      obj.draw(ctx)
-    })
+    for (const obj of gameObjects) {
+      if (obj.alive) {
+        obj.draw(ctx)
+      }
+    }
 
-    const boss = gameObjects.find(o => o instanceof BossDrone && o.alive);
+    // Рисуем здоровье босса
+    const boss = gameObjects.find(o => o instanceof BossDrone && o.alive)
+    if (boss?.active) {
+      const barWidth = 400
+      const barHeight = 20
+      const x = (canvas.width - barWidth) / 2
+      const y = 20
 
-    if (boss && boss.active) {
-      const barWidth = 400;
-      const barHeight = 20;
-      const x = (canvas.width - barWidth) / 2;
-      const y = 20;
+      ctx.fillStyle = "rgba(255, 0, 0, 0.3)"
+      ctx.fillRect(x, y, barWidth, barHeight)
 
-      // Фон полоски (красный)
-      ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
-      ctx.fillRect(x, y, barWidth, barHeight);
+      const healthPercent = boss.hp / boss.maxHp
+      ctx.fillStyle = "#00ff00"
+      ctx.fillRect(x, y, barWidth * healthPercent, barHeight)
 
-      // Текущее здоровье (зеленый)
-      const healthPercent = boss.hp / boss.maxHp;
-      ctx.fillStyle = "#00ff00";
-      ctx.fillRect(x, y, barWidth * healthPercent, barHeight);
+      ctx.strokeStyle = "white"
+      ctx.lineWidth = 2
+      ctx.strokeRect(x, y, barWidth, barHeight)
 
-      // Рамка
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, barWidth, barHeight);
+      ctx.fillStyle = "white"
+      ctx.font = "14px 'Press Start 2P', cursive"
+      ctx.textAlign = "center"
+      ctx.fillText("BOSS: Обнулитель 3000", canvas.width / 2, y + 40)
+    }
 
-      // Надпись
-      ctx.fillStyle = "white";
-      ctx.font = "14px 'Press Start 2P', cursive";
-      ctx.textAlign = "center";
-      ctx.fillText("BOSS: Обнулитель 3000", canvas.width / 2, y + 40);
+    ctx.restore() // ВАЖНО: закрываем translate
+
+    // UI элементы - рисуем БЕЗ трансформаций
+    ctx.save()
+    ctx.fillStyle = "white"
+    ctx.font = "20px monospace"
+    ctx.shadowColor = "black"
+    ctx.shadowBlur = 4
+    ctx.shadowOffsetX = 2
+    ctx.shadowOffsetY = 2
+
+    ctx.fillText(currentWeapon?.name || "Pistol", 20, 200)
+    ctx.fillText(`Ammo: ${ammoInMagazine || 0} / ${currentWeapon?.magazineSize || 15}`, 20, 240)
+    ctx.fillText(`Magazines: ${magazines || 0}`, 20, 270)
+
+    if (isReloading) {
+      ctx.fillStyle = "yellow"
+      ctx.fillText("RELOADING...", 20, 100)
     }
 
     ctx.restore()
 
-    ctx.fillStyle = "white"
-    ctx.font = "20px monospace"
-
-    ctx.fillText(
-      "Ammo: " + ammoInMagazine + " / " + currentWeapon.magazineSize,
-      20,
-      240
-    )
-
-    ctx.fillText(
-      "Magazines: " + magazines,
-      20,
-      270
-    )
-
-    ctx.fillText(
-      currentWeapon.name,
-      20,
-      200
-    )
-
-    if(isReloading){
-      ctx.fillStyle = "yellow"
-      ctx.fillText("RELOADING...",20,100)
-    }
-
-    if(!player.alive){
+    // Экран смерти
+    if (!player?.alive) {
+      ctx.save()
       ctx.fillStyle = "rgba(0,0,0,0.7)"
-      ctx.fillRect(0,0,canvas.width,canvas.height)
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       ctx.fillStyle = "red"
       ctx.font = "96px 'Press Start 2P'"
       ctx.textAlign = "center"
-
-      ctx.fillText(
-        "Ты 200!",
-        canvas.width/2,
-        canvas.height/2
-      )
+      ctx.shadowColor = "black"
+      ctx.shadowBlur = 10
+      ctx.fillText("Ты 200!", canvas.width / 2, canvas.height / 2)
+      ctx.restore()
     }
 
-    ctx.restore()
-
+    // Обновление UI элементов (это не отрисовка, а установка текста)
     document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
     document.getElementById("score").innerText = score
   }
 
   function drawClouds(ctx) {
+    if (!cloudsImg?.complete) return
+
+    ctx.save()
+    // Сортируем облака по высоте
     const sortedClouds = [...clouds].sort((a, b) => a.y - b.y)
 
-    // Рисуем облака
     for (const cloud of sortedClouds) {
-      cloud.draw(ctx)
+      ctx.globalAlpha = cloud.opacity
+      ctx.drawImage(
+        cloudsImg,
+        cloud.x,
+        cloud.y,
+        cloud.width,
+        cloud.height
+      )
     }
+    ctx.restore()
   }
 
   let last=0
@@ -2727,7 +2868,6 @@
       }
     }
   }
-
 </script>
 
 </body>
