@@ -10,6 +10,7 @@ Commander balloon improve
 New music tracks
 Moving clouds
 Smoke sprites
+Fire sprite
 Text changes
 
 ## 0.17.3

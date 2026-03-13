@@ -2639,6 +2639,8 @@
   let last=0
 
   function gameLoop(t){
+    perfMonitor.update()
+    
     const rawDelta = t - last
     const delta = rawDelta * timeScale
     last = t
@@ -2721,6 +2723,23 @@
   window.addEventListener("load", () => {
     document.getElementById("loading-screen").style.display = "none"
   })
+
+  // Добавьте в конец файла для отладки
+  const perfMonitor = {
+    frames: 0,
+    lastTime: performance.now(),
+
+    update() {
+      this.frames++
+      const now = performance.now()
+      if (now - this.lastTime >= 1000) {
+        console.log(`FPS: ${this.frames}, Objects: ${gameObjects.length}`)
+        this.frames = 0
+        this.lastTime = now
+      }
+    }
+  }
+
 </script>
 
 </body>
