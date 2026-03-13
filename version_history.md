@@ -8,6 +8,9 @@ Intro sequence
 CRT screen effect
 Commander balloon improve
 New music tracks
+Moving clouds
+Smoke sprites
+Text changes
 
 ## 0.17.3
 

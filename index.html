@@ -22,7 +22,7 @@
       margin:0;
       overflow:hidden;
       font-family: "Press Start 2P", monospace;
-      
+
       background-color: #333;
       filter: blur(.5px);
       text-shadow: 0 0 3px lime, 2px 2px black;
@@ -63,7 +63,7 @@
         content: "";
         transform: translateZ(0);
         pointer-events: none;
-      /*//opacity: 0.5;*/
+        /*//opacity: 0.5;*/
         mix-blend-mode: overlay;
         position: absolute;
         height: 100%;
@@ -118,6 +118,7 @@
       right:20px;
       font-size:22px;
       font-weight:bold;
+      z-index: 1;
     }
 
     .hide-cursor{
@@ -133,6 +134,7 @@
       color:#ffe066;
       text-shadow:3px 3px black;
       transition:transform 0.15s;
+      z-index: 1;
     }
 
     .score-pop{
@@ -249,6 +251,7 @@
       font-size:16px;
       right:-500px;   /* за пределами экрана */
       transition:right 0.6s ease-out, opacity .5s;
+      z-index: 1000;
     }
 
     #commander-balloon.show {
@@ -303,12 +306,25 @@
           rgba(0,0,0,0) 60%,
           rgba(0,0,0,0.55) 100%
       );
+      z-index: 5;
     }
 
     #game{
       position: absolute;
       left: 0;
       top: 0;
+      z-index: 1;
+    }
+
+    #cloud-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.6;
     }
 
     #effects-layer{
@@ -318,14 +334,14 @@
       width:100%;
       height:100%;
       pointer-events:none;
-      z-index:2;
+      z-index:4;
     }
 
     .smoke{
       position: absolute;
       width: 80px;
       pointer-events: none; /* чтобы клики проходили в игру */
-      z-index: 2;
+      z-index: 4;
     }
 
     .background-moto {
@@ -430,11 +446,8 @@
   </canvas>
 
   <div id="effects-layer">
-    <img src="smoke.gif" class="smoke" style="left:200px; bottom:80px;">
-    <img src="smoke_2.gif" class="smoke" style="right:60px; bottom:100px; width:220px;">
     <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">
     <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">
-<!--    <img src="moto_chase.png" class="background-moto">-->
   </div>
 
   <div id="timer"></div>
@@ -460,13 +473,13 @@
 </div>
 
 <div id="commander-balloon">
-    <section class="message -left commander-section">
-      <img class="commander-face" src="commander.gif">
-      <div class="nes-balloon from-left">
-        <p></p>
-        <div id="continueHint">PRESS ENTER</div>
-      </div>
-    </section>
+  <section class="message -left commander-section">
+    <img class="commander-face" src="commander.gif">
+    <div class="nes-balloon from-left">
+      <p></p>
+      <div id="continueHint">PRESS ENTER</div>
+    </div>
+  </section>
 </div>
 
 <div id="ui">
@@ -477,7 +490,7 @@
     <input id="nameInput" maxlength="3" type="text" class="nes-input">
   </div>
 
-  <button id="startBtn" class="nes-btn is-success">Play Game</button>
+  <button id="startBtn" class="nes-btn is-success">Try to Survive</button>
 
   <div id="leaderboard">
 
@@ -614,6 +627,86 @@
     }
   }
 
+  // ПЕРЕМЕСТИТЕ ЭТОТ КЛАСС ВВЕРХ, например после GAME_SOUNDS
+  class AnimatedSprite {
+    constructor(x, y, image, options = {}) {
+      this.x = x
+      this.y = y
+      this.image = image
+
+      // Параметры спрайта
+      this.columns = options.columns || 2
+      this.totalFrames = options.totalFrames || 58
+      this.frameDelay = options.frameDelay || 8
+      this.width = options.width || (image.width / this.columns)
+      this.height = options.height || (image.height / (this.totalFrames / this.columns))
+      this.scale = options.scale || 1.0
+      this.opacity = options.opacity || 1.0
+      this.loop = options.loop !== undefined ? options.loop : true
+
+      // Вычисляем количество строк
+      this.rows = Math.ceil(this.totalFrames / this.columns)
+
+      this.timer = 0
+      this.frame = options.startFrame || 0
+      this.alive = true
+    }
+
+    update() {
+      this.timer++
+
+      if (this.timer >= this.frameDelay) {
+        let nextFrame = this.frame + 1
+
+        if (nextFrame >= this.totalFrames) {
+          if (this.loop) {
+            nextFrame = 0
+          } else {
+            this.alive = false
+            return
+          }
+        }
+
+        this.frame = nextFrame
+        this.timer = 0
+      }
+    }
+
+    draw(ctx) {
+      if (!this.image || !this.image.complete) return
+
+      const col = this.frame % this.columns
+      const row = Math.floor(this.frame / this.columns)
+
+      ctx.save()
+      ctx.globalAlpha = this.opacity
+
+      ctx.drawImage(
+        this.image,
+        col * (this.image.width / this.columns),
+        row * (this.image.height / this.rows),
+        this.image.width / this.columns,
+        this.image.height / this.rows,
+        this.x,
+        this.y,
+        this.width * this.scale,
+        this.height * this.scale
+      )
+
+      ctx.restore()
+    }
+
+    setFrame(frame) {
+      this.frame = Math.min(frame, this.totalFrames - 1)
+    }
+
+    restart() {
+      this.frame = 0
+      this.timer = 0
+      this.alive = true
+    }
+  }
+
   const background = new Image()
   background.src = "game_bg.png"
   const playerImg = new Image()
@@ -634,6 +727,74 @@
   grenadeImg.src = "grenade.png"
   const kamikazeImg = new Image()
   kamikazeImg.src = "kamikaze.png"
+  const smokeSprite = new Image()
+  smokeSprite.src = "tank_smoke_sprite.png"
+  const citySmokeSprite= new Image()
+  citySmokeSprite.src = "city_smoke.png"
+  const cloudsImg = new Image()
+  cloudsImg.src = "clouds_bg.png" // Замените на путь к вашей картинке с облаками
+
+  let SMOKE_FRAME_WIDTH
+  let SMOKE_FRAME_HEIGHT
+
+  smokeSprite.onload = () => {
+    SMOKE_FRAME_WIDTH = smokeSprite.width / 2
+    SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
+  }
+
+  // И добавьте правильную инициализацию:
+  let citySmoke = null
+  let tankSmoke = null
+
+  // Инициализация дыма от города
+  function initCitySmoke() {
+    if (citySmokeSprite.complete) {
+      citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
+        columns: 2,
+        totalFrames: 98,
+        frameDelay: 8,
+        scale: 1.5,
+        opacity: 0.6,
+        loop: true
+      })
+    } else {
+      citySmokeSprite.onload = () => {
+        citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+          columns: 2,
+          totalFrames: 98,
+          frameDelay: 8,
+          scale: 1.5,
+          opacity: 0.6,
+          loop: true
+        })
+      }
+    }
+  }
+
+  // Инициализация дыма от танка
+  function initTankSmoke() {
+    if (smokeSprite.complete) {
+      tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
+        columns: 2,
+        totalFrames: 58,
+        frameDelay: 8,
+        scale: 1.2,
+        opacity: 0.4,
+        loop: true
+      })
+    } else {
+      smokeSprite.onload = () => {
+        tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
+          columns: 2,
+          totalFrames: 58,
+          frameDelay: 8,
+          scale: 1.2,
+          opacity: 0.4,
+          loop: true
+        })
+      }
+    }
+  }
 
   const smokeGif = new Image()
   smokeGif.src = "smoke.gif"
@@ -737,6 +898,50 @@
 
   let currentState = GameState.MENU
 
+  // Класс для облаков
+  class Cloud {
+    constructor() {
+      this.width = 2528 // ширина облаков (в 2 раза шире экрана как вы сказали)
+      this.height =317
+      this.x = -1264 // случайная позиция
+      this.y = 0 // только в верхней трети экрана
+      this.speed = 0.01 + Math.random() * 0.1 // очень медленная скорость
+      this.opacity = 0.3 + Math.random() * 0.3 // прозрачность
+    }
+
+    update() {
+      this.x += this.speed
+      // Зацикливание: когда облако уходит за правый край, появляется слева
+      if (this.x > canvas.width) {
+        this.x = -this.width
+      }
+    }
+
+    draw(ctx) {
+      if (!cloudsImg.complete) return
+
+      ctx.globalAlpha = this.opacity
+      ctx.drawImage(
+        cloudsImg,
+        this.x,
+        this.y,
+        this.width,
+        this.height
+      )
+      ctx.globalAlpha = 1.0
+    }
+  }
+
+  let clouds = []
+
+  // Инициализация облаков
+  function initClouds(count = 3) {
+    clouds = []
+    for (let i = 0; i < count; i++) {
+      clouds.push(new Cloud())
+    }
+  }
+
   // ... (Input listeners and utility functions remain the same)
   document.addEventListener("keydown",e=> {
     if(e.code === "Space"){
@@ -778,7 +983,6 @@
   }
 
   async function showCommanderIntro() {
-    console.log("show commanderIntro")
     await new Promise(r => setTimeout(r, 500))
 
     const msg = `
@@ -794,8 +998,6 @@
   }
 
   async function startWaveIntro() {
-    console.log("startWaveIntro")
-
     droneSound.currentTime = 0
     droneSound.volume = 0.3
     droneSound.play()
@@ -811,7 +1013,6 @@
   }
 
   async function animatePlayerIntro() {
-    console.log("animatePlayerIntro")
     player.x = -player.width
     player.y = canvas.height - groundHeight - player.height
     player.direction = 1 // идем вправо
@@ -2037,6 +2238,11 @@
     dropTimer = 0
     shootCooldown = 0
 
+    // облака
+    initClouds(3)
+    initCitySmoke()
+    initTankSmoke()
+
     // музыка
   }
 
@@ -2075,7 +2281,7 @@
     ui.classList.add("game_over_bg")
     ui.innerHTML=`
       <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
-      <button class="nes-btn is-success" onclick="restartGame()">Play Again</button>
+      <button class="nes-btn is-success" onclick="restartGame()">Try Again</button>
       <div id="leaderboard"></div>
     `
     ui.style.display="flex"
@@ -2099,6 +2305,19 @@
     }
 
     player.update()
+
+    if (tankSmoke) {
+      tankSmoke.update()
+    }
+
+    if (citySmoke) {
+      citySmoke.update()
+    }
+
+    // Обновление облаков
+    for (const cloud of clouds) {
+      cloud.update()
+    }
 
     if (wavePause) {
       wavePauseTimer += delta;
@@ -2222,8 +2441,7 @@
       document.getElementById("timer").innerText =
         survivalTime.toFixed(1) + "s"
 
-      document.getElementById("score").innerText =
-        "Score: " + score
+      document.getElementById("score").innerText = score
 
       uiTimer = 0
     }
@@ -2234,12 +2452,30 @@
 
   // ... (Draw and Game Loop remain the same)
   function draw(){
+    // Очистка основного канваса
     ctx.clearRect(0,0,canvas.width,canvas.height)
+
+    // Рисуем фон
     if(background.complete){
       ctx.drawImage(background,0,0,canvas.width,canvas.height)
     }
+
+    // Рисуем облака ПОВЕРХ фона, но ПОД всеми объектами
+    drawClouds(ctx)  // Передаем основной контекст
+
+    if (tankSmoke) {
+      tankSmoke.draw(ctx)
+    }
+
+    if (citySmoke) {
+      citySmoke.draw(ctx)
+    }
+
+    // Рисуем землю
     ctx.fillStyle="rgba(0,0,0,0)"
     ctx.fillRect(0,canvas.height-groundHeight,canvas.width,groundHeight)
+
+    // Рисуем танк
     ctx.drawImage(
       tankImg,
       tank.x,
@@ -2253,6 +2489,7 @@
     ctx.save()
     ctx.translate(shakeOffset.x, shakeOffset.y)
 
+    // Рисуем разрушенный город
     ctx.drawImage(
       destroyedCityImg,
       destroyedCity.x,
@@ -2261,10 +2498,12 @@
       destroyedCity.h
     )
 
+    // Рисуем игрока
     if (player.alive){
       player.draw()
     }
 
+    // Рисуем игровые объекты
     gameObjects.forEach(obj=>{
       obj.draw(ctx)
     })
@@ -2297,6 +2536,8 @@
       ctx.textAlign = "center";
       ctx.fillText("BOSS: Обнулитель 3000", canvas.width / 2, y + 40);
     }
+
+    ctx.restore()
 
     ctx.fillStyle = "white"
     ctx.font = "20px monospace"
@@ -2340,18 +2581,28 @@
     }
 
     ctx.restore()
+
+    document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
+    document.getElementById("score").innerText = score
+  }
+
+  function drawClouds(ctx) {
+    const sortedClouds = [...clouds].sort((a, b) => a.y - b.y)
+
+    // Рисуем облака
+    for (const cloud of sortedClouds) {
+      cloud.draw(ctx)
+    }
   }
 
   let last=0
 
   function gameLoop(t){
-    // const delta = t - last
     const rawDelta = t - last
     const delta = rawDelta * timeScale
     last = t
 
     switch(currentState){
-
       case GameState.MENU:
         updateMenu(delta)
         drawMenu()
@@ -2385,6 +2636,7 @@
 
   function drawGame(){
     draw()
+
   }
 
   function updateGameOver(delta){
