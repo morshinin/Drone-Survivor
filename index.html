@@ -12,17 +12,18 @@
   <link rel="manifest" href="/site.webmanifest">
 
   <style>
+    :root {
+      --crt-red: rgb(218, 49, 49);
+      --crt-green: rgb(112, 159, 115);
+      --crt-blue: rgb(40, 129, 206);
+    }
 
     body{
       margin:0;
       overflow:hidden;
       font-family: "Press Start 2P", monospace;
-
-      background-image:url("menu_bg.png");
-      background-size: 105%;
-      background-position:center;
-      background-repeat:no-repeat;
-      animation:bgMove 40s linear infinite;
+      
+      background-color: #333;
 
       display: flex;
       justify-content: center;
@@ -44,6 +45,48 @@
     .game_over_bg {
       background-image: url("game_over_bg.png");
       background-size: cover;
+    }
+
+    .crt {
+      /*background-color: rgb(25, 25, 30);*/
+      background-image:url("menu_bg.png");
+      background-size: 105%;
+      background-position:center;
+      background-repeat:no-repeat;
+      animation:bgMove 40s linear infinite;
+      text-shadow: 0 0 0.2em currentColor, 1px 1px rgba(255, 0, 255, 0.5),
+      -1px -1px rgba(0, 255, 255, 0.4);
+      position: relative;
+      &:before,
+      &:after {
+        content: "";
+        transform: translateZ(0);
+        pointer-events: none;
+      //opacity: 0.5;
+        mix-blend-mode: overlay;
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        left: 0;
+        top: 0;
+        z-index: 1;
+      }
+
+      &:before {
+        background: repeating-linear-gradient(
+            var(--crt-red) 0px,
+            var(--crt-green) 2px,
+            var(--crt-blue) 4px
+        );
+      }
+      &:after {
+        background: repeating-linear-gradient(
+            90deg,
+            var(--crt-red) 1px,
+            var(--crt-green) 2px,
+            var(--crt-blue) 3px
+        );
+      }
     }
 
     #ui{
@@ -219,6 +262,14 @@
     #commander-balloon {
       opacity: 0;
       transition: opacity 0.5s;
+      display:none;
+      width:600px;
+      height: 200px;
+      position:absolute;
+      top:20px;
+      left:20px;
+      z-index:10000;
+      font-size:14px;
     }
 
     #commander-balloon.show {
@@ -234,6 +285,19 @@
       border-radius: 50%;
       margin-right: 10px;
       vertical-align: middle;
+      flex-shrink: 0;
+      align-self: flex-end;
+      animation: radioFlicker 2s infinite alternate;
+    }
+
+    .nes-balloon {
+      height: 100%;
+      width: 100%;
+    }
+
+    .commander-section {
+      display: flex;
+      height: 100%;
     }
 
     #game-container{
@@ -273,6 +337,24 @@
       animation: motoMove 40s linear alternate; /* туда-сюда */
     }
 
+    #continueHint{
+      opacity:0;
+      margin-top:10px;
+      font-size:14px;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes radioFlicker{
+      from{filter:brightness(0.9)}
+      to{filter:brightness(1.1)}
+    }
+
+    @keyframes blink{
+      0%{opacity:0}
+      50%{opacity:1}
+      100%{opacity:0}
+    }
+
     @keyframes motoMove {
       0% { right: -200px; }
       50% { right: calc(100% - 200px); }
@@ -280,7 +362,6 @@
     }
 
     @keyframes bgMove{
-
       0%{
         background-position:center top;
       }
@@ -310,7 +391,7 @@
 
 <body>
 
-<div id="game-container">
+<div id="game-container" class="crt">
   <canvas id="game" width="1500" height="800">
   </canvas>
 
@@ -337,8 +418,6 @@
 <audio id="droneExplosionSound" src="drone_explosion.mp3"></audio>
 <audio id="groundExplosionSound" src="ground_explosion.mp3"></audio>
 
-<div id="countdown"></div>
-
 <div id="loading-screen">
   <div class="loading-box">
     <p>Loading...</p>
@@ -346,14 +425,12 @@
   </div>
 </div>
 
-<div id="commander-balloon" style="display:none; max-width:400px; position:absolute; top:20px; left:20px; z-index:10000; font-size:14px;">
-    <section class="message -left">
+<div id="commander-balloon">
+    <section class="message -left commander-section">
       <i class="commander-face"></i>
-      <!-- Balloon -->
       <div class="nes-balloon from-left">
-        <p>
-          Солдат! Выдвигайся на позицию. Вокруг много дронов, отстреливайся. Ни шагу назад! Если отступишь, мы тебя обнулим. Запомни: ты просто мясо...
-        </p>
+        <p></p>
+        <div id="continueHint">PRESS ENTER</div>
       </div>
     </section>
 </div>
@@ -372,18 +449,19 @@
 
   </div>
 
-</div>
-
-<div id="game-info">
-  <div>Drone Survivor</div>
-  <div>Version <span id="game-version"></span></div>
-  <div>© 2026 Mikhail Morshinin</div>
-  <div>
-    <a href="https://github.com/morshinin/drone-survivor" target="_blank">
-      GitHub
-    </a>
+  <div id="game-info">
+    <div>Drone Survivor</div>
+    <div>Version <span id="game-version"></span></div>
+    <div>© 2026 Mikhail Morshinin</div>
+    <div>
+      <a href="https://github.com/morshinin/drone-survivor" target="_blank">
+        GitHub
+      </a>
+    </div>
   </div>
 </div>
+
+
 
 <script>
   // ... (Supabase config remains the same)
@@ -555,6 +633,164 @@
     keys[e.key]=false
   })
 
+  const fadeEl = document.getElementById("fade")
+
+  async function fadeOutMenu() {
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    document.body.classList.add("hide-cursor")
+    await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
+    // 1. Экран полностью черный
+    fadeEl.style.opacity = "1"
+    fadeEl.style.transition = "opacity 3s"
+    // fadeEl.style.opacity = "0"
+  }
+  async function startGameSequence() {
+    console.log("Starting Game Sequence")
+
+    await new Promise(r => setTimeout(r, 5000))
+    const ui = document.getElementById("ui")
+    fadeEl.style.opacity = "0"
+    ui.style.display = "none"
+    effectsLayer.style.display = "block"
+    currentState = GameState.GAME
+    await new Promise(r => setTimeout(r, 1000))
+  }
+
+  async function showCommanderIntro() {
+    console.log("show commanderIntro")
+    await new Promise(r => setTimeout(r, 7000))
+
+    // const msg = "Солдат! Выдвигайся на позицию. Вокруг много дронов, отстреливайся. " +
+    //   "Ни шагу назад! Если отступишь, мы тебя обнулим. Запомни: ты просто мясо..."
+    const msg = `
+    значит так товарищ солдат. Соответственно, соответственно.
+- слушай боевую задачу - в час х выдвигаешся на усиление на укреплённую позицию. Наши из шестдесят девятого там уже хорошо окопались - опасаться нечего.
+Будешь оказывать содействие в организации снабжения и связи.
+Ротация будет каждые... очень скоро.
+В случае малейшего ранения тебя сразу обну...окажут помощь и эвакуируют в тыл.
+Кто без команды пойдёт назад - будет принят за наступающие силы противника.
+    `
+    await showCommanderMessage(8000, msg)
+  }
+
+  async function startWaveIntro() {
+    console.log("startWaveIntro")
+
+    droneSound.currentTime = 0
+    droneSound.volume = 0.3
+    droneSound.play()
+    await new Promise(r => setTimeout(r, 2000)) // небольшая пауза
+    gameMusic.play()
+
+    // Теперь разрешаем спавн дронов и первую волну
+    waveActive = true
+    wavePause = false
+    spawnDrone()
+    await new Promise(r => setTimeout(r, 1000))
+    spawnDrone()
+  }
+
+  async function animatePlayerIntro() {
+    console.log("animatePlayerIntro")
+    player.x = -player.width
+    player.y = canvas.height - groundHeight - player.height
+    player.direction = 1 // идем вправо
+    const targetX = canvas.width * 0.5
+    const speed = 3
+
+    // const stepSound = PLAYER_SOUNDS['footSteps']
+
+    // stepSound.volume = 0.4
+    // stepSound.loop = true
+    // stepSound.currentTime = 0
+    // await stepSound.play()
+
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        // “имитация” движения, как при нажатии клавиш
+        player.vx = speed
+        player.isMoving = true
+        player.update()  // обновляем позицию и кадры
+
+        if(player.x >= targetX){
+          player.x = targetX
+          player.vx = 0
+          player.isMoving = false
+          player.update()
+          clearInterval(interval)
+          resolve()
+        }
+      }, 100)
+    })
+  }
+
+  function splitTextIntoPages(text,maxChars=140){
+
+    const words = text.split(" ")
+    const pages = []
+
+    let current = ""
+
+    for(const word of words){
+
+      if((current+word).length > maxChars){
+        pages.push(current.trim())
+        current=""
+      }
+
+      current += word + " "
+    }
+
+    if(current.length) pages.push(current.trim())
+
+    return pages
+  }
+
+  async function typeText(element, text, speed = 25){
+
+    element.textContent = ""
+
+    let skip = false
+
+    function skipHandler(e){
+      if(e.code === "Enter") skip = true
+    }
+
+    window.addEventListener("keydown", skipHandler)
+    for(let i=0;i<text.length;i++){
+      element.textContent += text[i]
+
+      if(i % 3 === 0 && text[i] !== " "){
+        const s = GAME_SOUNDS.typeWriter.cloneNode()
+        s.volume = 0.15
+        s.play()
+      }
+
+      if(skip){
+        element.textContent = text
+        break
+      }
+
+      await new Promise(r => setTimeout(r,speed))
+    }
+
+    window.removeEventListener("keydown", skipHandler)
+  }
+
+  function waitForContinue(){
+    return new Promise(resolve => {
+      function handler(e){
+        if(e.code === "Enter"){
+          window.removeEventListener("keydown",handler)
+          resolve()
+        }
+      }
+
+      window.addEventListener("keydown",handler)
+    })
+  }
+
   function freeze(ms){
     hitFreeze = ms
   }
@@ -599,7 +835,9 @@
       startReload()
     }
 
-    // infinite ammo
+    if(e.code === "KeyD"){
+      spawnDrone()
+    }
 
     keys[e.key] = true
   })
@@ -675,6 +913,14 @@
 
   const PLAYER_SOUNDS = {
     death: new Audio("death.mp3"),
+    footSteps: new Audio("foot_steps.mp3"),
+  }
+
+  const GAME_SOUNDS = {
+    ambient: new Audio("ambient.mp3"),
+    typeWriter: new Audio("typeWriter.mp3"),
+    radioOn: new Audio("radio_chatter.mp3"),
+    radioOff: new Audio("radio_off.mp3"),
   }
 
   let currentWeapon
@@ -947,26 +1193,43 @@
 
 
   async function showCommanderMessage(duration = 10000, message = null){
-    const commanderSound = new Audio("radio_chatter.mp3")
-    commanderSound.volume = 0.4
+    const radioStart = GAME_SOUNDS.radioOn
+    const radioEnd = GAME_SOUNDS.radioOff
+    // const commanderSound = GAME_SOUNDS.typeWriter
+    // commanderSound.volume = 0.4
+    // commanderSound.currentTime = 0
+    // await commanderSound.play()
 
-    return new Promise(resolve => {
-      commanderSound.currentTime = 0
-      commanderSound.play()
+    const balloon = document.getElementById("commander-balloon");
+    const p = balloon.querySelector("p");
+    const hint = document.getElementById("continueHint")
 
-      const balloon = document.getElementById("commander-balloon");
-      const p = balloon.querySelector("p");
-      if(message) p.innerText = message;
+    balloon.style.display = "block";
+    balloon.classList.add("show");
 
-      balloon.style.display = "block";
-      balloon.classList.add("show");
+    radioStart.currentTime = 0
+    await radioStart.play()
 
-      setTimeout(() => {
-        balloon.classList.remove("show");
-        balloon.style.display = "none";
-        resolve();
-      }, duration);
-    });
+    await new Promise(r => setTimeout(r,300))
+
+    const pages = splitTextIntoPages(message)
+    for(let i=0;i<pages.length;i++){
+
+      const page = pages[i] + "..."
+
+      await typeText(p, page)
+
+      hint.style.display = "block"
+
+      await waitForContinue()
+
+      hint.style.display = "none"
+    }
+
+    radioEnd.currentTime = 0
+    radioEnd.play()
+
+    balloon.style.display = "none"
   }
 
   function fadeScreen(duration=800){
@@ -1001,9 +1264,6 @@
 
   class Player{
     constructor(){
-      this.x = canvas.width/2
-      this.y = canvas.height-groundHeight-115
-
       this.width = 100
       this.height = 130
 
@@ -1718,31 +1978,16 @@
   }
 
   async function startGame(){
+    await fadeOutMenu()
     initGame()
-    currentState = GameState.GAME
+    await startGameSequence()
+    await animatePlayerIntro()
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    await showCommanderIntro()
+    // await startWaveIntro()
 
     playerName = document.getElementById("nameInput").value.toUpperCase()
     if(playerName.length<3) playerName="AAA"
-
-    document.getElementById("ui").style.display = "none"
-    gameInfo.style.display = "none"
-    effectsLayer.style.display = "block"
-
-    // DEBUG: сразу спавним босса
-    if(DEBUG.bossStart){
-      spawnBoss()
-    }
-
-    await fadeScreen()
-    await crossfadeMusic(menuMusic, gameMusic)
-    droneSound.volume = 0.1
-    droneSound.currentTime = 0
-    droneSound.play()
-
-    // --- показываем сообщение командира ---
-    await showCommanderMessage(8000)
-
-    document.body.classList.add("hide-cursor")
   }
 
   async function endGame(){
@@ -1809,18 +2054,18 @@
       globalEnemyFireCooldown -= delta
     }
 
-    spawnInterval = Math.max(400, 2000 - survivalTime * 30);
-    spawnTimer += delta;
-
-    if (
-      spawnTimer >= spawnInterval &&
-      waveActive &&
-      countDrones() < waveMaxInAir &&
-      DEBUG.spawnDrones
-    ){
-      spawnDrone()
-      spawnTimer = 0
-    }
+    // spawnInterval = Math.max(400, 2000 - survivalTime * 30);
+    // spawnTimer += delta;
+    //
+    // if (
+    //   spawnTimer >= spawnInterval &&
+    //   waveActive &&
+    //   countDrones() < waveMaxInAir &&
+    //   DEBUG.spawnDrones
+    // ){
+    //   spawnDrone()
+    //   spawnTimer = 0
+    // }
 
     shootCooldown-=delta
 

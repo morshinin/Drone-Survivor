@@ -4,6 +4,9 @@
 
 Shoot mechanic
 Death screen
+Intro sequence
+CRT screen effect
+Commander baloon improve
 
 ## 0.17.3
 
