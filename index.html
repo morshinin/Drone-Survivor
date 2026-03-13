@@ -48,7 +48,6 @@
     }
 
     .crt {
-      /*background-color: rgb(25, 25, 30);*/
       background-image:url("menu_bg.png");
       background-size: 105%;
       background-position:center;
@@ -62,7 +61,7 @@
         content: "";
         transform: translateZ(0);
         pointer-events: none;
-      //opacity: 0.5;
+      /*//opacity: 0.5;*/
         mix-blend-mode: overlay;
         position: absolute;
         height: 100%;
@@ -189,24 +188,6 @@
       z-index:999;
     }
 
-    #countdown{
-      position:fixed;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      font-size:120px;
-      font-weight:bold;
-      color:white;
-      text-shadow:0 0 20px cyan;
-
-      opacity:0;
-      pointer-events:none;
-
-      transition:opacity 0.2s, transform 0.2s;
-
-      z-index:1000;
-    }
-
     #muteBtn {
       position: fixed;
       top:40px;
@@ -260,16 +241,18 @@
     }
 
     #commander-balloon {
-      opacity: 0;
-      transition: opacity 0.5s;
+      /*opacity: 0;*/
+      /*transition: opacity 0.5s;*/
       display:none;
       width:600px;
       height: 200px;
       position:absolute;
       top:20px;
-      left:20px;
-      z-index:10000;
-      font-size:14px;
+      /*left:20px;*/
+      /*z-index:10000;*/
+      font-size:16px;
+      right:-500px;   /* за пределами экрана */
+      transition:right 0.6s ease-out, opacity .5s;
     }
 
     #commander-balloon.show {
@@ -373,15 +356,12 @@
       100%{
         background-position:center top;
       }
-
     }
 
     @keyframes blink{
-
       0%{opacity:1}
-      50%{opacity:.9}
+      50%{opacity:0.1}
       100%{opacity:1}
-
     }
 
   </style>
@@ -659,17 +639,18 @@
 
   async function showCommanderIntro() {
     console.log("show commanderIntro")
-    await new Promise(r => setTimeout(r, 7000))
+    await new Promise(r => setTimeout(r, 3000))
 
     // const msg = "Солдат! Выдвигайся на позицию. Вокруг много дронов, отстреливайся. " +
     //   "Ни шагу назад! Если отступишь, мы тебя обнулим. Запомни: ты просто мясо..."
     const msg = `
-    значит так товарищ солдат. Соответственно, соответственно.
-- слушай боевую задачу - в час х выдвигаешся на усиление на укреплённую позицию. Наши из шестдесят девятого там уже хорошо окопались - опасаться нечего.
+    Значит так, товарищ солдат. Соответственно… соответственно.
+— Слушай боевую задачу.
+В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
 Будешь оказывать содействие в организации снабжения и связи.
-Ротация будет каждые... очень скоро.
-В случае малейшего ранения тебя сразу обну...окажут помощь и эвакуируют в тыл.
-Кто без команды пойдёт назад - будет принят за наступающие силы противника.
+Ротация будет каждые… очень скоро.
+В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
+Кто без команды пойдёт назад — будет принят за наступающие силы противника.
     `
     await showCommanderMessage(8000, msg)
   }
@@ -921,6 +902,12 @@
     typeWriter: new Audio("typeWriter.mp3"),
     radioOn: new Audio("radio_chatter.mp3"),
     radioOff: new Audio("radio_off.mp3"),
+  }
+
+  const UI = {
+    notification: {
+      balloon: document.getElementById("commander-balloon"),
+    }
   }
 
   let currentWeapon
@@ -1191,21 +1178,42 @@
     return gameObjects.filter(o => o instanceof EnemyBullet).length
   }
 
+  async function animateCommanderBox(){
+    const box = UI.notification.balloon
+
+    box.style.display = "block"
+
+    // маленькая задержка чтобы браузер применил display
+    await new Promise(r => setTimeout(r,20))
+
+    box.style.right = "40px"
+
+    // ждём завершения анимации
+    await new Promise(r => setTimeout(r,600))
+  }
+
+  async function hideCommanderBox(){
+    const box = UI.notification.balloon
+
+    box.style.right = "-500px"
+
+    await new Promise(r => setTimeout(r,600))
+
+    box.style.display = "none"
+  }
 
   async function showCommanderMessage(duration = 10000, message = null){
     const radioStart = GAME_SOUNDS.radioOn
     const radioEnd = GAME_SOUNDS.radioOff
-    // const commanderSound = GAME_SOUNDS.typeWriter
-    // commanderSound.volume = 0.4
-    // commanderSound.currentTime = 0
-    // await commanderSound.play()
 
-    const balloon = document.getElementById("commander-balloon");
+    const balloon = UI.notification.balloon
     const p = balloon.querySelector("p");
     const hint = document.getElementById("continueHint")
 
-    balloon.style.display = "block";
-    balloon.classList.add("show");
+    // balloon.style.display = "block";
+    // balloon.classList.add("show");
+
+    await animateCommanderBox()
 
     radioStart.currentTime = 0
     await radioStart.play()
@@ -1227,9 +1235,11 @@
     }
 
     radioEnd.currentTime = 0
-    radioEnd.play()
+    await radioEnd.play()
 
-    balloon.style.display = "none"
+    await hideCommanderBox()
+
+    // balloon.style.display = "none"
   }
 
   function fadeScreen(duration=800){
@@ -2232,7 +2242,7 @@
       ctx.fillStyle = "white";
       ctx.font = "14px 'Press Start 2P', cursive";
       ctx.textAlign = "center";
-      ctx.fillText("BOSS: NEURAL REAPER", canvas.width / 2, y + 40);
+      ctx.fillText("BOSS: Обнулитель 3000", canvas.width / 2, y + 40);
     }
 
     ctx.fillStyle = "white"

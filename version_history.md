@@ -6,7 +6,7 @@ Shoot mechanic
 Death screen
 Intro sequence
 CRT screen effect
-Commander baloon improve
+Commander balloon improve
 
 ## 0.17.3
 
