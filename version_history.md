@@ -13,6 +13,7 @@ Smoke sprites
 Fire sprite
 Text changes
 Optimization
+Remove freeze and screen shake
 
 ## 0.17.3
 
