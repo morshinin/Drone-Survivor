@@ -1012,7 +1012,7 @@
       // Отключаем анимацию UI
       ui.style.animation = 'none'
 
-      console.log('Visual effects disabled for game')
+      // console.log('Visual effects disabled for game')
     },
 
     // Включить эффекты для меню
@@ -1027,7 +1027,7 @@
       // Возвращаем анимацию UI
       ui.style.animation = 'glitch1 1s infinite'
 
-      console.log('Visual effects enabled for menu')
+      // console.log('Visual effects enabled for menu')
     }
   }
 
@@ -1080,6 +1080,7 @@
       this.spawnTimer = 0
       this.stageComplete = false
       this.infiniteMode = false
+      this.maxDrones = 30
 
       // Инициализация этапов
       this.initStages()
@@ -1315,12 +1316,9 @@
 
     // Обновление (вызывать в gameLoop)
     update(delta) {
-      if (!this.isActive) {
-        console.log("WaveManager not active")
+      if (!this.isActive && countDrones() > this.maxDrones) {
         return
       }
-
-      console.log("WaveManager updating", this.currentStageIndex, this.currentWaveIndex)
 
       if (this.isPaused) {
         this.pauseTimer += delta
@@ -1393,7 +1391,6 @@
 
     // Спавн дрона по типу
     spawnDroneByType(type) {
-      console.log("Spawning drone of type:", type)
       switch (type) {
         case DroneType.NORMAL:
           return spawnNormalDrone()
@@ -2382,7 +2379,6 @@
 
     takeDamage(amount) {
       this.hp -= amount
-      console.log(`Drone took damage, hp: ${this.hp}/${this.maxHp}`)
 
       if (this.hp <= 0) {
         this.alive = false
@@ -2408,7 +2404,6 @@
         frameDelay: 8,
         image: droneImg
       })
-      console.log("NormalDrone image:", this.image ? "loaded" : "not loaded", this.image?.complete)
 
       this.fireTimer = Math.random() * 1000
       this.fireCooldown = 800 + Math.random() * 1200
@@ -2457,7 +2452,6 @@
         frameDelay: 10,
         image: droneImg // Можно заменить на другой спрайт
       })
-      console.log("GrenadierDrone image:", this.image ? "loaded" : "not loaded", this.image?.complete)
 
       this.dropTimer = 120 + Math.random() * 120
       this.grenadeCooldown = 3000
@@ -2710,7 +2704,6 @@
       this.vy = dy
       this.size = 6 // Размер пули
       this.alive = true
-      console.log("Bullet created at:", x, y) // Отладка
     }
 
     update() {
@@ -3149,7 +3142,6 @@
 
     shake(intensity = 10, duration = 15) {
       // Ничего не делаем - тряска отключена
-      console.log('Shake disabled')
     }
   }
 
@@ -3174,7 +3166,6 @@
 
   // ЗАМЕНИТЕ старую функцию spawnDrone на эту:
   function spawnDrone() {
-    console.log("spawn drone")
     const maxDrones = 50
 
     if (countDrones() >= maxDrones) return
@@ -3261,6 +3252,8 @@
   }
 
   function update(delta) {
+    const startTime = performance.now()
+
     if (hitFreeze > 0) {
       hitFreeze -= delta
       return
@@ -3356,34 +3349,33 @@
     //   })
     // })
     // КОЛЛИЗИИ ПУЛЬ И ДРОНОВ
-    const bullets = gameObjects.filter(o => o instanceof Bullet && o.alive)
-    const drones = gameObjects.filter(o => o instanceof BaseDrone && o.alive)
+    if (frameCounter % 2 === 0) { // Проверяем коллизии каждый второй кадр
+      const bullets = gameObjects.filter(o => o instanceof Bullet && o.alive)
+      const drones = gameObjects.filter(o => o instanceof BaseDrone && o.alive)
 
-    bullets.forEach(b => {
-      drones.forEach(d => {
-        if (isColliding(b, d)) {
-          console.log("Hit!", b, d) // Отладка
+      bullets.forEach(b => {
+        drones.forEach(d => {
+          if (isColliding(b, d)) {
 
-          b.alive = false
+            b.alive = false
 
-          if (d.takeDamage(1)) { // Если дрон умер
-            console.log("Drone killed!")
-            d.onDeath()
+            if (d.takeDamage(1)) { // Если дрон умер
+              d.onDeath()
 
-            // Начисляем очки
-            const gained = calculateDroneScore(d)
-            score += gained
-            showScoreGain(gained)
-            waveKills++
+              // Начисляем очки
+              const gained = calculateDroneScore(d)
+              score += gained
+              showScoreGain(gained)
+              waveKills++
 
-            // freeze(40)
-            // screenShake.shake(4, 4)
-          } else {
-            console.log(`Drone damaged, hp: ${d.hp}/${d.maxHp}`)
+              // freeze(40)
+              // screenShake.shake(4, 4)
+            } else {
+            }
           }
-        }
+        })
       })
-    })
+    }
 
     // ===== ВАЖНО: ОБНОВЛЕНИЕ ВСЕХ ОБЪЕКТОВ =====
     gameObjects.forEach(obj => {
@@ -3427,123 +3419,13 @@
     // ===== ВАЖНО: ЗВУК ДРОНОВ =====
     let targetVolume = 0.05 + (countDrones() / 50) * 0.25
     droneSound.volume = targetVolume
-  }
 
-  // ... (Draw and Game Loop remain the same)
-  // function draw() {
-  //   // Очистка основного канваса - ТОЛЬКО ОДИН РАЗ
-  //   ctx.clearRect(0, 0, canvas.width, canvas.height)
-  //
-  //   // Рисуем фон - ТОЛЬКО ЕСЛИ ОН ЗАГРУЖЕН
-  //   if (background.complete) {
-  //     ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
-  //   }
-  //
-  //   // Рисуем облака
-  //   drawClouds(ctx)
-  //
-  //   // Рисуем анимированные спрайты
-  //   if (tankSmoke?.alive) tankSmoke.draw(ctx)
-  //   if (citySmoke?.alive) citySmoke.draw(ctx)
-  //   if (cityFire?.alive) cityFire.draw(ctx)
-  //
-  //   // Рисуем землю
-  //   ctx.fillStyle = "rgba(0,0,0,0)"
-  //   ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight)
-  //
-  //   // Рисуем танк
-  //   if (tankImg.complete) {
-  //     ctx.drawImage(tankImg, tank.x, tank.y, tank.w, tank.h)
-  //   }
-  //
-  //   // Тряска камеры
-  //   const shakeOffset = screenShake.update()
-  //   ctx.save()
-  //   ctx.translate(shakeOffset.x, shakeOffset.y)
-  //
-  //   // Рисуем разрушенный город
-  //   if (destroyedCityImg.complete) {
-  //     ctx.drawImage(destroyedCityImg, destroyedCity.x, destroyedCity.y, destroyedCity.w, destroyedCity.h)
-  //   }
-  //
-  //   // Рисуем игрока
-  //   if (player?.alive) {
-  //     player.draw()
-  //   }
-  //
-  //   // Рисуем игровые объекты
-  //   for (const obj of gameObjects) {
-  //     if (obj.alive) {
-  //       obj.draw(ctx)
-  //     }
-  //   }
-  //
-  //   // Рисуем здоровье босса
-  //   const boss = gameObjects.find(o => o instanceof BossDrone && o.alive)
-  //   if (boss?.active) {
-  //     const barWidth = 400
-  //     const barHeight = 20
-  //     const x = (canvas.width - barWidth) / 2
-  //     const y = 20
-  //
-  //     ctx.fillStyle = "rgba(255, 0, 0, 0.3)"
-  //     ctx.fillRect(x, y, barWidth, barHeight)
-  //
-  //     const healthPercent = boss.hp / boss.maxHp
-  //     ctx.fillStyle = "#00ff00"
-  //     ctx.fillRect(x, y, barWidth * healthPercent, barHeight)
-  //
-  //     ctx.strokeStyle = "white"
-  //     ctx.lineWidth = 2
-  //     ctx.strokeRect(x, y, barWidth, barHeight)
-  //
-  //     ctx.fillStyle = "white"
-  //     ctx.font = "14px 'Press Start 2P', cursive"
-  //     ctx.textAlign = "center"
-  //     ctx.fillText("BOSS: Обнулитель 3000", canvas.width / 2, y + 40)
-  //   }
-  //
-  //   ctx.restore() // ВАЖНО: закрываем translate
-  //
-  //   // UI элементы - рисуем БЕЗ трансформаций
-  //   ctx.save()
-  //   ctx.fillStyle = "white"
-  //   ctx.font = "20px monospace"
-  //   ctx.shadowColor = "black"
-  //   ctx.shadowBlur = 4
-  //   ctx.shadowOffsetX = 2
-  //   ctx.shadowOffsetY = 2
-  //
-  //   ctx.fillText(currentWeapon?.name || "Pistol", 20, 200)
-  //   ctx.fillText(`Ammo: ${ammoInMagazine || 0} / ${currentWeapon?.magazineSize || 15}`, 20, 240)
-  //   ctx.fillText(`Magazines: ${magazines || 0}`, 20, 270)
-  //
-  //   if (isReloading) {
-  //     ctx.fillStyle = "yellow"
-  //     ctx.fillText("RELOADING...", 20, 100)
-  //   }
-  //
-  //   ctx.restore()
-  //
-  //   // Экран смерти
-  //   if (!player?.alive) {
-  //     ctx.save()
-  //     ctx.fillStyle = "rgba(0,0,0,0.7)"
-  //     ctx.fillRect(0, 0, canvas.width, canvas.height)
-  //
-  //     ctx.fillStyle = "red"
-  //     ctx.font = "96px 'Press Start 2P'"
-  //     ctx.textAlign = "center"
-  //     ctx.shadowColor = "black"
-  //     ctx.shadowBlur = 10
-  //     ctx.fillText("Ты 200!", canvas.width / 2, canvas.height / 2)
-  //     ctx.restore()
-  //   }
-  //
-  //   // Обновление UI элементов (это не отрисовка, а установка текста)
-  //   document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
-  //   document.getElementById("score").innerText = score
-  // }
+    const endTime = performance.now()
+    const frameTime = endTime - startTime
+    if (frameTime > 16) { // Если кадр длится дольше 16ms (меньше 60fps)
+      console.warn(`Long frame: ${frameTime.toFixed(2)}ms, Drones: ${countDrones()}`)
+    }
+  }
 
   function draw() {
     // Очистка канваса
@@ -3689,7 +3571,7 @@
       frameCount = 0
       lastFrameTime = t
       // Можно показать FPS для отладки
-      // console.log('FPS:', fps)
+      console.log('FPS:', fps)
     }
 
     const rawDelta = Math.min(t - last, 100) // Ограничиваем дельту
