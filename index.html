@@ -1080,7 +1080,7 @@
       this.spawnTimer = 0
       this.stageComplete = false
       this.infiniteMode = false
-      this.maxDrones = 18
+      this.maxDrones = 15
       this.maxBullets = 30
 
       // Инициализация этапов
@@ -1327,8 +1327,12 @@
 
     // Обновление (вызывать в gameLoop)
     update(delta) {
-      if (!this.isActive && countDrones() > this.maxDrones) {
+      if (!this.isActive) {
         return
+      }
+
+      if (countDrones() >= this.maxDrones) {
+        return // Не спавним новых, если достигнут лимит
       }
 
       if (this.isPaused) {
@@ -3239,7 +3243,7 @@
     shootCooldown = 0
 
     // облака
-    initClouds(3)
+    // initClouds(3)
     initCitySmoke()
     initTankSmoke()
     initFire()
@@ -3255,7 +3259,7 @@
     await new Promise(resolve => setTimeout(resolve, 3000))
     await showCommanderIntro()
     // await startWaveIntro()
-    waveManager.startStage(0)
+    await waveManager.startStage(0)
 
     playerName = document.getElementById("nameInput").value.toUpperCase()
     if(playerName.length<3) playerName="AAA"
@@ -3366,30 +3370,6 @@
       shoot(dir.dx, dir.dy)
     }
 
-    // ===== ВАЖНО: КОЛЛИЗИИ ПУЛЬ И ДРОНОВ =====
-    // const boss = gameObjects.find(o => o instanceof BossDrone)
-    // const bullets = gameObjects.filter(o => o instanceof Bullet)
-    // const drones = gameObjects.filter(o => o instanceof BaseDrone)
-    //
-    // bullets.forEach(b => {
-    //   drones.forEach(d => {
-    //     if (isColliding(b, d)) {
-    //       b.alive = false
-    //
-    //       if (d.takeDamage(1)) { // Если дрон умер
-    //         d.onDeath()
-    //
-    //         const gained = calculateDroneScore(d)
-    //         score += gained
-    //         showScoreGain(gained)
-    //         waveKills++
-    //
-    //         freeze(40)
-    //         screenShake.shake(4, 4)
-    //       }
-    //     }
-    //   })
-    // })
     // КОЛЛИЗИИ ПУЛЬ И ДРОНОВ
     if (frameCounter % 2 === 0) { // Проверяем коллизии каждый второй кадр
       const bullets = gameObjects.filter(o => o instanceof Bullet && o.alive)
