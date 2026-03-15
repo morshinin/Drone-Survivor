@@ -1085,12 +1085,14 @@
 
       // Инициализация этапов
       this.initStages()
+
+      this.currentWaveDrones = []
     }
 
     initStages() {
       // Этап 1: Начало
       this.stages.push(new StageConfig('Начало', {
-        startMessage: 'Первая группа дронов на подходе. Держись!',
+        startMessage: 'Основные силы противника!',
         waves: [
           new WaveConfig('Разведка', {
             drones: [{type: DroneType.NORMAL, count: 5}],
@@ -1111,7 +1113,7 @@
             spawnInterval: 900
           })
         ],
-        endMessage: 'Неплохо для начала. Но это только цветочки...',
+        endMessage: 'Ты еще жив? Удивительно...',
         pauseAfter: 4000
       }))
 
@@ -1236,30 +1238,47 @@
 
     // Запустить конкретный этап
     startStage(index) {
+      // Убеждаемся, что индекс в пределах массива
+      if (index >= this.stages.length) {
+        if (this.infiniteMode) {
+          this.startInfiniteMode()
+        }
+        return
+      }
+
       const stage = this.stages[index]
+
+      // ВАЖНО: сбрасываем все счетчики перед стартом этапа
+      this.currentStageIndex = index
+      this.currentWaveIndex = 0
+      this.isActive = true
+      this.stageComplete = false
+      this.isPaused = false
+      this.pauseTimer = 0
+      this.spawnTimer = 0
+      this.currentWaveSpawnCount = 0
+      this.currentWaveDrones = []
+
+      this.isActive = false // ВАЖНО
+
+      if (stage.startMessage) {
+        showCommanderMessage(5000, stage.startMessage).then(() => {
+          this.isActive = true
+          this.startCurrentWave()
+        })
+      } else {
+        this.isActive = true
+        this.startCurrentWave()
+      }
+
       if (stage.bossWave) {
-        // Приостанавливаем обычные волны
+        // Для босса особая логика
         this.isActive = false
-        // Показываем сообщение и запускаем босса отдельно
         showCommanderMessage(5000, stage.startMessage).then(() => {
           spawnBoss()
         })
       } else {
-        if (index >= this.stages.length) {
-          if (this.infiniteMode) {
-            this.startInfiniteMode()
-          }
-          return
-        }
-
-        this.currentStageIndex = index
-        this.currentWaveIndex = 0
-        this.isActive = true
-        this.stageComplete = false
-
-        const stage = this.stages[this.currentStageIndex]
-
-        // Показываем сообщение этапа
+        // Показываем сообщение этапа если есть
         if (stage.startMessage) {
           showCommanderMessage(5000, stage.startMessage).then(() => {
             this.startCurrentWave()
@@ -1272,41 +1291,61 @@
 
     // Запустить текущую волну
     startCurrentWave() {
-      if (this.currentWaveIndex >= this.stages[this.currentStageIndex].waves.length) {
+      const stage = this.stages[this.currentStageIndex]
+
+      if (this.currentWaveIndex >= stage.waves.length) {
         this.completeStage()
         return
       }
 
+      const wave = stage.waves[this.currentWaveIndex]
+
+      // ПРИНУДИТЕЛЬНОЕ ГЛУБОКОЕ КОПИРОВАНИЕ
+      this.currentWaveDrones = JSON.parse(JSON.stringify(wave.drones))
+
+      console.log(`Starting wave ${this.currentWaveIndex + 1}/${stage.waves.length}: ${wave.name}`,
+        'Original:', wave.drones,
+        'Copy:', this.currentWaveDrones)
+
       this.isPaused = false
       this.spawnTimer = 0
-      this.currentWaveSpawnCount = 0 // Сбрасываем счетчик для новой волны
+      this.currentWaveSpawnCount = 0
     }
 
     // Завершить этап
     completeStage() {
       const stage = this.stages[this.currentStageIndex]
+      console.log(`Stage ${this.currentStageIndex + 1} (${stage.name}) completed!`)
+
       this.isActive = false
       this.stageComplete = true
       this.pauseTimer = 0
+      this.spawnTimer = 0
+      this.currentWaveSpawnCount = 0
+      this.currentWaveDrones = []
+
+      const nextStage = (cb) => {
+        this.currentStageIndex++
+        this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
+        if (this.currentStageIndex < this.stages.length) {
+          console.log(`Moving to stage ${this.currentStageIndex + 1}: ${this.stages[this.currentStageIndex].name}`)
+          this.startStage(this.currentStageIndex)
+        } else {
+          console.log("All stages completed! Starting infinite mode...")
+          this.startInfiniteMode()
+        }
+      }
 
       if (stage.endMessage) {
         showCommanderMessage(5000, stage.endMessage).then(() => {
           if (stage.bossWave) {
-            // После босса можно перейти в бесконечный режим
             this.startInfiniteMode()
           } else {
-            // Переход к следующему этапу
-            this.currentStageIndex++
-            if (this.currentStageIndex < this.stages.length) {
-              this.startStage(this.currentStageIndex)
-            }
+            nextStage()
           }
         })
       } else {
-        this.currentStageIndex++
-        if (this.currentStageIndex < this.stages.length) {
-          this.startStage(this.currentStageIndex)
-        }
+        nextStage()
       }
     }
 
@@ -1327,58 +1366,81 @@
 
     // Обновление (вызывать в gameLoop)
     update(delta) {
-      if (!this.isActive) {
-        return
-      }
+      if (!this.isActive) return
 
-      if (countDrones() >= this.maxDrones) {
-        return // Не спавним новых, если достигнут лимит
-      }
-
-      if (this.isPaused) {
-        this.pauseTimer += delta
-        const stage = this.stages[this.currentStageIndex]
-        const wave = stage.waves[this.currentWaveIndex - 1] // предыдущая волна
-
-        if (wave && this.pauseTimer >= wave.pauseAfter) {
-          this.isPaused = false
-          this.spawnTimer = 0
-        }
+      // Проверяем индекс этапа
+      if (this.currentStageIndex >= this.stages.length) {
+        console.log("No more stages")
+        this.isActive = false
         return
       }
 
       const stage = this.stages[this.currentStageIndex]
+      if (!stage) {
+        console.error("Stage not found!")
+        this.isActive = false
+        return
+      }
+
+      // ЕСЛИ МЫ В ПАУЗЕ
+      if (this.isPaused) {
+        this.pauseTimer += delta
+        const prevWave = stage.waves[this.currentWaveIndex - 1]
+
+        if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
+          console.log(`Pause ended, starting next wave ${this.currentWaveIndex + 1}/${stage.waves.length}`)
+          this.isPaused = false
+          this.spawnTimer = 0
+          this.startCurrentWave() // Запускаем следующую волну
+        }
+        return
+      }
+
+      // ПРОВЕРЯЕМ, НЕ ЗАКОНЧИЛИСЬ ЛИ ВОЛНЫ
+      if (this.currentWaveIndex >= stage.waves.length) {
+        console.log("All waves completed, completing stage")
+        this.completeStage()
+        return
+      }
+
+      if (this.currentWaveDrones.length === 0) return
+
+      // ОСНОВНАЯ ЛОГИКА СПАВНА
       const wave = stage.waves[this.currentWaveIndex]
 
-      if (!wave) return
-
-      // Спавн дронов
       this.spawnTimer += delta
 
       if (this.spawnTimer >= wave.spawnInterval) {
         this.spawnTimer = 0
 
-        // Проверяем, все ли дроны волны заспавнены
-        const currentWaveDrones = this.getWaveDroneCount(this.currentStageIndex, this.currentWaveIndex)
-        const spawnedInWave = this.countSpawnedInWave()
+        const totalDrones = this.getWaveDroneCount()
 
-        if (spawnedInWave < currentWaveDrones) {
-          this.spawnNextDrone(wave)
+        if (this.currentWaveSpawnCount < totalDrones) {
+          this.spawnNextDrone()
         } else {
           // Все дроны заспавнены, ждем пока их убьют
           if (countDrones() === 0) {
-            this.isPaused = true
-            this.pauseTimer = 0
+            console.log(`Wave ${this.currentWaveIndex + 1} completed`)
             this.currentWaveIndex++
+
+            // ПРОВЕРЯЕМ, ЕСТЬ ЛИ СЛЕДУЮЩАЯ ВОЛНА
+            if (this.currentWaveIndex < stage.waves.length) {
+              // Есть следующая волна - ставим паузу
+              this.isPaused = true
+              this.pauseTimer = 0
+            } else {
+              // Это была последняя волна - завершаем этап
+              this.completeStage()
+            }
           }
         }
       }
     }
 
     // Получить общее количество дронов в волне
-    getWaveDroneCount(stageIndex, waveIndex) {
-      const wave = this.stages[stageIndex].waves[waveIndex]
-      return wave.drones.reduce((sum, d) => sum + d.count, 0)
+    getWaveDroneCount() {
+      if (!this.currentWaveDrones) return 0
+      return this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
     }
 
     // Посчитать сколько дронов уже заспавнено в текущей волне
@@ -1391,15 +1453,17 @@
     }
 
     // Заспавнить следующего дрона из волны
-    spawnNextDrone(wave) {
-      const availableTypes = wave.drones.filter(d => d.count > 0)
+    spawnNextDrone() {
+      const availableTypes = this.currentWaveDrones.filter(d => d.count > 0)
       if (availableTypes.length === 0) return
 
       const type = availableTypes[Math.floor(Math.random() * availableTypes.length)]
-      type.count--
+      type.count--  // Уменьшаем ТОЛЬКО в копии
 
-      // Увеличиваем счетчик
-      this.currentWaveSpawnCount = (this.currentWaveSpawnCount || 0) + 1
+      this.currentWaveSpawnCount++
+
+      console.log(`Spawning ${type.type}, remaining:`,
+        this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', '))
 
       this.spawnDroneByType(type.type)
     }
@@ -3243,7 +3307,7 @@
     shootCooldown = 0
 
     // облака
-    // initClouds(3)
+    // initClouds(1)
     initCitySmoke()
     initTankSmoke()
     initFire()
@@ -3357,8 +3421,11 @@
     if (frameCounter % 30 === 0) {
       const stage = waveManager.stages[waveManager.currentStageIndex]
       const waveInfo = document.getElementById('wave-info')
-      if (stage) {
+      if (stage && waveManager.currentWaveIndex < stage.waves.length) {
         waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
+      } else if (stage) {
+        // Если волны закончились, показываем завершение
+        waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
       }
     }
 
@@ -3593,7 +3660,7 @@
       frameCount = 0
       lastFrameTime = t
       // Можно показать FPS для отладки
-      console.log('FPS:', fps)
+      // console.log('FPS:', fps)
     }
 
     const rawDelta = Math.min(t - last, 100) // Ограничиваем дельту
