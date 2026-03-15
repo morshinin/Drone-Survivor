@@ -583,7 +583,7 @@
   const HITBOX_PADDING = 12
   const GAME_VERSION = "0.17.3"
 
-  const MAX_ENEMY_BULLETS = 60
+  // const MAX_ENEMY_BULLETS = 60
   document.getElementById("game-version").innerText = GAME_VERSION
 
   const menuMusic = document.getElementById("menuMusic")
@@ -1080,7 +1080,8 @@
       this.spawnTimer = 0
       this.stageComplete = false
       this.infiniteMode = false
-      this.maxDrones = 30
+      this.maxDrones = 18
+      this.maxBullets = 30
 
       // Инициализация этапов
       this.initStages()
@@ -1235,27 +1236,37 @@
 
     // Запустить конкретный этап
     startStage(index) {
-      if (index >= this.stages.length) {
-        if (this.infiniteMode) {
-          this.startInfiniteMode()
-        }
-        return
-      }
-
-      this.currentStageIndex = index
-      this.currentWaveIndex = 0
-      this.isActive = true
-      this.stageComplete = false
-
-      const stage = this.stages[this.currentStageIndex]
-
-      // Показываем сообщение этапа
-      if (stage.startMessage) {
+      const stage = this.stages[index]
+      if (stage.bossWave) {
+        // Приостанавливаем обычные волны
+        this.isActive = false
+        // Показываем сообщение и запускаем босса отдельно
         showCommanderMessage(5000, stage.startMessage).then(() => {
-          this.startCurrentWave()
+          spawnBoss()
         })
       } else {
-        this.startCurrentWave()
+        if (index >= this.stages.length) {
+          if (this.infiniteMode) {
+            this.startInfiniteMode()
+          }
+          return
+        }
+
+        this.currentStageIndex = index
+        this.currentWaveIndex = 0
+        this.isActive = true
+        this.stageComplete = false
+
+        const stage = this.stages[this.currentStageIndex]
+
+        // Показываем сообщение этапа
+        if (stage.startMessage) {
+          showCommanderMessage(5000, stage.startMessage).then(() => {
+            this.startCurrentWave()
+          })
+        } else {
+          this.startCurrentWave()
+        }
       }
     }
 
@@ -2430,7 +2441,7 @@
 
     shoot() {
       this.fireTimer = 0
-      if (countEnemyBullets() < MAX_ENEMY_BULLETS) {
+      if (countEnemyBullets() < waveManager.maxBullets) {
         spawn(new EnemyBullet(
           this.x + this.width / 2,
           this.y + this.height
@@ -2770,6 +2781,9 @@
       this.active = false
 
       this.alive = true
+
+      this.maxMinions = 8 // Максимум дронов-миньонов одновременно
+      this.spawnedMinions = 0
     }
 
     update(delta){
@@ -2778,27 +2792,53 @@
         this.y += this.speed
       }
       // спавн дронов
-      this.spawnTimer += delta
-      if(this.spawnTimer > 2000){
-        this.spawnTimer = 0
+      this.phaseTimer += delta
+      if (this.hp < this.maxHp * 0.5 && this.phase === 1) {
+        this.phase = 2
+        console.log("Boss phase 2!") // Важное сообщение оставляем
+      }
 
-        for(let i=0;i<4;i++){
-          spawnDrone()
+      // Фаза 1: редко спавнит дронов
+      if (this.phase === 1) {
+        this.spawnTimer += delta
+        if (this.spawnTimer > 6000) { // 6 секунд
+          this.spawnTimer = 0
+          if (countDrones() < 15) {
+            spawnNormalDrone() // Только 1 дрон
+          }
+        }
+      }
+
+      // Фаза 2: спавнит больше, но все равно с лимитом
+      if (this.phase === 2) {
+        this.spawnTimer += delta
+        if (this.spawnTimer > 4000) { // 4 секунды
+          this.spawnTimer = 0
+          if (countDrones() < 20) {
+            // Спавним 1-2 дрона
+            for (let i = 0; i < 2; i++) {
+              if (Math.random() < 0.5) {
+                spawnNormalDrone()
+              } else {
+                spawnGrenadier()
+              }
+            }
+          }
         }
       }
 
       // ракета
       this.missileTimer += delta
-      if(this.missileTimer > 3000){
+      if (this.missileTimer > 4000) { // УВЕЛИЧИЛИ до 4 секунд
         this.missileTimer = 0
-
-        spawn(
-          new Missile(
+        // Только одна ракета за раз
+        if (gameObjects.filter(o => o instanceof Missile).length < 3) {
+          spawn(new Missile(
             this.x + this.width/2,
             this.y + this.height,
             player.x + player.width/2
-          )
-        )
+          ))
+        }
       }
     }
 
@@ -2988,7 +3028,7 @@
 
   // Функции спавна
   function spawnNormalDrone() {
-    const maxDrones = 50
+    const maxDrones = waveManager.maxDrones
     if (countDrones() >= maxDrones) return
 
     const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
@@ -2997,7 +3037,7 @@
   }
 
   function spawnGrenadier() {
-    const maxDrones = 50
+    const maxDrones = waveManager.maxDrones
     if (countDrones() >= maxDrones) return
 
     const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
@@ -3006,6 +3046,9 @@
   }
 
   function spawnKamikaze() {
+    const maxDrones = waveManager.maxDrones
+    if (countDrones() >= maxDrones) return
+
     const drone = new KamikazeDrone()
     spawn(drone)
     return drone
@@ -3166,8 +3209,7 @@
 
   // ЗАМЕНИТЕ старую функцию spawnDrone на эту:
   function spawnDrone() {
-    const maxDrones = 50
-
+    const maxDrones = waveManager.maxDrones
     if (countDrones() >= maxDrones) return
 
     // Используем новый NormalDrone вместо старого Drone
