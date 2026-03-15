@@ -976,7 +976,8 @@
   const DEBUG = {
     bossStart: false,   // начать игру сразу с босса
     godMode: false,     // бессмертие
-    spawnDrones: false // включить/выключить обычных дронов
+    spawnDrones: false, // включить/выключить обычных дронов
+    showHitboxes: true
   }
 
   const GameState = {
@@ -1035,6 +1036,12 @@
     NORMAL: 'normal',
     GRENADIER: 'grenadier',
     KAMIKAZE: 'kamikaze'
+  }
+
+  function showHitboxRect(x, y, width, height, color) {
+    ctx.strokeStyle = color || 'red'
+    ctx.lineWidth = 2
+    ctx.strokeRect(x, y, width, height)
   }
 
   // Класс для настройки волны
@@ -2053,14 +2060,24 @@
   // }
 
   function isColliding(a, b) {
-    // Для пули (a) и дрона (b)
     if (!a || !b || !a.alive || !b.alive) return false
 
+    // Для объектов с size (пули игрока)
+    if (a.size !== undefined) {
+      return (
+        a.x < b.x + b.width &&
+        a.x + a.size > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.size > b.y
+      )
+    }
+
+    // Для объектов с width/height (вражеские пули, дроны и т.д.)
     return (
       a.x < b.x + b.width &&
-      a.x + a.size > b.x &&
+      a.x + a.width > b.x &&
       a.y < b.y + b.height &&
-      a.y + a.size > b.y
+      a.y + a.height > b.y
     )
   }
 
@@ -2331,6 +2348,10 @@
       if (this.maxHp > 1) {
         this.drawHealthBar(ctx)
       }
+
+      if (DEBUG.showHitboxes) {
+        showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
+      }
     }
 
 
@@ -2559,6 +2580,8 @@
 
   class Player{
     constructor(){
+      this.x = 0
+      this.y = 0
       this.width = 100
       this.height = 130
 
@@ -2578,6 +2601,7 @@
     }
 
     die() {
+      if (DEBUG.godMode) return
       player.alive = false
 
       timeScale = 0.25
@@ -2671,6 +2695,10 @@
         )
       }
       ctx.restore()
+
+      if (DEBUG.showHitboxes) {
+        showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
+      }
     }
   }
 
@@ -2709,6 +2737,8 @@
       this.speed=4
       this.width = 12
       this.height = 20
+      // Добавляем size для совместимости с isColliding
+      this.size = Math.min(this.width, this.height)
 
       this.alive = true
     }
@@ -2721,10 +2751,14 @@
         this.width,
         this.height
       )
+
+      if (DEBUG.showHitboxes) {
+        showHitboxRect(this.x, this.y, this.width, this.height)
+      }
     }
   }
 
-  class BossDrone{
+  class BossDrone {
     constructor(){
       this.width = 300
       this.height = 260
@@ -2777,6 +2811,10 @@
 
     draw(){
       ctx.drawImage(bossImg,this.x,this.y,this.width,this.height)
+
+      if (DEBUG.showHitboxes) {
+        showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
+      }
     }
   }
 
@@ -2987,9 +3025,11 @@
 
   // Обновленная функция calculateDroneScore
   function calculateDroneScore(drone) {
-    return drone.scoreValue *
+    const rawScore = drone.scoreValue *
       (1 + Math.min(survivalTime / 60, 5)) *
       (1 + Math.min(countDrones() / 20, 4))
+
+    return Math.floor(rawScore)
   }
 
   function spawnBoss(){
@@ -3364,9 +3404,10 @@
         }
 
         if (isColliding(obj, player)) {
-          if (!DEBUG.godMode && player.alive) {
+          if (player.alive) {
             player.die()
           }
+          obj.alive = false
         }
       }
     })
