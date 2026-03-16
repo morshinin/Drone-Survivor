@@ -999,6 +999,12 @@
     const WALK_FRAME_WIDTH = 100
     const WALK_FRAME_HEIGHT = 130
 
+    // Глобальные счетчики для оптимизации
+    let globalActiveDronesCount = 0
+    let globalEnemyBulletsCount = 0
+    let globalVFXCount = 0
+
+
 
     let player
     let playerName = "AAA"
@@ -1027,7 +1033,7 @@
     // DEBUG режим для тестирования
     const DEBUG = {
       bossStart: false,   // начать игру сразу с босса
-      godMode: false,     // бессмертие
+      godMode: true,     // бессмертие
       spawnDrones: false, // включить/выключить обычных дронов
       showHitboxes: true
     }
@@ -1468,8 +1474,7 @@
         this._debugTimer += delta
         if (this._debugTimer >= 3000) {
           this._debugTimer = 0
-          const vfxCount = gameObjects.filter(o => o instanceof Explosion || o instanceof GroundExplosion).length
-          console.log(`[WAIT] wave=${this.currentWaveIndex + 1}, aliveDrones=${alive}, gameObjects=${gameObjects.length}, vfx=${vfxCount}, spawned=${this.currentWaveSpawnCount}/${totalDrones}`)
+          console.log(`[WAIT] wave=${this.currentWaveIndex + 1}, aliveDrones=${alive}, gameObjects=${gameObjects.length}, vfx=${globalVFXCount}, spawned=${this.currentWaveSpawnCount}/${totalDrones}`)
         }
 
         if (alive === 0) {
@@ -2299,7 +2304,7 @@
     // }
 
     function countEnemyBullets() {
-      return gameObjects.filter(o => o instanceof EnemyBullet).length
+      return globalEnemyBulletsCount
     }
 
     async function animateCommanderBox() {
@@ -2405,13 +2410,17 @@
         this.speed = options.speed || (Math.random() * 2 + 1)
         this.direction = options.direction || (Math.random() < 0.5 ? 1 : -1)
 
-        // Позиция зависит от направления
-        if (this.direction > 0) {
-          this.x = -this.width
-        } else {
-          this.x = canvas.width + this.width
-          this.speed = -this.speed
+        // Позиция зависит от направления, если не указано иное
+        if (!options.skipEntryPos) {
+          if (this.direction > 0) {
+            this.x = -this.width
+          } else {
+            this.x = canvas.width + this.width
+            this.speed = -this.speed
+          }
         }
+
+        this.category = 'drone'
 
         this.hp = options.hp || 1
         this.maxHp = options.hp || 1
@@ -2837,6 +2846,7 @@
         this.vy = dy
         this.size = 6 // Размер пули
         this.alive = true
+        this.category = 'bullet'
       }
 
       update() {
@@ -2867,13 +2877,14 @@
         this.size = Math.min(this.width, this.height)
 
         this.alive = true
+        this.category = 'enemyBullet'
       }
       update() { this.y += this.speed }
       draw() {
         ctx.drawImage(
           enemyBulletImg,
-          this.x,
-          this.y,
+          Math.floor(this.x),
+          Math.floor(this.y),
           this.width,
           this.height
         )
@@ -2890,8 +2901,10 @@
           width: 300,
           height: 260,
           hp: 200,
-          image: bossImg
+          image: bossImg,
+          skipEntryPos: true
         })
+        this.maxHp = 200
         this.speed = 1
         this.phase = 1
         this.phaseTimer = 0
@@ -2991,6 +3004,7 @@
         this.size = 12
 
         this.alive = true
+        this.category = 'enemyBullet'
       }
 
       update() {
@@ -3013,6 +3027,7 @@
         this.timer = 0;
 
         this.alive = true
+        this.category = 'vfx'
       }
 
       update(delta) {
@@ -3034,7 +3049,8 @@
             EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
             Math.floor(this.x - EXPLOSION_FRAME_WIDTH / 2),
             Math.floor(this.y - EXPLOSION_FRAME_HEIGHT / 2),
-            EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT
+            EXPLOSION_FRAME_WIDTH,
+            EXPLOSION_FRAME_HEIGHT
           );
         }
       }
@@ -3126,6 +3142,7 @@
         this.timer = 0;
 
         this.alive = true
+        this.category = 'vfx'
       }
 
       update() {
@@ -3185,7 +3202,7 @@
 
     // Обновленная функция countDrones для подсчета всех типов
     function countDrones() {
-      return gameObjects.filter(o => o instanceof BaseDrone && o.alive).length
+      return globalActiveDronesCount
     }
 
     // Обновленная функция calculateDroneScore
@@ -3504,6 +3521,11 @@
       const activeBullets = []
       const activeEnemyBullets = []
 
+      // Сброс счетчиков перед проходом
+      globalActiveDronesCount = 0
+      globalEnemyBulletsCount = 0
+      globalVFXCount = 0
+
       // 1. Одиночный проход: обновление, фильтрация и категоризация
       for (let i = 0; i < gameObjects.length; i++) {
         const obj = gameObjects[i]
@@ -3514,10 +3536,19 @@
           if (obj.alive) {
             stillAlive.push(obj)
 
-            // Категоризация для коллизий
-            if (obj instanceof BaseDrone || obj instanceof BossDrone) activeDrones.push(obj)
-            else if (obj instanceof Bullet) activeBullets.push(obj)
-            else if (obj instanceof EnemyBullet || obj instanceof Missile) activeEnemyBullets.push(obj)
+            // Категоризация для коллизий (Оптимизация: используем категорию вместо instanceof)
+            if (obj.category === 'drone') {
+              activeDrones.push(obj)
+              globalActiveDronesCount++
+            }
+            else if (obj.category === 'bullet') activeBullets.push(obj)
+            else if (obj.category === 'enemyBullet') {
+              activeEnemyBullets.push(obj)
+              globalEnemyBulletsCount++
+            }
+            else if (obj.category === 'vfx') {
+              globalVFXCount++
+            }
           }
         }
       }
