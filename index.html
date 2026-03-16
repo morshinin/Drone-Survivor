@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Drone Survivor</title>
@@ -18,9 +19,9 @@
       --crt-blue: rgb(40, 129, 206);
     }
 
-    body{
-      margin:0;
-      overflow:hidden;
+    body {
+      margin: 0;
+      overflow: hidden;
       font-family: "Press Start 2P", monospace;
 
       background-color: #333;
@@ -34,15 +35,15 @@
       height: 100vh;
     }
 
-    body::before{
-      content:"";
-      position:fixed;
-      left:0;
-      top:0;
-      width:100%;
-      height:100%;
+    body::before {
+      content: "";
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
 
-      background:rgba(0,0,0,0.15);
+      background: rgba(0, 0, 0, 0.15);
     }
 
     .game_over_bg {
@@ -51,75 +52,69 @@
     }
 
     .crt {
-      background-image:url("menu_bg.png");
+      background-image: url("menu_bg.png");
       background-size: 105%;
-      background-position:center;
-      background-repeat:no-repeat;
-      text-shadow: 0 0 0.2em currentColor, 1px 1px rgba(255, 0, 255, 0.5),
-      -1px -1px rgba(0, 255, 255, 0.4);
-      position: relative;
-      &:before,
-      &:after {
-        content: "";
-        transform: translateZ(0);
-        pointer-events: none;
-        /*//opacity: 0.5;*/
-        mix-blend-mode: overlay;
-        position: absolute;
-        height: 100%;
-        width: 100%;
-        left: 0;
-        top: 0;
-        z-index: 1;
-      }
+      background-position: center;
+      background-repeat: no-repeat;
+      /*text-shadow: 0 0 0.2em currentColor, 1px 1px rgba(255, 0, 255, 0.5),*/
+      /*  -1px -1px rgba(0, 255, 255, 0.4);*/
+      /*position: relative;*/
 
-      &:before {
-        background: repeating-linear-gradient(
-            var(--crt-red) 0px,
-            var(--crt-green) 2px,
-            var(--crt-blue) 4px
-        );
-      }
-      &:after {
-        background: repeating-linear-gradient(
-            90deg,
-            var(--crt-red) 1px,
-            var(--crt-green) 2px,
-            var(--crt-blue) 3px
-        );
-      }
+      /*&:before,*/
+      /*&:after {*/
+      /*  content: "";*/
+      /*  transform: translateZ(0);*/
+      /*  pointer-events: none;*/
+      /*  opacity: 0.5;*/
+      /*  mix-blend-mode: overlay;*/
+      /*  position: absolute;*/
+      /*  height: 100%;*/
+      /*  width: 100%;*/
+      /*  left: 0;*/
+      /*  top: 0;*/
+      /*  z-index: 1;*/
+      /*}*/
+
+      /*&:before {*/
+      /*  background: repeating-linear-gradient(var(--crt-red) 0px,*/
+      /*      var(--crt-green) 2px,*/
+      /*      var(--crt-blue) 4px);*/
+      /*}*/
+
+      /*&:after {*/
+      /*  background: repeating-linear-gradient(90deg,*/
+      /*      var(--crt-red) 1px,*/
+      /*      var(--crt-green) 2px,*/
+      /*      var(--crt-blue) 3px);*/
+      /*}*/
     }
 
     /* Добавьте после .crt */
     .crt::before,
     .crt::after {
-      content: "";
-      transform: translateZ(0);
-      pointer-events: none;
-      mix-blend-mode: overlay;
-      position: absolute;
-      height: 100%;
-      width: 100%;
-      left: 0;
-      top: 0;
-      z-index: 1;
+      /*content: "";*/
+      /*transform: translateZ(0);*/
+      /*pointer-events: none;*/
+      /*mix-blend-mode: overlay;*/
+      /*position: absolute;*/
+      /*height: 100%;*/
+      /*width: 100%;*/
+      /*left: 0;*/
+      /*top: 0;*/
+      /*z-index: 1;*/
     }
 
     .crt::before {
-      background: repeating-linear-gradient(
-          var(--crt-red) 0px,
-          var(--crt-green) 2px,
-          var(--crt-blue) 4px
-      );
+      /*background: repeating-linear-gradient(var(--crt-red) 0px,*/
+      /*    var(--crt-green) 2px,*/
+      /*    var(--crt-blue) 4px);*/
     }
 
     .crt::after {
-      background: repeating-linear-gradient(
-          90deg,
-          var(--crt-red) 1px,
-          var(--crt-green) 2px,
-          var(--crt-blue) 3px
-      );
+      /*background: repeating-linear-gradient(90deg,*/
+      /*    var(--crt-red) 1px,*/
+      /*    var(--crt-green) 2px,*/
+      /*    var(--crt-blue) 3px);*/
     }
 
     /* Класс для отключения CRT эффектов */
@@ -135,108 +130,111 @@
       display: none !important;
     }
 
-    #ui{
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      display:flex;
-      align-items:center;
-      flex-direction:column;
+    #ui {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
       gap: 16px;
-      text-align:center;
+      text-align: center;
       padding-top: 20%;
-      animation: glitch1 1s infinite;
+      z-index: 2;
+      /*animation: glitch1 1s infinite;*/
     }
 
-    button{
-      padding:12px 30px;
-      font-size:20px;
-      cursor:pointer;
-      margin-top:10px;
+    button {
+      padding: 12px 30px;
+      font-size: 20px;
+      cursor: pointer;
+      margin-top: 10px;
     }
 
-    #timer{
-      position:absolute;
-      top:10px;
-      right:20px;
-      font-size:22px;
-      font-weight:bold;
+    #timer {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 22px;
+      font-weight: bold;
       z-index: 1;
     }
 
-    .hide-cursor{
+    .hide-cursor {
       cursor: none;
     }
 
-    #score{
-      position:absolute;
-      top:10px;
-      left:20px;
-      font-size:34px;
-      font-weight:bold;
-      color:#ffe066;
-      text-shadow:3px 3px black;
-      transition:transform 0.15s;
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      font-size: 34px;
+      font-weight: bold;
+      color: #ffe066;
+      text-shadow: 3px 3px black;
+      transition: transform 0.15s;
       z-index: 1;
     }
 
-    .score-pop{
-      transform:scale(1.25);
+    .score-pop {
+      transform: scale(1.25);
     }
 
-    #score-pop{
-      position:absolute;
-      top:50px;
-      left:20px;
-      font-size:28px;
-      color:#ffff66;
-      text-shadow:2px 2px black;
-      opacity:0;
-      transform:translateY(0);
-      transition:all 0.4s ease;
+    #score-pop {
+      position: absolute;
+      top: 50px;
+      left: 20px;
+      font-size: 28px;
+      color: #ffff66;
+      text-shadow: 2px 2px black;
+      opacity: 0;
+      transform: translateY(0);
+      transition: all 0.4s ease;
     }
 
-    .score-pop-show{
-      opacity:1;
-      transform:translateY(-20px);
+    .score-pop-show {
+      opacity: 1;
+      transform: translateY(-20px);
     }
 
     /* СТИЛЬ ДЛЯ НОВОГО СЧЕТЧИКА */
     #drones-alive {
-      position:absolute;
-      top:40px; /* Ниже основного счетчика */
-      left:20px;
-      font-size:22px;
-      font-weight:bold;
-      color: #ff4444; /* Красный цвет */
+      position: absolute;
+      top: 40px;
+      /* Ниже основного счетчика */
+      left: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #ff4444;
+      /* Красный цвет */
     }
 
-    #leaderboard{
-      margin-top:20px;
+    #leaderboard {
+      margin-top: 20px;
       font-size: 24px;
       line-height: 1.5;
       color: lawngreen;
     }
 
-    #fade{
-      position:fixed;
-      left:0;
-      top:0;
-      width:100%;
-      height:100%;
-      background:black;
-      pointer-events:none;
-      opacity:0;
-      transition:opacity 0.8s;
-      z-index:999;
+    #fade {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s;
+      z-index: 999;
     }
 
     #muteBtn {
       position: fixed;
-      top:40px;
-      right:20px;
+      top: 40px;
+      right: 20px;
       width: 30px;
       height: 30px;
       background-image: url(music_icon.png);
@@ -247,25 +245,25 @@
       padding: 0;
     }
 
-    #game-info{
-      position:fixed;
-      bottom:15px;
-      left:50%;
-      transform:translateX(-50%);
-      font-size:10px;
-      color:#aaa;
-      text-align:center;
-      line-height:1.6;
-      text-shadow:1px 1px black;
+    #game-info {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #aaa;
+      text-align: center;
+      line-height: 1.6;
+      text-shadow: 1px 1px black;
     }
 
-    #game-info a{
-      color:#7cff7c;
-      text-decoration:none;
+    #game-info a {
+      color: #7cff7c;
+      text-decoration: none;
     }
 
-    #game-info a:hover{
-      text-decoration:underline;
+    #game-info a:hover {
+      text-decoration: underline;
     }
 
     #loading-screen {
@@ -286,16 +284,17 @@
     }
 
     #commander-balloon {
-      display:none;
-      width:600px;
+      display: none;
+      width: 600px;
       height: 200px;
-      position:absolute;
+      position: absolute;
       top: 60px;
       color: #333333;
       text-shadow: none;
-      font-size:16px;
-      right:-500px;   /* за пределами экрана */
-      transition:right 0.6s ease-out, opacity .5s;
+      font-size: 16px;
+      right: -500px;
+      /* за пределами экрана */
+      transition: right 0.6s ease-out, opacity .5s;
       z-index: 1000;
     }
 
@@ -326,32 +325,31 @@
       height: 100%;
     }
 
-    #game-container{
+    #game-container {
       position: relative;
-      width: 1500px; /* как у канваса */
+      width: 1500px;
+      /* как у канваса */
       height: 800px;
 
-      border-radius:30px;
-      overflow:hidden;
+      border-radius: 30px;
+      overflow: hidden;
 
-      animation: blur 30ms infinite, jerk 50ms infinite, bgMove 40s linear infinite;
+      /*animation: blur 30ms infinite, jerk 50ms infinite, bgMove 40s linear infinite;*/
       box-shadow:
-          inset 0 0 80px rgba(0,0,0,0.6),
-          inset 0 0 20px rgba(0,0,0,0.8);
+        inset 0 0 80px rgba(0, 0, 0, 0.6),
+        inset 0 0 20px rgba(0, 0, 0, 0.8);
     }
 
-    #game-container::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
+    #game-container::after {
+      /*content: "";*/
+      /*position: absolute;*/
+      /*inset: 0;*/
+      /*pointer-events: none;*/
 
-      background:radial-gradient(
-          circle,
-          rgba(0,0,0,0) 60%,
-          rgba(0,0,0,0.55) 100%
-      );
-      z-index: 5;
+      /*background: radial-gradient(circle,*/
+      /*    rgba(0, 0, 0, 0) 60%,*/
+      /*    rgba(0, 0, 0, 0.55) 100%);*/
+      /*z-index: 5;*/
     }
 
     #game-container.no-bg {
@@ -359,7 +357,7 @@
       background-color: transparent;
     }
 
-    #game{
+    #game {
       position: absolute;
       left: 0;
       top: 0;
@@ -377,87 +375,123 @@
       opacity: 0.6;
     }
 
-    #effects-layer{
-      position:absolute;
-      left:0;
-      top:0;
-      width:100%;
-      height:100%;
-      pointer-events:none;
-      z-index:4;
+    #effects-layer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 4;
     }
 
-    .smoke{
+    .smoke {
       position: absolute;
       width: 80px;
-      pointer-events: none; /* чтобы клики проходили в игру */
+      pointer-events: none;
+      /* чтобы клики проходили в игру */
       z-index: 4;
     }
 
     .background-moto {
       position: absolute;
-      bottom: 90px; /* чтобы «мотоцикл» был на земле */
-      right: -200px;  /* старт за экраном */
+      bottom: 90px;
+      /* чтобы «мотоцикл» был на земле */
+      right: -200px;
+      /* старт за экраном */
       width: 30px;
-      animation: motoMove 40s linear alternate; /* туда-сюда */
+      animation: motoMove 40s linear alternate;
+      /* туда-сюда */
     }
 
-    #continueHint{
-      opacity:0;
-      margin-top:10px;
-      font-size:14px;
+    #continueHint {
+      opacity: 0;
+      margin-top: 10px;
+      font-size: 14px;
       animation: blink 1s infinite;
     }
 
-    @keyframes radioFlicker{
-      from{filter:brightness(0.9)}
-      to{filter:brightness(1.1)}
+    @keyframes radioFlicker {
+      from {
+        filter: brightness(0.9)
+      }
+
+      to {
+        filter: brightness(1.1)
+      }
     }
 
-    @keyframes blink{
-      0%{opacity:0}
-      50%{opacity:1}
-      100%{opacity:0}
+    @keyframes blink {
+      0% {
+        opacity: 0
+      }
+
+      50% {
+        opacity: 1
+      }
+
+      100% {
+        opacity: 0
+      }
     }
 
     @keyframes motoMove {
-      0% { right: -200px; }
-      50% { right: calc(100% - 200px); }
-      100% { right: -200px; }
-    }
-
-    @keyframes bgMove{
-      0%{
-        background-position:center top;
+      0% {
+        right: -200px;
       }
 
-      50%{
-        background-position:center bottom;
+      50% {
+        right: calc(100% - 200px);
       }
 
-      100%{
-        background-position:center top;
+      100% {
+        right: -200px;
       }
     }
 
-    @keyframes blink{
-      0%{opacity:1}
-      50%{opacity:0.1}
-      100%{opacity:1}
+    @keyframes bgMove {
+      0% {
+        background-position: center top;
+      }
+
+      50% {
+        background-position: center bottom;
+      }
+
+      100% {
+        background-position: center top;
+      }
+    }
+
+    @keyframes blink {
+      0% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.1
+      }
+
+      100% {
+        opacity: 1
+      }
     }
 
     @keyframes jerk {
       50% {
         transform: translateX(1px);
       }
+
       51% {
         transform: translateX(0);
       }
     }
+
     @keyframes jerkUp {
       0% {
         transform: translateY(1px);
       }
+
       100% {
         transform: translateY(0);
       }
@@ -467,23 +501,27 @@
       0% {
         transform: translateX(0);
       }
+
       30% {
         transform: translateX(0);
       }
+
       31% {
         transform: translateX(10px);
       }
+
       32% {
         transform: translateX(0);
       }
+
       98% {
         transform: translateX(0);
       }
+
       100% {
         transform: translateX(10px);
       }
     }
-
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -491,20 +529,20 @@
 
 <body>
 
-<div id="game-container" class="crt">
-  <canvas id="game" width="1500" height="800">
-  </canvas>
+  <div id="game-container" class="crt">
+    <canvas id="game" width="1500" height="800">
+    </canvas>
 
-  <div id="effects-layer">
-<!--    <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">-->
-    <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">
-  </div>
+    <div id="effects-layer">
+      <!--    <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">-->
+      <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">
+    </div>
 
-  <div id="timer"></div>
-  <div id="score"></div>
-  <div id="score-pop"></div>
-  <!-- Добавьте после <div id="score-pop"></div> -->
-  <div id="wave-info" style="
+    <div id="timer"></div>
+    <div id="score"></div>
+    <div id="score-pop"></div>
+    <!-- Добавьте после <div id="score-pop"></div> -->
+    <div id="wave-info" style="
   position: absolute;
   top: 60px;
   left: 20px;
@@ -513,316 +551,306 @@
   text-shadow: 2px 2px black;
   z-index: 1;
 ">Этап: Начало | Волна: 1/3</div>
-</div>
-
-<div id="fade"></div>
-
-<audio id="menuMusic" src="menu.mp3"></audio>
-<audio id="gameMusic" src="game.mp3" loop></audio>
-<audio id="droneSound" src="drone_sound.mp3" loop></audio>
-<audio id="shootSound" src="pistol_shot.mp3"></audio>
-<audio id="gameOverMusic" src="gameover.mp3"></audio>
-<audio id="droneExplosionSound" src="drone_explosion.mp3"></audio>
-<audio id="groundExplosionSound" src="ground_explosion.mp3"></audio>
-
-<div id="loading-screen">
-  <div class="loading-box">
-    <p>Loading...</p>
-    <progress id="loading-bar" class="nes-progress is-success" value="0" max="100"></progress>
-  </div>
-</div>
-
-<div id="commander-balloon">
-  <section class="message -left commander-section">
-    <img class="commander-face" src="commander.gif">
-    <div class="nes-balloon from-left">
-      <p></p>
-      <div id="continueHint">PRESS ENTER</div>
-    </div>
-  </section>
-</div>
-
-<div id="ui">
-
-  <button id="muteBtn"></button>
-  <div class="nes-field">
-    <label for="nameInput">Enter your name (3 letters)</label>
-    <input id="nameInput" maxlength="3" type="text" class="nes-input">
   </div>
 
-  <button id="startBtn" class="nes-btn is-success">Try to Survive</button>
+  <div id="fade"></div>
 
-  <div id="leaderboard">
+  <audio id="menuMusic" src="menu.mp3"></audio>
+  <audio id="gameMusic" src="game.mp3" loop></audio>
+  <audio id="droneSound" src="drone_sound.mp3" loop></audio>
+  <audio id="shootSound" src="pistol_shot.mp3"></audio>
+  <audio id="gameOverMusic" src="gameover.mp3"></audio>
+  <audio id="droneExplosionSound" src="drone_explosion.mp3"></audio>
+  <audio id="groundExplosionSound" src="ground_explosion.mp3"></audio>
 
-  </div>
-
-  <div id="game-info">
-    <div>Drone Survivor</div>
-    <div>Version <span id="game-version"></span></div>
-    <div>© 2026 Mikhail Morshinin</div>
-    <div>
-      <a href="https://github.com/morshinin/drone-survivor" target="_blank">
-        GitHub
-      </a>
+  <div id="loading-screen">
+    <div class="loading-box">
+      <p>Loading...</p>
+      <progress id="loading-bar" class="nes-progress is-success" value="0" max="100"></progress>
     </div>
   </div>
-</div>
+
+  <div id="commander-balloon">
+    <section class="message -left commander-section">
+      <img class="commander-face" src="commander.gif">
+      <div class="nes-balloon from-left">
+        <p></p>
+        <div id="continueHint">PRESS ENTER</div>
+      </div>
+    </section>
+  </div>
+
+  <div id="ui">
+
+    <button id="muteBtn"></button>
+    <div class="nes-field">
+      <label for="nameInput">Enter your name (3 letters)</label>
+      <input id="nameInput" maxlength="3" type="text" class="nes-input">
+    </div>
+
+    <button id="startBtn" class="nes-btn is-success">Try to Survive</button>
+
+    <div id="leaderboard">
+
+    </div>
+
+    <div id="game-info">
+      <div>Drone Survivor</div>
+      <div>Version <span id="game-version"></span></div>
+      <div>© 2026 Mikhail Morshinin</div>
+      <div>
+        <a href="https://github.com/morshinin/drone-survivor" target="_blank">
+          GitHub
+        </a>
+      </div>
+    </div>
+  </div>
 
 
 
-<script>
-  // ... (Supabase config remains the same)
-  const SUPABASE_URL = "https://zsdwmjdalfnmvtlwoygs.supabase.co"
-  const SUPABASE_KEY = "sb_publishable_B9tdTmqKndQysFngs7vT2Q_TqYVx7bt"
+  <script>
+    // ... (Supabase config remains the same)
+    const SUPABASE_URL = "https://zsdwmjdalfnmvtlwoygs.supabase.co"
+    const SUPABASE_KEY = "sb_publishable_B9tdTmqKndQysFngs7vT2Q_TqYVx7bt"
 
-  const db = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  )
+    const db = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    )
 
-  const HITBOX_PADDING = 12
-  const GAME_VERSION = "0.17.3"
+    const HITBOX_PADDING = 12
+    const GAME_VERSION = "0.17.3"
 
-  // const MAX_ENEMY_BULLETS = 60
-  document.getElementById("game-version").innerText = GAME_VERSION
+    // const MAX_ENEMY_BULLETS = 60
+    document.getElementById("game-version").innerText = GAME_VERSION
 
-  const menuMusic = document.getElementById("menuMusic")
-  const gameMusic = document.getElementById("gameMusic")
-  const droneSound = document.getElementById("droneSound")
-  const droneExplosionSound = document.getElementById("droneExplosionSound")
-  const groundExplosionSound = document.getElementById("groundExplosionSound")
-  const gameOverMusic = document.getElementById("gameOverMusic")
-  const gameInfo = document.getElementById("game-info")
-  const effectsLayer = document.getElementById("effects-layer")
-  const canvas = document.getElementById("game")
-  const ctx = canvas.getContext("2d")
+    const menuMusic = document.getElementById("menuMusic")
+    const gameMusic = document.getElementById("gameMusic")
+    const droneSound = document.getElementById("droneSound")
+    const droneExplosionSound = document.getElementById("droneExplosionSound")
+    const groundExplosionSound = document.getElementById("groundExplosionSound")
+    const gameOverMusic = document.getElementById("gameOverMusic")
+    const gameInfo = document.getElementById("game-info")
+    const effectsLayer = document.getElementById("effects-layer")
+    const canvas = document.getElementById("game")
+    const ctx = canvas.getContext("2d")
 
-  const WEAPONS = {
-    pistol: {
-      name: "Pistol",
-      magazineSize: 15,
-      magazines: 8,
-      fireRate: 400, // ms
-      reloadTime: 1000,
-      auto: false,
-      bulletsPerShot: 1,
-      bulletSpeed: 11,
-      spread: 0,
-    },
+    const WEAPONS = {
+      pistol: {
+        name: "Pistol",
+        magazineSize: 15,
+        magazines: 8,
+        fireRate: 400, // ms
+        reloadTime: 1000,
+        auto: false,
+        bulletsPerShot: 1,
+        bulletSpeed: 11,
+        spread: 0,
+      },
 
-    rifle: {
-      name: "Assault Rifle",
-      magazineSize: 30,
-      magazines: 6,
-      fireRate: 200,
-      reloadTime: 2000,
-      auto: true,
-      bulletsPerShot: 1,
-      bulletSpeed: 13,
-      spread: 0,
-    },
+      rifle: {
+        name: "Assault Rifle",
+        magazineSize: 30,
+        magazines: 6,
+        fireRate: 200,
+        reloadTime: 2000,
+        auto: true,
+        bulletsPerShot: 1,
+        bulletSpeed: 13,
+        spread: 0,
+      },
 
-    shotgun: {
-      name: "Shotgun",
-      magazineSize: 12,
-      magazines: 5,
-      fireRate: 600,
-      reloadTime: 2600,
-      auto: false,
-      bulletsPerShot: 6,
-      bulletSpeed: 10,
-      spread: 30,
-    },
+      shotgun: {
+        name: "Shotgun",
+        magazineSize: 12,
+        magazines: 5,
+        fireRate: 600,
+        reloadTime: 2600,
+        auto: false,
+        bulletsPerShot: 6,
+        bulletSpeed: 10,
+        spread: 30,
+      },
 
-    machinegun: {
-      name: "Machine Gun",
-      magazineSize: 120,
-      magazines: 2,
-      fireRate: 100,
-      reloadTime: 5000,
-      auto: true,
-      bulletsPerShot: 1,
-      bulletSpeed: 15,
-      spread: 5,
-    }
-  }
-
-  const WEAPON_SOUNDS = {
-    'Pistol':{
-      shoot: new Audio("pistol_shot.mp3"),
-      reload: new Audio("pistol_reload.mp3")
-    },
-    'Assault Rifle':{
-      shoot: new Audio("rifle_shot.mp3"),
-      reload: new Audio("rifle_reload.mp3")
-    },
-    'Shotgun':{
-      shoot: new Audio("shotgun_shot.mp3"),
-      reload: new Audio("shotgun_reload.mp3")
-    },
-    'Machine Gun':{
-      shoot: new Audio("machinegun_shot.mp3"),
-      reload: new Audio("machinegun_reload.mp3")
-    }
-  }
-
-  const PLAYER_SOUNDS = {
-    death: new Audio("death.mp3"),
-    footSteps: new Audio("foot_steps.mp3"),
-  }
-
-  const GAME_SOUNDS = {
-    ambient: new Audio("ambient.mp3"),
-    typeWriter: new Audio("typeWriter.mp3"),
-    radioOn: new Audio("radio_chatter.mp3"),
-    radioOff: new Audio("radio_off.mp3"),
-  }
-
-  const UI = {
-    notification: {
-      balloon: document.getElementById("commander-balloon"),
-    },
-    game: {
-      container: document.getElementById("game-container"),
-    }
-  }
-
-  // ПЕРЕМЕСТИТЕ ЭТОТ КЛАСС ВВЕРХ, например после GAME_SOUNDS
-  class AnimatedSprite {
-    constructor(x, y, image, options = {}) {
-      this.x = x
-      this.y = y
-      this.image = image
-
-      // Параметры спрайта
-      this.columns = options.columns || 2
-      this.totalFrames = options.totalFrames || 58
-      this.frameDelay = options.frameDelay || 8
-      this.width = options.width || (image.width / this.columns)
-      this.height = options.height || (image.height / (this.totalFrames / this.columns))
-      this.scale = options.scale || 1.0
-      this.opacity = options.opacity || 1.0
-      this.loop = options.loop !== undefined ? options.loop : true
-
-      // Вычисляем количество строк
-      this.rows = Math.ceil(this.totalFrames / this.columns)
-
-      this.timer = 0
-      this.frame = options.startFrame || 0
-      this.alive = true
-    }
-
-    update() {
-      this.timer++
-
-      if (this.timer >= this.frameDelay) {
-        let nextFrame = this.frame + 1
-
-        if (nextFrame >= this.totalFrames) {
-          if (this.loop) {
-            nextFrame = 0
-          } else {
-            this.alive = false
-            return
-          }
-        }
-
-        this.frame = nextFrame
-        this.timer = 0
+      machinegun: {
+        name: "Machine Gun",
+        magazineSize: 120,
+        magazines: 2,
+        fireRate: 100,
+        reloadTime: 5000,
+        auto: true,
+        bulletsPerShot: 1,
+        bulletSpeed: 15,
+        spread: 5,
       }
     }
 
-    draw(ctx) {
-      if (!this.image || !this.image.complete) return
-
-      const col = this.frame % this.columns
-      const row = Math.floor(this.frame / this.columns)
-
-      ctx.save()
-      ctx.globalAlpha = this.opacity
-
-      ctx.drawImage(
-        this.image,
-        col * (this.image.width / this.columns),
-        row * (this.image.height / this.rows),
-        this.image.width / this.columns,
-        this.image.height / this.rows,
-        this.x,
-        this.y,
-        this.width * this.scale,
-        this.height * this.scale
-      )
-
-      ctx.restore()
+    const WEAPON_SOUNDS = {
+      'Pistol': {
+        shoot: new Audio("pistol_shot.mp3"),
+        reload: new Audio("pistol_reload.mp3")
+      },
+      'Assault Rifle': {
+        shoot: new Audio("rifle_shot.mp3"),
+        reload: new Audio("rifle_reload.mp3")
+      },
+      'Shotgun': {
+        shoot: new Audio("shotgun_shot.mp3"),
+        reload: new Audio("shotgun_reload.mp3")
+      },
+      'Machine Gun': {
+        shoot: new Audio("machinegun_shot.mp3"),
+        reload: new Audio("machinegun_reload.mp3")
+      }
     }
 
-    setFrame(frame) {
-      this.frame = Math.min(frame, this.totalFrames - 1)
+    const PLAYER_SOUNDS = {
+      death: new Audio("death.mp3"),
+      footSteps: new Audio("foot_steps.mp3"),
     }
 
-    restart() {
-      this.frame = 0
-      this.timer = 0
-      this.alive = true
+    const GAME_SOUNDS = {
+      ambient: new Audio("ambient.mp3"),
+      typeWriter: new Audio("typeWriter.mp3"),
+      radioOn: new Audio("radio_chatter.mp3"),
+      radioOff: new Audio("radio_off.mp3"),
     }
-  }
 
-  const background = new Image()
-  background.src = "game_bg.png"
-  const playerImg = new Image()
-  playerImg.src = "soldier.png"
-  const droneImg = new Image()
-  droneImg.src = "mavic.png"
-  const enemyBulletImg = new Image()
-  enemyBulletImg.src = "drone_bullet.png"
-  const bossImg = new Image()
-  bossImg.src = "boss.png"
-  const missileImg = new Image()
-  missileImg.src = "drone_bullet.png"
-  const tankImg = new Image()
-  tankImg.src = "tank.png"
-  const destroyedCityImg = new Image()
-  destroyedCityImg.src = "destroyed_city.png"
-  const grenadeImg = new Image()
-  grenadeImg.src = "grenade.png"
-  const kamikazeImg = new Image()
-  kamikazeImg.src = "kamikaze.png"
-  const smokeSprite = new Image()
-  smokeSprite.src = "tank_smoke_sprite.png"
-  const citySmokeSprite= new Image()
-  citySmokeSprite.src = "city_smoke.png"
-  const cloudsImg = new Image()
-  cloudsImg.src = "clouds_bg.png" // Замените на путь к вашей картинке с облаками
-  const fireSprite = new Image()
-  fireSprite.src = "fire_sprite.png"
+    const UI = {
+      notification: {
+        balloon: document.getElementById("commander-balloon"),
+      },
+      game: {
+        container: document.getElementById("game-container"),
+      }
+    }
 
-  let SMOKE_FRAME_WIDTH
-  let SMOKE_FRAME_HEIGHT
+    // ПЕРЕМЕСТИТЕ ЭТОТ КЛАСС ВВЕРХ, например после GAME_SOUNDS
+    class AnimatedSprite {
+      constructor(x, y, image, options = {}) {
+        this.x = x
+        this.y = y
+        this.image = image
 
-  smokeSprite.onload = () => {
-    SMOKE_FRAME_WIDTH = smokeSprite.width / 2
-    SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
-  }
+        // Параметры спрайта
+        this.columns = options.columns || 2
+        this.totalFrames = options.totalFrames || 58
+        this.frameDelay = options.frameDelay || 8
+        this.width = options.width || (image.width / this.columns)
+        this.height = options.height || (image.height / (this.totalFrames / this.columns))
+        this.scale = options.scale || 1.0
+        this.opacity = options.opacity || 1.0
+        this.loop = options.loop !== undefined ? options.loop : true
 
-  // И добавьте правильную инициализацию:
-  let citySmoke = null
-  let tankSmoke = null
-  let cityFire = null
+        // Вычисляем количество строк
+        this.rows = Math.ceil(this.totalFrames / this.columns)
 
-  // Инициализация дыма от города
-  function initCitySmoke() {
-    if (citySmokeSprite.complete) {
-      citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
-        columns: 2,
-        totalFrames: 98,
-        frameDelay: 8,
-        scale: 1.5,
-        opacity: 0.6,
-        loop: true
-      })
-    } else {
-      citySmokeSprite.onload = () => {
-        citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+        this.timer = 0
+        this.frame = options.startFrame || 0
+        this.alive = true
+      }
+
+      update() {
+        this.timer++
+
+        if (this.timer >= this.frameDelay) {
+          let nextFrame = this.frame + 1
+
+          if (nextFrame >= this.totalFrames) {
+            if (this.loop) {
+              nextFrame = 0
+            } else {
+              this.alive = false
+              return
+            }
+          }
+
+          this.frame = nextFrame
+          this.timer = 0
+        }
+      }
+
+      draw(ctx) {
+        if (!this.image || !this.image.complete) return
+
+        const col = this.frame % this.columns
+        const row = Math.floor(this.frame / this.columns)
+
+        ctx.save()
+        ctx.globalAlpha = this.opacity
+
+        ctx.drawImage(
+          this.image,
+          col * (this.image.width / this.columns),
+          row * (this.image.height / this.rows),
+          this.image.width / this.columns,
+          this.image.height / this.rows,
+          this.x,
+          this.y,
+          this.width * this.scale,
+          this.height * this.scale
+        )
+
+        ctx.restore()
+      }
+
+      setFrame(frame) {
+        this.frame = Math.min(frame, this.totalFrames - 1)
+      }
+
+      restart() {
+        this.frame = 0
+        this.timer = 0
+        this.alive = true
+      }
+    }
+
+    const background = new Image()
+    background.src = "game_bg.png"
+    const playerImg = new Image()
+    playerImg.src = "soldier.png"
+    const droneImg = new Image()
+    droneImg.src = "mavic.png"
+    const enemyBulletImg = new Image()
+    enemyBulletImg.src = "drone_bullet.png"
+    const bossImg = new Image()
+    bossImg.src = "boss.png"
+    const missileImg = new Image()
+    missileImg.src = "drone_bullet.png"
+    const tankImg = new Image()
+    tankImg.src = "tank.png"
+    const destroyedCityImg = new Image()
+    destroyedCityImg.src = "destroyed_city.png"
+    const grenadeImg = new Image()
+    grenadeImg.src = "grenade.png"
+    const kamikazeImg = new Image()
+    kamikazeImg.src = "kamikaze.png"
+    const smokeSprite = new Image()
+    smokeSprite.src = "tank_smoke_sprite.png"
+    const citySmokeSprite = new Image()
+    citySmokeSprite.src = "city_smoke.png"
+    const cloudsImg = new Image()
+    cloudsImg.src = "clouds_bg.png" // Замените на путь к вашей картинке с облаками
+    const fireSprite = new Image()
+    fireSprite.src = "fire_sprite.png"
+
+    let SMOKE_FRAME_WIDTH
+    let SMOKE_FRAME_HEIGHT
+
+    smokeSprite.onload = () => {
+      SMOKE_FRAME_WIDTH = smokeSprite.width / 2
+      SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
+    }
+
+    // И добавьте правильную инициализацию:
+    let citySmoke = null
+    let tankSmoke = null
+    let cityFire = null
+
+    // Инициализация дыма от города
+    function initCitySmoke() {
+      if (citySmokeSprite.complete) {
+        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
           columns: 2,
           totalFrames: 98,
           frameDelay: 8,
@@ -830,23 +858,23 @@
           opacity: 0.6,
           loop: true
         })
+      } else {
+        citySmokeSprite.onload = () => {
+          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+            columns: 2,
+            totalFrames: 98,
+            frameDelay: 8,
+            scale: 1.5,
+            opacity: 0.6,
+            loop: true
+          })
+        }
       }
     }
-  }
 
-  // Инициализация дыма от танка
-  function initTankSmoke() {
-    if (smokeSprite.complete) {
-      tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
-        columns: 2,
-        totalFrames: 58,
-        frameDelay: 8,
-        scale: 1.2,
-        opacity: 0.4,
-        loop: true
-      })
-    } else {
-      smokeSprite.onload = () => {
+    // Инициализация дыма от танка
+    function initTankSmoke() {
+      if (smokeSprite.complete) {
         tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
           columns: 2,
           totalFrames: 58,
@@ -855,25 +883,23 @@
           opacity: 0.4,
           loop: true
         })
+      } else {
+        smokeSprite.onload = () => {
+          tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
+            columns: 2,
+            totalFrames: 58,
+            frameDelay: 8,
+            scale: 1.2,
+            opacity: 0.4,
+            loop: true
+          })
+        }
       }
     }
-  }
 
-  // Инициализация огня
-  function initFire() {
-    if (fireSprite.complete) {
-      cityFire = new AnimatedSprite(100, 600, fireSprite, {
-        columns: 2,
-        totalFrames: 8,
-        frameDelay: 8,
-        scale: 1,
-        opacity: 0.9,
-        width: 144,
-        height: 144,
-        loop: true
-      })
-    } else {
-      fireSprite.onload = () => {
+    // Инициализация огня
+    function initFire() {
+      if (fireSprite.complete) {
         cityFire = new AnimatedSprite(100, 600, fireSprite, {
           columns: 2,
           totalFrames: 8,
@@ -884,866 +910,874 @@
           height: 144,
           loop: true
         })
+      } else {
+        fireSprite.onload = () => {
+          cityFire = new AnimatedSprite(100, 600, fireSprite, {
+            columns: 2,
+            totalFrames: 8,
+            frameDelay: 8,
+            scale: 1,
+            opacity: 0.9,
+            width: 144,
+            height: 144,
+            loop: true
+          })
+        }
       }
     }
-  }
 
-  effectsLayer.style.display = "none"
+    effectsLayer.style.display = "none"
 
-  const groundHeight = 40
+    const groundHeight = 40
 
-  let spawnTimer = 0
-  let spawnInterval = 2000
+    // let spawnTimer = 0
+    // let spawnInterval = 2000
+    //
+    // let waveNumber = 0;       // текущая волна
+    // let waveMaxInAir = 10;    // сколько дронов может быть одновременно
+    // let waveTargetKills = 40; // сколько нужно сбить
+    // let waveKills = 0;        // сбитые дроны в волне
+    // let waveActive = true;    // можно ли спавнить дронов
+    // let wavePause = false;       // идёт пауза между волнами
+    // let wavePauseTimer = 0;      // таймер паузы в мс
+    // const wavePauseDuration = 6000; // 6 секунд пауза
 
-  let waveNumber = 0;       // текущая волна
-  let waveMaxInAir = 10;    // сколько дронов может быть одновременно
-  let waveTargetKills = 40; // сколько нужно сбить
-  let waveKills = 0;        // сбитые дроны в волне
-  let waveActive = true;    // можно ли спавнить дронов
-  let wavePause = false;       // идёт пауза между волнами
-  let wavePauseTimer = 0;      // таймер паузы в мс
-  const wavePauseDuration = 6000; // 6 секунд пауза
+    let gameObjects = []
+    let isReloading = false
+    let uiTimer = 0
+    let keys = {}
+    let timeScale = 1
+    let hitFreeze = 0
 
-  let gameObjects = []
-  let isReloading = false
-  let uiTimer = 0
-  let keys = {}
-  let timeScale = 1
-  let hitFreeze = 0
-
-  const tank = {
-    x: canvas.width * 0.85,
-    y: canvas.height - groundHeight - 150,
-    w: 280,
-    h: 180
-  }
-
-  const destroyedCity = {
-    x: 100,
-    y: canvas.height - groundHeight - 120,
-    w: 180,
-    h: 80
-  }
-
-  const explosionSprite = new Image();
-  explosionSprite.src = "explosion_sprite.png";
-  const EXPLOSION_FRAME_WIDTH = 100;
-  const EXPLOSION_FRAME_HEIGHT = 100;
-  const EXPLOSION_FRAME_COUNT = 4;
-  const EXPLOSION_FRAME_DURATION = 100;
-  const MAX_ATTACKING_DRONES = 5
-
-  const groundExplosionSprite = new Image();
-  groundExplosionSprite.src = "ground_explosion_sprite.png";
-
-  const GROUND_EXPLOSION_FRAMES = 9;
-  const GROUND_EXPLOSION_FRAME_WIDTH = 100;
-  const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
-
-  const playerWalkSprite = new Image();
-  playerWalkSprite.src = "soldier_walk_sprite.png";
-
-  const WALK_FRAMES = 7
-  const WALK_FRAME_WIDTH = 100
-  const WALK_FRAME_HEIGHT = 130
-
-
-  let player
-  let playerName="AAA"
-
-  let dropTimer=0
-  let shootCooldown=0
-  let globalEnemyFireCooldown = 0
-
-  let score=0
-  let survivalTime=0
-
-  let leaderboard=[]
-
-  let waveMusic = {
-    1: new Audio("wave1.mp3"),
-    2: new Audio("wave2.mp3"),
-    3: new Audio("wave3.mp3"),
-    boss: new Audio("boss.mp3")
-  }
-
-  for(const key in waveMusic){
-    waveMusic[key].loop = false
-    waveMusic[key].volume = 0.1
-  }
-
-  // DEBUG режим для тестирования
-  const DEBUG = {
-    bossStart: false,   // начать игру сразу с босса
-    godMode: false,     // бессмертие
-    spawnDrones: false, // включить/выключить обычных дронов
-    showHitboxes: true
-  }
-
-  const GameState = {
-    MENU: "menu",
-    GAME: "game",
-    GAME_OVER: "game_over"
-  }
-
-  let currentState = GameState.MENU
-  let gameLoopRunning = true
-  let lastFrameTime = 0
-  let frameCount = 0
-  let fps = 0
-
-  let cachedDronesCount = 0
-  let cachedEnemyBulletsCount = 0
-  let frameCounter = 0
-
-  const GRID_SIZE = 100
-  let collisionGrid = {}
-
-  const EffectsManager = {
-    // Отключить все визуальные эффекты для игры
-    disableForGame() {
-      const container = document.getElementById('game-container')
-      const ui = document.getElementById('ui')
-
-      // Убираем CRT класс и добавляем no-crt
-      container.classList.remove('crt')
-      container.classList.add('no-crt')
-
-      // Отключаем анимацию UI
-      ui.style.animation = 'none'
-
-      // console.log('Visual effects disabled for game')
-    },
-
-    // Включить эффекты для меню
-    enableForMenu() {
-      const container = document.getElementById('game-container')
-      const ui = document.getElementById('ui')
-
-      // Возвращаем CRT класс и убираем no-crt
-      container.classList.add('crt')
-      container.classList.remove('no-crt')
-
-      // Возвращаем анимацию UI
-      ui.style.animation = 'glitch1 1s infinite'
-
-      // console.log('Visual effects enabled for menu')
-    }
-  }
-
-  // Типы дронов
-  const DroneType = {
-    NORMAL: 'normal',
-    GRENADIER: 'grenadier',
-    KAMIKAZE: 'kamikaze'
-  }
-
-  function showHitboxRect(x, y, width, height, color) {
-    ctx.strokeStyle = color || 'red'
-    ctx.lineWidth = 2
-    ctx.strokeRect(x, y, width, height)
-  }
-
-  // Класс для настройки волны
-  class WaveConfig {
-    constructor(name, options = {}) {
-      this.name = name
-      this.drones = options.drones || [] // массив {type: DroneType, count: number}
-      this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
-      this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
-      this.message = options.message || null // сообщение перед волной
-      this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
-      this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
-    }
-  }
-
-  // Класс для большой волны (этапа)
-  class StageConfig {
-    constructor(name, options = {}) {
-      this.name = name
-      this.waves = options.waves || [] // массив WaveConfig
-      this.startMessage = options.startMessage || null // сообщение перед этапом
-      this.endMessage = options.endMessage || null // сообщение после этапа
-      this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
-      this.bossWave = options.bossWave || false // это босс волна?
-    }
-  }
-
-  class WaveManager {
-    constructor() {
-      this.stages = [] // все этапы
-      this.currentStageIndex = 0
-      this.currentWaveIndex = 0
-      this.isActive = false
-      this.isPaused = false
-      this.pauseTimer = 0
-      this.spawnTimer = 0
-      this.stageComplete = false
-      this.infiniteMode = false
-      this.maxDrones = 15
-      this.maxBullets = 30
-
-      // Инициализация этапов
-      this.initStages()
-
-      this.currentWaveDrones = []
+    const tank = {
+      x: canvas.width * 0.85,
+      y: canvas.height - groundHeight - 150,
+      w: 280,
+      h: 180
     }
 
-    initStages() {
-      // Этап 1: Начало
-      this.stages.push(new StageConfig('Начало', {
-        startMessage: 'Основные силы противника!',
-        waves: [
-          new WaveConfig('Разведка', {
-            drones: [{type: DroneType.NORMAL, count: 5}],
-            pauseAfter: 2000,
-            spawnInterval: 800
-          }),
-          new WaveConfig('Усиление', {
-            drones: [{type: DroneType.NORMAL, count: 7}],
-            pauseAfter: 2500,
-            spawnInterval: 700
-          }),
-          new WaveConfig('Гранатометчики', {
-            drones: [
-              {type: DroneType.NORMAL, count: 4},
-              {type: DroneType.GRENADIER, count: 3}
-            ],
-            pauseAfter: 3000,
-            spawnInterval: 900
-          })
-        ],
-        endMessage: 'Ты еще жив? Удивительно...',
-        pauseAfter: 4000
-      }))
-
-      // Этап 2: Нарастание
-      this.stages.push(new StageConfig('Нарастание', {
-        startMessage: 'Основные силы противника!',
-        waves: [
-          new WaveConfig('Волна 1', {
-            drones: [
-              {type: DroneType.NORMAL, count: 8},
-              {type: DroneType.GRENADIER, count: 2}
-            ],
-            pauseAfter: 2500,
-            spawnInterval: 600
-          }),
-          new WaveConfig('Волна 2', {
-            drones: [
-              {type: DroneType.NORMAL, count: 10},
-              {type: DroneType.GRENADIER, count: 3},
-              {type: DroneType.KAMIKAZE, count: 2}
-            ],
-            pauseAfter: 3000,
-            spawnInterval: 550
-          }),
-          new WaveConfig('Волна 3', {
-            drones: [
-              {type: DroneType.NORMAL, count: 12},
-              {type: DroneType.GRENADIER, count: 4},
-              {type: DroneType.KAMIKAZE, count: 3}
-            ],
-            pauseAfter: 3500,
-            spawnInterval: 500
-          })
-        ],
-        endMessage: 'Ты еще жив? Удивительно...',
-        pauseAfter: 5000
-      }))
-
-      // Этап 3: Тяжелый
-      this.stages.push(new StageConfig('Тяжелый', {
-        startMessage: 'Сейчас будет жарко!',
-        waves: [
-          new WaveConfig('Волна 1', {
-            drones: [
-              {type: DroneType.NORMAL, count: 15},
-              {type: DroneType.GRENADIER, count: 5},
-              {type: DroneType.KAMIKAZE, count: 3}
-            ],
-            pauseAfter: 3000,
-            spawnInterval: 450
-          }),
-          new WaveConfig('Волна 2', {
-            drones: [
-              {type: DroneType.NORMAL, count: 18},
-              {type: DroneType.GRENADIER, count: 6},
-              {type: DroneType.KAMIKAZE, count: 4}
-            ],
-            pauseAfter: 3500,
-            spawnInterval: 400
-          }),
-          new WaveConfig('Волна 3', {
-            drones: [
-              {type: DroneType.NORMAL, count: 20},
-              {type: DroneType.GRENADIER, count: 7},
-              {type: DroneType.KAMIKAZE, count: 5}
-            ],
-            pauseAfter: 4000,
-            spawnInterval: 350
-          })
-        ],
-        endMessage: 'Ты справился с основными силами! Но это еще не конец...',
-        pauseAfter: 6000
-      }))
-
-      // Этап 4: Босс
-      this.stages.push(new StageConfig('Босс', {
-        startMessage: 'Внимание! Летит что-то большое!',
-        bossWave: true,
-        waves: [
-          new WaveConfig('Приспешники', {
-            drones: [
-              {type: DroneType.NORMAL, count: 10},
-              {type: DroneType.GRENADIER, count: 4},
-              {type: DroneType.KAMIKAZE, count: 3}
-            ],
-            pauseAfter: 2000,
-            spawnInterval: 500
-          }),
-          new WaveConfig('Босс', {
-            drones: [{type: 'boss', count: 1}],
-            pauseAfter: 0
-          })
-        ],
-        endMessage: 'БОСС УНИЧТОЖЕН! Ты герой!',
-        pauseAfter: 8000
-      }))
-
-      // Этап 5: Бесконечный режим
-      this.stages.push(new StageConfig('Бесконечность', {
-        startMessage: 'Режим бесконечной битвы активирован! Держись сколько сможешь!',
-        waves: this.generateInfiniteWaves(),
-        infiniteMode: true
-      }))
+    const destroyedCity = {
+      x: 100,
+      y: canvas.height - groundHeight - 120,
+      w: 180,
+      h: 80
     }
 
-    generateInfiniteWaves() {
-      const waves = []
-      for (let i = 0; i < 100; i++) {
-        const difficulty = 1 + i * 0.2
-        waves.push(new WaveConfig(`Волна ${i+1}`, {
-          drones: [
-            {type: DroneType.NORMAL, count: Math.floor(10 * difficulty)},
-            {type: DroneType.GRENADIER, count: Math.floor(3 * difficulty)},
-            {type: DroneType.KAMIKAZE, count: Math.floor(2 * difficulty)}
+    const explosionSprite = new Image();
+    explosionSprite.src = "explosion_sprite.png";
+    const EXPLOSION_FRAME_WIDTH = 100;
+    const EXPLOSION_FRAME_HEIGHT = 100;
+    const EXPLOSION_FRAME_COUNT = 4;
+    const EXPLOSION_FRAME_DURATION = 100;
+    const MAX_ATTACKING_DRONES = 5
+
+    const groundExplosionSprite = new Image();
+    groundExplosionSprite.src = "ground_explosion_sprite.png";
+
+    const GROUND_EXPLOSION_FRAMES = 9;
+    const GROUND_EXPLOSION_FRAME_WIDTH = 100;
+    const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
+
+    const playerWalkSprite = new Image();
+    playerWalkSprite.src = "soldier_walk_sprite.png";
+
+    const WALK_FRAMES = 7
+    const WALK_FRAME_WIDTH = 100
+    const WALK_FRAME_HEIGHT = 130
+
+
+    let player
+    let playerName = "AAA"
+
+    let dropTimer = 0
+    let shootCooldown = 0
+    let globalEnemyFireCooldown = 0
+
+    let score = 0
+    let survivalTime = 0
+
+    let leaderboard = []
+
+    let waveMusic = {
+      1: new Audio("wave1.mp3"),
+      2: new Audio("wave2.mp3"),
+      3: new Audio("wave3.mp3"),
+      boss: new Audio("boss.mp3")
+    }
+
+    for (const key in waveMusic) {
+      waveMusic[key].loop = false
+      waveMusic[key].volume = 0.1
+    }
+
+    // DEBUG режим для тестирования
+    const DEBUG = {
+      bossStart: false,   // начать игру сразу с босса
+      godMode: false,     // бессмертие
+      spawnDrones: false, // включить/выключить обычных дронов
+      showHitboxes: true
+    }
+
+    const GameState = {
+      MENU: "menu",
+      GAME: "game",
+      GAME_OVER: "game_over"
+    }
+
+    let currentState = GameState.MENU
+    let gameLoopRunning = true
+    let lastFrameTime = 0
+    let frameCount = 0
+    let fps = 0
+
+    let cachedDronesCount = 0
+    let cachedEnemyBulletsCount = 0
+    let frameCounter = 0
+
+    const GRID_SIZE = 100
+    let collisionGrid = {}
+
+    const EffectsManager = {
+      // Отключить все визуальные эффекты для игры
+      disableForGame() {
+        const container = document.getElementById('game-container')
+        const ui = document.getElementById('ui')
+
+        // Убираем CRT класс и добавляем no-crt
+        container.classList.remove('crt')
+        container.classList.add('no-crt')
+
+        // Отключаем анимацию UI
+        ui.style.animation = 'none'
+
+        // console.log('Visual effects disabled for game')
+      },
+
+      // Включить эффекты для меню
+      enableForMenu() {
+        const container = document.getElementById('game-container')
+        const ui = document.getElementById('ui')
+
+        // Возвращаем CRT класс и убираем no-crt
+        container.classList.add('crt')
+        container.classList.remove('no-crt')
+
+        // Возвращаем анимацию UI
+        ui.style.animation = 'glitch1 1s infinite'
+
+        // console.log('Visual effects enabled for menu')
+      }
+    }
+
+    // Типы дронов
+    const DroneType = {
+      NORMAL: 'normal',
+      GRENADIER: 'grenadier',
+      KAMIKAZE: 'kamikaze'
+    }
+
+    function showHitboxRect(x, y, width, height, color) {
+      ctx.strokeStyle = color || 'red'
+      ctx.lineWidth = 2
+      ctx.strokeRect(x, y, width, height)
+    }
+
+    // Класс для настройки волны
+    class WaveConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.drones = options.drones || [] // массив {type: DroneType, count: number}
+        this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
+        this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
+        this.message = options.message || null // сообщение перед волной
+        this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
+        this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
+      }
+    }
+
+    // Класс для большой волны (этапа)
+    class StageConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.waves = options.waves || [] // массив WaveConfig
+        this.startMessage = options.startMessage || null // сообщение перед этапом
+        this.endMessage = options.endMessage || null // сообщение после этапа
+        this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
+        this.bossWave = options.bossWave || false // это босс волна?
+      }
+    }
+
+    class WaveManager {
+      constructor() {
+        this.stages = [] // все этапы
+        this.currentStageIndex = 0
+        this.currentWaveIndex = 0
+        this.isActive = false
+        this.isPaused = false
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.stageComplete = false
+        this.infiniteMode = false
+        this.maxDrones = 15
+        this.maxBullets = 30
+
+        // Инициализация этапов
+        this.initStages()
+
+        this.currentWaveDrones = []
+      }
+
+      initStages() {
+        // Этап 1: Начало
+        this.stages.push(new StageConfig('Начало', {
+          startMessage: 'Основные силы противника!',
+          waves: [
+            new WaveConfig('Разведка', {
+              drones: [{ type: DroneType.NORMAL, count: 5 }],
+              pauseAfter: 2000,
+              spawnInterval: 800
+            }),
+            new WaveConfig('Усиление', {
+              drones: [{ type: DroneType.NORMAL, count: 7 }],
+              pauseAfter: 2500,
+              spawnInterval: 700
+            }),
+            new WaveConfig('Гранатометчики', {
+              drones: [
+                { type: DroneType.NORMAL, count: 4 },
+                { type: DroneType.GRENADIER, count: 3 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 900
+            })
           ],
-          pauseAfter: 3000,
-          spawnInterval: Math.max(200, 500 - i * 10)
+          endMessage: 'Ты еще жив? Удивительно...',
+          pauseAfter: 4000
+        }))
+
+        // Этап 2: Нарастание
+        this.stages.push(new StageConfig('Нарастание', {
+          startMessage: 'Основные силы противника!',
+          waves: [
+            new WaveConfig('Волна 1', {
+              drones: [
+                { type: DroneType.NORMAL, count: 8 },
+                { type: DroneType.GRENADIER, count: 2 }
+              ],
+              pauseAfter: 2500,
+              spawnInterval: 600
+            }),
+            new WaveConfig('Волна 2', {
+              drones: [
+                { type: DroneType.NORMAL, count: 10 },
+                { type: DroneType.GRENADIER, count: 3 },
+                { type: DroneType.KAMIKAZE, count: 2 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 550
+            }),
+            new WaveConfig('Волна 3', {
+              drones: [
+                { type: DroneType.NORMAL, count: 12 },
+                { type: DroneType.GRENADIER, count: 4 },
+                { type: DroneType.KAMIKAZE, count: 3 }
+              ],
+              pauseAfter: 3500,
+              spawnInterval: 500
+            })
+          ],
+          endMessage: 'Ты еще жив? Удивительно...',
+          pauseAfter: 5000
+        }))
+
+        // Этап 3: Тяжелый
+        this.stages.push(new StageConfig('Тяжелый', {
+          startMessage: 'Сейчас будет жарко!',
+          waves: [
+            new WaveConfig('Волна 1', {
+              drones: [
+                { type: DroneType.NORMAL, count: 15 },
+                { type: DroneType.GRENADIER, count: 5 },
+                { type: DroneType.KAMIKAZE, count: 3 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 450
+            }),
+            new WaveConfig('Волна 2', {
+              drones: [
+                { type: DroneType.NORMAL, count: 18 },
+                { type: DroneType.GRENADIER, count: 6 },
+                { type: DroneType.KAMIKAZE, count: 4 }
+              ],
+              pauseAfter: 3500,
+              spawnInterval: 400
+            }),
+            new WaveConfig('Волна 3', {
+              drones: [
+                { type: DroneType.NORMAL, count: 20 },
+                { type: DroneType.GRENADIER, count: 7 },
+                { type: DroneType.KAMIKAZE, count: 5 }
+              ],
+              pauseAfter: 4000,
+              spawnInterval: 350
+            })
+          ],
+          endMessage: 'Ты справился с основными силами! Но это еще не конец...',
+          pauseAfter: 6000
+        }))
+
+        // Этап 4: Босс
+        this.stages.push(new StageConfig('Босс', {
+          startMessage: 'Внимание! Летит что-то большое!',
+          bossWave: true,
+          waves: [
+            new WaveConfig('Приспешники', {
+              drones: [
+                { type: DroneType.NORMAL, count: 10 },
+                { type: DroneType.GRENADIER, count: 4 },
+                { type: DroneType.KAMIKAZE, count: 3 }
+              ],
+              pauseAfter: 2000,
+              spawnInterval: 500
+            }),
+            new WaveConfig('Босс', {
+              drones: [{ type: 'boss', count: 1 }],
+              pauseAfter: 0
+            })
+          ],
+          endMessage: 'БОСС УНИЧТОЖЕН! Ты герой!',
+          pauseAfter: 8000
+        }))
+
+        // Этап 5: Бесконечный режим
+        this.stages.push(new StageConfig('Бесконечность', {
+          startMessage: 'Режим бесконечной битвы активирован! Держись сколько сможешь!',
+          waves: this.generateInfiniteWaves(),
+          infiniteMode: true
         }))
       }
-      return waves
-    }
 
-    // Запустить конкретный этап
-    startStage(index) {
-      // Убеждаемся, что индекс в пределах массива
-      if (index >= this.stages.length) {
-        if (this.infiniteMode) {
-          this.startInfiniteMode()
+      generateInfiniteWaves() {
+        const waves = []
+        for (let i = 0; i < 100; i++) {
+          const difficulty = 1 + i * 0.2
+          waves.push(new WaveConfig(`Волна ${i + 1}`, {
+            drones: [
+              { type: DroneType.NORMAL, count: Math.floor(10 * difficulty) },
+              { type: DroneType.GRENADIER, count: Math.floor(3 * difficulty) },
+              { type: DroneType.KAMIKAZE, count: Math.floor(2 * difficulty) }
+            ],
+            pauseAfter: 3000,
+            spawnInterval: Math.max(200, 500 - i * 10)
+          }))
         }
-        return
+        return waves
       }
 
-      const stage = this.stages[index]
+      // Запустить конкретный этап
+      startStage(index) {
+        // Убеждаемся, что индекс в пределах массива
+        if (index >= this.stages.length) {
+          if (this.infiniteMode) {
+            this.startInfiniteMode()
+          }
+          return
+        }
 
-      // ВАЖНО: сбрасываем все счетчики перед стартом этапа
-      this.currentStageIndex = index
-      this.currentWaveIndex = 0
-      this.isActive = true
-      this.stageComplete = false
-      this.isPaused = false
-      this.pauseTimer = 0
-      this.spawnTimer = 0
-      this.currentWaveSpawnCount = 0
-      this.currentWaveDrones = []
+        const stage = this.stages[index]
 
-      this.isActive = false // ВАЖНО
+        // ВАЖНО: сбрасываем все счетчики перед стартом этапа
+        this.currentStageIndex = index
+        this.currentWaveIndex = 0
+        this.isActive = true
+        this.stageComplete = false
+        this.isPaused = false
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+        this.currentWaveDrones = []
 
-      if (stage.startMessage) {
-        showCommanderMessage(5000, stage.startMessage).then(() => {
+        this.isActive = false // ВАЖНО
+
+        if (stage.bossWave) {
+          // Для босса особая логика — только спавн босса, без волн
+          showCommanderMessage(5000, stage.startMessage).then(() => {
+            spawnBoss()
+          })
+        } else if (stage.startMessage) {
+          // Показываем сообщение, затем запускаем волну
+          showCommanderMessage(5000, stage.startMessage).then(() => {
+            this.isActive = true
+            this.startCurrentWave()
+          })
+        } else {
+          // Нет сообщения — сразу запускаем
           this.isActive = true
           this.startCurrentWave()
-        })
-      } else {
-        this.isActive = true
-        this.startCurrentWave()
+        }
       }
 
-      if (stage.bossWave) {
-        // Для босса особая логика
+      // Запустить текущую волну
+      startCurrentWave() {
+        const stage = this.stages[this.currentStageIndex]
+
+        if (this.currentWaveIndex >= stage.waves.length) {
+          this.completeStage()
+          return
+        }
+
+        const wave = stage.waves[this.currentWaveIndex]
+
+        // ПРИНУДИТЕЛЬНОЕ ГЛУБОКОЕ КОПИРОВАНИЕ
+        this.currentWaveDrones = JSON.parse(JSON.stringify(wave.drones))
+
+        // Сохраняем общее количество дронов в волне как константу
+        this.totalWaveDrones = this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
+
+        console.log(`Starting wave ${this.currentWaveIndex + 1}/${stage.waves.length}: ${wave.name}`,
+          'Original:', wave.drones,
+          'Copy:', this.currentWaveDrones,
+          'Total:', this.totalWaveDrones)
+
+        this.isPaused = false
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+      }
+
+      // Завершить этап
+      completeStage() {
+        const stage = this.stages[this.currentStageIndex]
+        console.log(`Stage ${this.currentStageIndex + 1} (${stage.name}) completed!`)
+
         this.isActive = false
-        showCommanderMessage(5000, stage.startMessage).then(() => {
-          spawnBoss()
-        })
-      } else {
-        // Показываем сообщение этапа если есть
+        this.stageComplete = true
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+        this.currentWaveDrones = []
+
+        const nextStage = (cb) => {
+          this.currentStageIndex++
+          this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
+          if (this.currentStageIndex < this.stages.length) {
+            console.log(`Moving to stage ${this.currentStageIndex + 1}: ${this.stages[this.currentStageIndex].name}`)
+            this.startStage(this.currentStageIndex)
+          } else {
+            console.log("All stages completed! Starting infinite mode...")
+            this.startInfiniteMode()
+          }
+        }
+
+        if (stage.endMessage) {
+          showCommanderMessage(5000, stage.endMessage).then(() => {
+            if (stage.bossWave) {
+              this.startInfiniteMode()
+            } else {
+              nextStage()
+            }
+          })
+        } else {
+          nextStage()
+        }
+      }
+
+      // Запустить бесконечный режим
+      startInfiniteMode() {
+        this.infiniteMode = true
+        this.currentStageIndex = this.stages.length - 1
+        this.currentWaveIndex = 0
+        this.isActive = true
+
+        const stage = this.stages[this.currentStageIndex]
         if (stage.startMessage) {
           showCommanderMessage(5000, stage.startMessage).then(() => {
             this.startCurrentWave()
           })
-        } else {
-          this.startCurrentWave()
-        }
-      }
-    }
-
-    // Запустить текущую волну
-    startCurrentWave() {
-      const stage = this.stages[this.currentStageIndex]
-
-      if (this.currentWaveIndex >= stage.waves.length) {
-        this.completeStage()
-        return
-      }
-
-      const wave = stage.waves[this.currentWaveIndex]
-
-      // ПРИНУДИТЕЛЬНОЕ ГЛУБОКОЕ КОПИРОВАНИЕ
-      this.currentWaveDrones = JSON.parse(JSON.stringify(wave.drones))
-
-      console.log(`Starting wave ${this.currentWaveIndex + 1}/${stage.waves.length}: ${wave.name}`,
-        'Original:', wave.drones,
-        'Copy:', this.currentWaveDrones)
-
-      this.isPaused = false
-      this.spawnTimer = 0
-      this.currentWaveSpawnCount = 0
-    }
-
-    // Завершить этап
-    completeStage() {
-      const stage = this.stages[this.currentStageIndex]
-      console.log(`Stage ${this.currentStageIndex + 1} (${stage.name}) completed!`)
-
-      this.isActive = false
-      this.stageComplete = true
-      this.pauseTimer = 0
-      this.spawnTimer = 0
-      this.currentWaveSpawnCount = 0
-      this.currentWaveDrones = []
-
-      const nextStage = (cb) => {
-        this.currentStageIndex++
-        this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
-        if (this.currentStageIndex < this.stages.length) {
-          console.log(`Moving to stage ${this.currentStageIndex + 1}: ${this.stages[this.currentStageIndex].name}`)
-          this.startStage(this.currentStageIndex)
-        } else {
-          console.log("All stages completed! Starting infinite mode...")
-          this.startInfiniteMode()
         }
       }
 
-      if (stage.endMessage) {
-        showCommanderMessage(5000, stage.endMessage).then(() => {
-          if (stage.bossWave) {
-            this.startInfiniteMode()
-          } else {
-            nextStage()
+      // Обновление (вызывать в gameLoop)
+      update(delta) {
+        if (!this.isActive) return
+
+        // Проверяем индекс этапа
+        if (this.currentStageIndex >= this.stages.length) {
+          this.isActive = false
+          return
+        }
+
+        const stage = this.stages[this.currentStageIndex]
+        if (!stage) {
+          this.isActive = false
+          return
+        }
+
+        // ===== ФАЗА ПАУЗЫ МЕЖДУ ВОЛНАМИ =====
+        if (this.isPaused) {
+          this.pauseTimer += delta
+          const prevWave = stage.waves[this.currentWaveIndex - 1]
+
+          if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
+            console.log(`Pause ended, starting next wave ${this.currentWaveIndex + 1}/${stage.waves.length}`)
+            this.isPaused = false
+            this.spawnTimer = 0
+            this.startCurrentWave()
           }
-        })
-      } else {
-        nextStage()
-      }
-    }
-
-    // Запустить бесконечный режим
-    startInfiniteMode() {
-      this.infiniteMode = true
-      this.currentStageIndex = this.stages.length - 1
-      this.currentWaveIndex = 0
-      this.isActive = true
-
-      const stage = this.stages[this.currentStageIndex]
-      if (stage.startMessage) {
-        showCommanderMessage(5000, stage.startMessage).then(() => {
-          this.startCurrentWave()
-        })
-      }
-    }
-
-    // Обновление (вызывать в gameLoop)
-    update(delta) {
-      if (!this.isActive) return
-
-      // Проверяем индекс этапа
-      if (this.currentStageIndex >= this.stages.length) {
-        console.log("No more stages")
-        this.isActive = false
-        return
-      }
-
-      const stage = this.stages[this.currentStageIndex]
-      if (!stage) {
-        console.error("Stage not found!")
-        this.isActive = false
-        return
-      }
-
-      // ЕСЛИ МЫ В ПАУЗЕ
-      if (this.isPaused) {
-        this.pauseTimer += delta
-        const prevWave = stage.waves[this.currentWaveIndex - 1]
-
-        if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
-          console.log(`Pause ended, starting next wave ${this.currentWaveIndex + 1}/${stage.waves.length}`)
-          this.isPaused = false
-          this.spawnTimer = 0
-          this.startCurrentWave() // Запускаем следующую волну
+          return
         }
-        return
-      }
 
-      // ПРОВЕРЯЕМ, НЕ ЗАКОНЧИЛИСЬ ЛИ ВОЛНЫ
-      if (this.currentWaveIndex >= stage.waves.length) {
-        console.log("All waves completed, completing stage")
-        this.completeStage()
-        return
-      }
+        // Проверяем индекс волны
+        if (this.currentWaveIndex >= stage.waves.length) {
+          console.log("All waves completed, completing stage")
+          this.completeStage()
+          return
+        }
 
-      if (this.currentWaveDrones.length === 0) return
+        const wave = stage.waves[this.currentWaveIndex]
+        const totalDrones = this.totalWaveDrones || 0
 
-      // ОСНОВНАЯ ЛОГИКА СПАВНА
-      const wave = stage.waves[this.currentWaveIndex]
-
-      this.spawnTimer += delta
-
-      if (this.spawnTimer >= wave.spawnInterval) {
-        this.spawnTimer = 0
-
-        const totalDrones = this.getWaveDroneCount()
-
+        // ===== ФАЗА 1: СПАВН — пока не заспавнены все дроны =====
         if (this.currentWaveSpawnCount < totalDrones) {
-          this.spawnNextDrone()
-        } else {
-          // Все дроны заспавнены, ждем пока их убьют
-          if (countDrones() === 0) {
-            console.log(`Wave ${this.currentWaveIndex + 1} completed`)
-            this.currentWaveIndex++
+          this.spawnTimer += delta
+          if (this.spawnTimer >= wave.spawnInterval) {
+            this.spawnTimer = 0
+            this.spawnNextDrone()
+          }
+          return
+        }
 
-            // ПРОВЕРЯЕМ, ЕСТЬ ЛИ СЛЕДУЮЩАЯ ВОЛНА
-            if (this.currentWaveIndex < stage.waves.length) {
-              // Есть следующая волна - ставим паузу
-              this.isPaused = true
-              this.pauseTimer = 0
-            } else {
-              // Это была последняя волна - завершаем этап
-              this.completeStage()
-            }
+        // ===== ФАЗА 2: ОЖИДАНИЕ — все заспавнены, ждём гибели =====
+        // Проверяем каждый кадр (не через spawnTimer), чтобы не пропустить момент
+        const alive = countDrones()
+
+        if (!this._debugTimer) this._debugTimer = 0
+        this._debugTimer += delta
+        if (this._debugTimer >= 3000) {
+          this._debugTimer = 0
+          console.log(`[WAIT] wave=${this.currentWaveIndex + 1}, aliveDrones=${alive}, gameObjects=${gameObjects.length}, spawned=${this.currentWaveSpawnCount}/${totalDrones}`)
+        }
+
+        if (alive === 0) {
+          console.log(`Wave ${this.currentWaveIndex + 1} completed`)
+          this._debugTimer = 0
+          this.currentWaveIndex++
+
+          if (this.currentWaveIndex < stage.waves.length) {
+            this.isPaused = true
+            this.pauseTimer = 0
+          } else {
+            this.completeStage()
           }
         }
       }
-    }
 
-    // Получить общее количество дронов в волне
-    getWaveDroneCount() {
-      if (!this.currentWaveDrones) return 0
-      return this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
-    }
-
-    // Посчитать сколько дронов уже заспавнено в текущей волне
-    countSpawnedInWave() {
-      // Можно добавить счетчик в WaveManager
-      if (!this.currentWaveSpawnCount) {
-        this.currentWaveSpawnCount = 0
-      }
-      return this.currentWaveSpawnCount
-    }
-
-    // Заспавнить следующего дрона из волны
-    spawnNextDrone() {
-      const availableTypes = this.currentWaveDrones.filter(d => d.count > 0)
-      if (availableTypes.length === 0) return
-
-      const type = availableTypes[Math.floor(Math.random() * availableTypes.length)]
-      type.count--  // Уменьшаем ТОЛЬКО в копии
-
-      this.currentWaveSpawnCount++
-
-      console.log(`Spawning ${type.type}, remaining:`,
-        this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', '))
-
-      this.spawnDroneByType(type.type)
-    }
-
-    // Спавн дрона по типу
-    spawnDroneByType(type) {
-      switch (type) {
-        case DroneType.NORMAL:
-          return spawnNormalDrone()
-        case DroneType.GRENADIER:
-          return spawnGrenadier()
-        case DroneType.KAMIKAZE:
-          return spawnKamikaze()
-        case 'boss':
-          return spawnBoss()
-      }
-    }
-
-    // Тестовые функции для клавиш
-    testWave(stageIndex, waveIndex) {
-      this.isActive = true
-      this.currentStageIndex = stageIndex
-      this.currentWaveIndex = waveIndex
-      this.isPaused = false
-      this.spawnTimer = 0
-    }
-
-    testStage(stageIndex) {
-      this.startStage(stageIndex)
-    }
-  }
-
-  // Создаем экземпляр менеджера
-  const waveManager = new WaveManager()
-
-  // Спавн группы одинаковых дронов
-  function spawnGroup(type, count, interval = 500) {
-    let spawned = 0
-
-    const intervalId = setInterval(() => {
-      if (spawned >= count) {
-        clearInterval(intervalId)
-        return
+      // Получить общее количество дронов в волне
+      getWaveDroneCount() {
+        if (!this.currentWaveDrones) return 0
+        return this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
       }
 
-      switch(type) {
-        case DroneType.NORMAL:
-          spawnDrone()
-          break
-        case DroneType.GRENADIER:
-          waveManager.spawnGrenadier()
-          break
-        case DroneType.KAMIKAZE:
-          waveManager.spawnKamikaze()
-          break
+      // Посчитать сколько дронов уже заспавнено в текущей волне
+      countSpawnedInWave() {
+        // Можно добавить счетчик в WaveManager
+        if (!this.currentWaveSpawnCount) {
+          this.currentWaveSpawnCount = 0
+        }
+        return this.currentWaveSpawnCount
       }
 
-      spawned++
-    }, interval)
-  }
+      // Заспавнить следующего дрона из волны
+      spawnNextDrone() {
+        const availableTypes = this.currentWaveDrones.filter(d => d.count > 0)
+        if (availableTypes.length === 0) return
 
-  // Спавн смешанной группы
-  function spawnMixedGroup(droneTypes, interval = 500) {
-    // droneTypes: [{type: DroneType.NORMAL, count: 5}, {type: DroneType.GRENADIER, count: 2}]
-    const total = droneTypes.reduce((sum, d) => sum + d.count, 0)
-    let spawned = 0
+        const type = availableTypes[Math.floor(Math.random() * availableTypes.length)]
+        type.count--  // Уменьшаем ТОЛЬКО в копии
 
-    const intervalId = setInterval(() => {
-      if (spawned >= total) {
-        clearInterval(intervalId)
-        return
+        this.currentWaveSpawnCount++
+
+        console.log(`Spawning ${type.type}, remaining:`,
+          this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', '))
+
+        this.spawnDroneByType(type.type)
       }
 
-      // Выбираем случайный тип из оставшихся
-      const available = droneTypes.filter(d => d.count > 0)
-      if (available.length === 0) {
-        clearInterval(intervalId)
-        return
+      // Спавн дрона по типу
+      spawnDroneByType(type) {
+        switch (type) {
+          case DroneType.NORMAL:
+            return spawnNormalDrone()
+          case DroneType.GRENADIER:
+            return spawnGrenadier()
+          case DroneType.KAMIKAZE:
+            return spawnKamikaze()
+          case 'boss':
+            return spawnBoss()
+        }
       }
 
-      const type = available[Math.floor(Math.random() * available.length)]
-      type.count--
-
-      switch(type.type) {
-        case DroneType.NORMAL:
-          spawnDrone()
-          break
-        case DroneType.GRENADIER:
-          waveManager.spawnGrenadier()
-          break
-        case DroneType.KAMIKAZE:
-          waveManager.spawnKamikaze()
-          break
+      // Тестовые функции для клавиш
+      testWave(stageIndex, waveIndex) {
+        this.isActive = true
+        this.currentStageIndex = stageIndex
+        this.currentWaveIndex = waveIndex
+        this.isPaused = false
+        this.spawnTimer = 0
       }
 
-      spawned++
-    }, interval)
-  }
-
-  // Спавн волны с нарастающей сложностью
-  function spawnProgressiveWave(baseCount, increments, interval = 500) {
-    // baseCount: базовое количество
-    // increments: [{type: DroneType.NORMAL, add: 2}, {type: DroneType.GRENADIER, add: 1}]
-    let wave = 0
-
-    function spawnNext() {
-      if (wave >= increments.length) return
-
-      const drones = [
-        {type: DroneType.NORMAL, count: baseCount + increments[wave].add}
-      ]
-
-      spawnMixedGroup(drones, interval)
-
-      wave++
-      setTimeout(spawnNext, 3000 + wave * 1000)
-    }
-
-    spawnNext()
-  }
-
-  // В обработчик клавиш добавьте:
-  document.addEventListener("keydown", e => {
-    // ... существующие клавиши ...
-
-    // Тестирование конкретных волн
-    if (e.key === "1") { // Этап 1, волна 1
-      waveManager.testWave(0, 0)
-    }
-    if (e.key === "2") { // Этап 1, волна 2
-      waveManager.testWave(0, 1)
-    }
-    if (e.key === "3") { // Этап 1, волна 3
-      waveManager.testWave(0, 2)
-    }
-
-    if (e.key === "4") { // Этап 2, волна 1
-      waveManager.testWave(1, 0)
-    }
-    if (e.key === "5") { // Этап 2, волна 2
-      waveManager.testWave(1, 1)
-    }
-    if (e.key === "6") { // Этап 2, волна 3
-      waveManager.testWave(1, 2)
-    }
-
-    if (e.key === "7") { // Этап 3, волна 1
-      waveManager.testWave(2, 0)
-    }
-    if (e.key === "8") { // Этап 3, волна 2
-      waveManager.testWave(2, 1)
-    }
-    if (e.key === "9") { // Этап 3, волна 3
-      waveManager.testWave(2, 2)
-    }
-
-    if (e.key === "0") { // Босс этап
-      waveManager.testStage(3)
-    }
-
-    if (e.key === "-") { // Бесконечный режим
-      waveManager.startInfiniteMode()
-    }
-
-    // Тестирование групп
-    if (e.key === "g") { // группа гранатометчиков
-      spawnGroup(DroneType.GRENADIER, 5, 800)
-    }
-
-    if (e.key === "c") { // смешанная группа
-      spawnMixedGroup([
-        {type: DroneType.NORMAL, count: 8},
-        {type: DroneType.GRENADIER, count: 3},
-        {type: DroneType.KAMIKAZE, count: 2}
-      ], 600)
-    }
-
-    if (e.key === "p") { // прогрессивная волна
-      spawnProgressiveWave(5, [
-        {type: DroneType.NORMAL, add: 2},
-        {type: DroneType.GRENADIER, add: 1},
-        {type: DroneType.NORMAL, add: 3},
-        {type: DroneType.KAMIKAZE, add: 2}
-      ], 500)
-    }
-  })
-
-  // Класс для облаков
-  class Cloud {
-    constructor() {
-      this.width = 2528 // ширина облаков (в 2 раза шире экрана как вы сказали)
-      this.height =317
-      this.x = -1264 // случайная позиция
-      this.y = 0 // только в верхней трети экрана
-      this.speed = 0.01 + Math.random() * 0.1 // очень медленная скорость
-      this.opacity = 0.3 + Math.random() * 0.3 // прозрачность
-    }
-
-    update() {
-      this.x += this.speed
-      // Зацикливание: когда облако уходит за правый край, появляется слева
-      if (this.x > canvas.width) {
-        this.x = -this.width
+      testStage(stageIndex) {
+        this.startStage(stageIndex)
       }
     }
 
-    draw(ctx) {
-      if (!cloudsImg.complete) return
+    // Создаем экземпляр менеджера
+    const waveManager = new WaveManager()
 
-      ctx.globalAlpha = this.opacity
-      ctx.drawImage(
-        cloudsImg,
-        this.x,
-        this.y,
-        this.width,
-        this.height
-      )
-      ctx.globalAlpha = 1.0
+    // Спавн группы одинаковых дронов
+    function spawnGroup(type, count, interval = 500) {
+      let spawned = 0
+
+      const intervalId = setInterval(() => {
+        if (spawned >= count) {
+          clearInterval(intervalId)
+          return
+        }
+
+        switch (type) {
+          case DroneType.NORMAL:
+            spawnNormalDrone()
+            break
+          case DroneType.GRENADIER:
+            spawnGrenadier()
+            break
+          case DroneType.KAMIKAZE:
+            spawnKamikaze()
+            break
+        }
+
+        spawned++
+      }, interval)
     }
-  }
 
-  let clouds = []
+    // Спавн смешанной группы
+    function spawnMixedGroup(droneTypes, interval = 500) {
+      // droneTypes: [{type: DroneType.NORMAL, count: 5}, {type: DroneType.GRENADIER, count: 2}]
+      const total = droneTypes.reduce((sum, d) => sum + d.count, 0)
+      let spawned = 0
 
-  // Инициализация облаков
-  function initClouds(count = 3) {
-    clouds = []
-    for (let i = 0; i < count; i++) {
-      clouds.push(new Cloud())
+      const intervalId = setInterval(() => {
+        if (spawned >= total) {
+          clearInterval(intervalId)
+          return
+        }
+
+        // Выбираем случайный тип из оставшихся
+        const available = droneTypes.filter(d => d.count > 0)
+        if (available.length === 0) {
+          clearInterval(intervalId)
+          return
+        }
+
+        const type = available[Math.floor(Math.random() * available.length)]
+        type.count--
+
+        switch (type.type) {
+          case DroneType.NORMAL:
+            spawnDrone()
+            break
+          case DroneType.GRENADIER:
+            waveManager.spawnGrenadier()
+            break
+          case DroneType.KAMIKAZE:
+            waveManager.spawnKamikaze()
+            break
+        }
+
+        spawned++
+      }, interval)
     }
-  }
 
-  // ... (Input listeners and utility functions remain the same)
-  document.addEventListener("keydown",e=> {
-    if(e.code === "Space"){
-      shooting = true
+    // Спавн волны с нарастающей сложностью
+    function spawnProgressiveWave(baseCount, increments, interval = 500) {
+      // baseCount: базовое количество
+      // increments: [{type: DroneType.NORMAL, add: 2}, {type: DroneType.GRENADIER, add: 1}]
+      let wave = 0
 
-      const dir = getShootDirection()
+      function spawnNext() {
+        if (wave >= increments.length) return
 
-      if(dir && !currentWeapon.auto){
-        shoot(dir.dx,dir.dy)
+        const drones = [
+          { type: DroneType.NORMAL, count: baseCount + increments[wave].add }
+        ]
+
+        spawnMixedGroup(drones, interval)
+
+        wave++
+        setTimeout(spawnNext, 3000 + wave * 1000)
+      }
+
+      spawnNext()
+    }
+
+    // В обработчик клавиш добавьте:
+    document.addEventListener("keydown", e => {
+      // ... существующие клавиши ...
+
+      // Тестирование конкретных волн
+      if (e.key === "1") { // Этап 1, волна 1
+        waveManager.testWave(0, 0)
+      }
+      if (e.key === "2") { // Этап 1, волна 2
+        waveManager.testWave(0, 1)
+      }
+      if (e.key === "3") { // Этап 1, волна 3
+        waveManager.testWave(0, 2)
+      }
+
+      if (e.key === "4") { // Этап 2, волна 1
+        waveManager.testWave(1, 0)
+      }
+      if (e.key === "5") { // Этап 2, волна 2
+        waveManager.testWave(1, 1)
+      }
+      if (e.key === "6") { // Этап 2, волна 3
+        waveManager.testWave(1, 2)
+      }
+
+      if (e.key === "7") { // Этап 3, волна 1
+        waveManager.testWave(2, 0)
+      }
+      if (e.key === "8") { // Этап 3, волна 2
+        waveManager.testWave(2, 1)
+      }
+      if (e.key === "9") { // Этап 3, волна 3
+        waveManager.testWave(2, 2)
+      }
+
+      if (e.key === "0") { // Босс этап
+        waveManager.testStage(3)
+      }
+
+      if (e.key === "-") { // Бесконечный режим
+        waveManager.startInfiniteMode()
+      }
+
+      // Тестирование групп
+      if (e.key === "g") { // группа гранатометчиков
+        spawnGroup(DroneType.GRENADIER, 5, 800)
+      }
+
+      if (e.key === "c") { // смешанная группа
+        spawnMixedGroup([
+          { type: DroneType.NORMAL, count: 8 },
+          { type: DroneType.GRENADIER, count: 3 },
+          { type: DroneType.KAMIKAZE, count: 2 }
+        ], 600)
+      }
+
+      if (e.key === "p") { // прогрессивная волна
+        spawnProgressiveWave(5, [
+          { type: DroneType.NORMAL, add: 2 },
+          { type: DroneType.GRENADIER, add: 1 },
+          { type: DroneType.NORMAL, add: 3 },
+          { type: DroneType.KAMIKAZE, add: 2 }
+        ], 500)
+      }
+    })
+
+    // Класс для облаков
+    class Cloud {
+      constructor() {
+        this.width = 2528 // ширина облаков (в 2 раза шире экрана как вы сказали)
+        this.height = 317
+        this.x = -1264 // случайная позиция
+        this.y = 0 // только в верхней трети экрана
+        this.speed = 0.01 + Math.random() * 0.1 // очень медленная скорость
+        this.opacity = 0.3 + Math.random() * 0.3 // прозрачность
+      }
+
+      update() {
+        this.x += this.speed
+        // Зацикливание: когда облако уходит за правый край, появляется слева
+        if (this.x > canvas.width) {
+          this.x = -this.width
+        }
+      }
+
+      draw(ctx) {
+        if (!cloudsImg.complete) return
+
+        ctx.globalAlpha = this.opacity
+        ctx.drawImage(
+          cloudsImg,
+          this.x,
+          this.y,
+          this.width,
+          this.height
+        )
+        ctx.globalAlpha = 1.0
       }
     }
-    keys[e.key]=true
-  })
-  document.addEventListener("keyup",e=> {
-    if(e.code === "Space"){
-      shooting = false
+
+    let clouds = []
+
+    // Инициализация облаков
+    function initClouds(count = 3) {
+      clouds = []
+      for (let i = 0; i < count; i++) {
+        clouds.push(new Cloud())
+      }
     }
-    keys[e.key]=false
-  })
 
-  const fadeEl = document.getElementById("fade")
+    // ... (Input listeners and utility functions remain the same)
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        shooting = true
 
-  async function fadeOutMenu() {
-    await new Promise(resolve => setTimeout(resolve, 500))
+        const dir = getShootDirection()
 
-    document.body.classList.add("hide-cursor")
-    await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
-    fadeEl.style.opacity = "1"
-    fadeEl.style.transition = "opacity 3s"
-  }
+        if (dir && !currentWeapon.auto) {
+          shoot(dir.dx, dir.dy)
+        }
+      }
+      keys[e.key] = true
+    })
+    document.addEventListener("keyup", e => {
+      if (e.code === "Space") {
+        shooting = false
+      }
+      keys[e.key] = false
+    })
 
-  async function startGameSequence() {
-    await new Promise(r => setTimeout(r, 5000))
-    const ui = document.getElementById("ui")
-    fadeEl.style.opacity = "0"
-    ui.style.display = "none"
-    effectsLayer.style.display = "block"
+    const fadeEl = document.getElementById("fade")
 
-    // Отключаем все визуальные эффекты
-    EffectsManager.disableForGame()
+    async function fadeOutMenu() {
+      await new Promise(resolve => setTimeout(resolve, 500))
 
-    currentState = GameState.GAME
-    await new Promise(r => setTimeout(r, 1000))
-  }
+      document.body.classList.add("hide-cursor")
+      await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
+      fadeEl.style.opacity = "1"
+      fadeEl.style.transition = "opacity 3s"
+    }
 
-  async function showCommanderIntro() {
-    await new Promise(r => setTimeout(r, 500))
+    async function startGameSequence() {
+      await new Promise(r => setTimeout(r, 5000))
+      const ui = document.getElementById("ui")
+      fadeEl.style.opacity = "0"
+      ui.style.display = "none"
+      effectsLayer.style.display = "block"
 
-    const msg = `
+      // Отключаем все визуальные эффекты
+      EffectsManager.disableForGame()
+
+      currentState = GameState.GAME
+      await new Promise(r => setTimeout(r, 1000))
+    }
+
+    async function showCommanderIntro() {
+      await new Promise(r => setTimeout(r, 500))
+
+      const msg = `
     Значит так, товарищ солдат. Соответственно… соответственно.
 — Слушай боевую задачу.
 В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
@@ -1752,2021 +1786,2032 @@
 В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
 Кто без команды пойдёт назад — будет принят за наступающие силы противника.
     `
-    await showCommanderMessage(8000, msg)
-  }
-
-  async function startWaveIntro() {
-    droneSound.currentTime = 0
-    droneSound.volume = 0.3
-    droneSound.play()
-    await new Promise(r => setTimeout(r, 2000)) // небольшая пауза
-    gameMusic.play()
-
-    // Теперь разрешаем спавн дронов и первую волну
-    waveActive = true
-    wavePause = false
-    spawnDrone()
-    await new Promise(r => setTimeout(r, 1000))
-    spawnDrone()
-  }
-
-  async function animatePlayerIntro() {
-    player.x = -player.width
-    player.y = canvas.height - groundHeight - player.height
-    player.direction = 1 // идем вправо
-    const targetX = canvas.width * 0.5
-    const speed = 3
-
-    // const stepSound = PLAYER_SOUNDS['footSteps']
-
-    // stepSound.volume = 0.4
-    // stepSound.loop = true
-    // stepSound.currentTime = 0
-    // await stepSound.play()
-
-    return new Promise(resolve => {
-      const interval = setInterval(() => {
-        // “имитация” движения, как при нажатии клавиш
-        player.vx = speed
-        player.isMoving = true
-        player.update()  // обновляем позицию и кадры
-
-        if(player.x >= targetX){
-          player.x = targetX
-          player.vx = 0
-          player.isMoving = false
-          player.update()
-          clearInterval(interval)
-          resolve()
-        }
-      }, 100)
-    })
-  }
-
-  function splitTextIntoPages(text,maxChars=140){
-
-    const words = text.split(" ")
-    const pages = []
-
-    let current = ""
-
-    for(const word of words){
-
-      if((current+word).length > maxChars){
-        pages.push(current.trim())
-        current=""
-      }
-
-      current += word + " "
-    }
-
-    if(current.length) pages.push(current.trim())
-
-    return pages
-  }
-
-  async function typeText(element, text, speed = 25){
-
-    element.textContent = ""
-
-    let skip = false
-
-    function skipHandler(e){
-      if(e.code === "Enter") skip = true
-    }
-
-    window.addEventListener("keydown", skipHandler)
-    for(let i=0;i<text.length;i++){
-      element.textContent += text[i]
-
-      if(i % 3 === 0 && text[i] !== " "){
-        const s = GAME_SOUNDS.typeWriter.cloneNode()
-        s.volume = 0.15
-        s.play()
-      }
-
-      if(skip){
-        element.textContent = text
-        break
-      }
-
-      await new Promise(r => setTimeout(r,speed))
-    }
-
-    window.removeEventListener("keydown", skipHandler)
-  }
-
-  function waitForContinue(){
-    return new Promise(resolve => {
-      function handler(e){
-        if(e.code === "Enter"){
-          window.removeEventListener("keydown",handler)
-          resolve()
-        }
-      }
-
-      window.addEventListener("keydown",handler)
-    })
-  }
-
-  function buildCollisionGrid() {
-    collisionGrid = {}
-
-    gameObjects.forEach(obj => {
-      if (!obj.alive) return
-
-      const gridX = Math.floor(obj.x / GRID_SIZE)
-      const gridY = Math.floor(obj.y / GRID_SIZE)
-      const key = `${gridX},${gridY}`
-
-      if (!collisionGrid[key]) {
-        collisionGrid[key] = []
-      }
-      collisionGrid[key].push(obj)
-    })
-  }
-
-  function optimizeCollisions() {
-    buildCollisionGrid()
-
-    const bullets = gameObjects.filter(o => o instanceof Bullet)
-    const drones = gameObjects.filter(o => o instanceof Drone)
-
-    bullets.forEach(b => {
-      const gridX = Math.floor(b.x / GRID_SIZE)
-      const gridY = Math.floor(b.y / GRID_SIZE)
-      const key = `${gridX},${gridY}`
-
-      // Проверяем только объекты в той же ячейке сетки
-      const nearbyObjects = collisionGrid[key] || []
-
-      nearbyObjects.forEach(obj => {
-        if (obj instanceof Drone && isColliding(b, obj)) {
-          b.alive = false
-          obj.alive = false
-          // ... остальная логика
-        }
-      })
-    })
-  }
-
-  function freeze(ms){
-    hitFreeze = ms
-  }
-
-  function spawn(obj){
-    gameObjects.push(obj)
-  }
-
-  function isFirePressed(){
-    return keys[" "] || keys["Space"]
-  }
-
-  // DEBUG горячие клавиши
-  document.addEventListener("keydown", e => {
-    // spawn boss
-    if(e.key === "b"){
-      spawnBoss()
-    }
-
-    // Kill all
-    if(e.key === "k"){
-    }
-
-    if(e.key === "i"){
-      setWeapon('rifle')
-    }
-
-    if(e.key === "s"){
-      setWeapon('shotgun')
-    }
-
-    if(e.key === "m"){
-      setWeapon('machinegun')
-    }
-
-    if(e.code === "Space"){
-      e.preventDefault()
-    }
-
-    if(e.code === "KeyR"){
-      if(isReloading) return
-      startReload()
-    }
-
-    if(e.code === "KeyD"){
-      spawnDrone()
-    }
-
-    keys[e.key] = true
-  })
-
-
-
-  let currentWeapon
-  let ammoInMagazine
-  let magazines
-
-  function setWeapon(type){
-    currentWeapon = structuredClone(WEAPONS[type])
-
-    ammoInMagazine = currentWeapon.magazineSize
-    magazines = currentWeapon.magazines
-
-    // можно сбросить перезарядку
-    isReloading = false
-  }
-
-  let lastShotTime = 0
-
-  function shoot(dirX,dirY){
-    if(dirX === 0 && dirY === 0) return
-    if(isReloading) return
-    if(ammoInMagazine <= 0) return
-
-    if(Date.now() - lastShotTime < currentWeapon.fireRate) return
-
-    lastShotTime = Date.now()
-
-    ammoInMagazine--
-    const currentWeaponName = currentWeapon.name
-    if (WEAPON_SOUNDS[currentWeaponName]) {
-      const s = WEAPON_SOUNDS[currentWeaponName].shoot.cloneNode()
-      s.volume = 0.4
-      s.play()
-    }
-
-    for(let i=0;i<currentWeapon.bulletsPerShot;i++){
-
-      let angle = Math.atan2(dirY,dirX)
-
-      if(currentWeapon.spread > 0){
-
-        const spreadRad =
-          (Math.random()*currentWeapon.spread -
-            currentWeapon.spread/2) * Math.PI/180
-
-        angle += spreadRad
-      }
-
-      const dx = Math.cos(angle)
-      const dy = Math.sin(angle)
-
-      const speed = currentWeapon.bulletSpeed
-
-      const x = player.x + player.width/2
-      const y = player.y + player.height/2
-
-      spawn(new Bullet(x,y,dx * speed,dy * speed))
-    }
-
-    if(ammoInMagazine <= 0 && magazines > 0){
-      startReload()
-    }
-  }
-
-  let shooting = false
-
-  const muteBtn = document.getElementById("muteBtn")
-
-  muteBtn.onclick = () => {
-    toggleMusic(); // если музыка выключена, остановим все треки
-
-    !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
-  }
-
-  let currentMusic = null
-
-  let isMusicOn = localStorage.getItem("musicOn");
-  if (!isMusicOn === null) {
-    isMusicOn = true; // по умолчанию музыка включена
-  } else {
-    isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
-  }
-
-  function playTrack(track) {
-    if (isMusicOn) {
-      track.play();
-    }
-  }
-
-  function pauseTrack(track) {
-    track.pause();
-    track.currentTime = 0;
-  }
-
-  function toggleMusic() {
-    isMusicOn = !isMusicOn;
-    localStorage.setItem("musicOn", isMusicOn);
-
-    if (!isMusicOn) {
-      // выключаем всю музыку
-      gameMusic.pause();
-      gameOverMusic.pause();
-      menuMusic.pause();
-      Object.values(waveMusic).forEach(track => pauseTrack(track));
-    } else {
-      menuMusic.play()
-    }
-  }
-
-  function playWaveMusic(wave){
-    if(currentMusic){
-      currentMusic.pause()
-      currentMusic.currentTime = 0
-    }
-
-    const music = waveMusic[wave]
-
-    if(music && isMusicOn){
-      music.play()
-      currentMusic = music
-    }
-  }
-
-  function getShootDirection(){
-    let dx = 0
-    let dy = -1   // по умолчанию вверх
-
-    if(keys["ArrowRight"]){
-      dx = 0.7
-      dy = -0.7
-    }
-
-    if(keys["ArrowLeft"]){
-      dx = -0.7
-      dy = -0.7
-    }
-
-    return {dx, dy}
-  }
-
-  function startReload(){
-    if(isReloading) return
-    if(magazines <= 0) return
-    if(ammoInMagazine === currentWeapon.magazineSize) return
-
-    isReloading = true
-    const currentWeaponName = currentWeapon.name
-
-    if (WEAPON_SOUNDS[currentWeaponName]) {
-      const r = WEAPON_SOUNDS[currentWeaponName].reload.cloneNode()
-      r.volume = 0.5
-      r.play()
-    }
-
-    setTimeout(()=>{
-
-      ammoInMagazine = currentWeapon.magazineSize
-      magazines--
-
-      isReloading = false
-
-    },currentWeapon.reloadTime)
-
-  }
-
-  // function isColliding(a, b){
-  //   return (
-  //     a.x + HITBOX_PADDING < b.x + b.width - HITBOX_PADDING &&
-  //     a.x + a.width - HITBOX_PADDING > b.x + HITBOX_PADDING &&
-  //     a.y + HITBOX_PADDING < b.y + b.height - HITBOX_PADDING &&
-  //     a.y + a.height - HITBOX_PADDING > b.y + HITBOX_PADDING
-  //   )
-  // }
-
-  function isColliding(a, b) {
-    if (!a || !b || !a.alive || !b.alive) return false
-
-    // Для объектов с size (пули игрока)
-    if (a.size !== undefined) {
-      return (
-        a.x < b.x + b.width &&
-        a.x + a.size > b.x &&
-        a.y < b.y + b.height &&
-        a.y + a.size > b.y
-      )
-    }
-
-    // Для объектов с width/height (вражеские пули, дроны и т.д.)
-    return (
-      a.x < b.x + b.width &&
-      a.x + a.width > b.x &&
-      a.y < b.y + b.height &&
-      a.y + a.height > b.y
-    )
-  }
-
-  // function calculateDroneScore(){
-  //   const base = 10
-  //
-  //   const timeMultiplier = 1 + Math.min(survivalTime / 60, 5)
-  //   const droneMultiplier = 1 + Math.min(countDrones() / 20, 4)
-  //
-  //   return Math.floor(base * timeMultiplier * droneMultiplier)
-  // }
-
-  function showScoreGain(points){
-    const scoreEl = document.getElementById("score")
-    const pop = document.getElementById("score-pop")
-
-    pop.innerText = "+" + points
-
-    pop.classList.remove("score-pop-show")
-    void pop.offsetWidth
-    pop.classList.add("score-pop-show")
-
-    scoreEl.classList.add("score-pop")
-
-    setTimeout(()=>{
-      scoreEl.classList.remove("score-pop")
-    },150)
-  }
-
-  async function checkWaveProgress() {
-    const boss = gameObjects.find(o => o instanceof BossDrone)
-    if (wavePause) return;
-
-    if (waveKills >= waveTargetKills) {
-      waveActive = false;
-    }
-
-    // цель достигнута и небо чистое
-    if (!waveActive && countDrones() === 0) {
-
-      wavePause = true;
-      wavePauseTimer = 0;
-
-      let msg = "";
-
-      if (waveNumber === 0) {
-
-        gameMusic.pause()
-
-        setWeapon('pistol')
-        playWaveMusic(1)
-
-        msg = "Ты еще живой? С передка передают, что к тебе летит новая группа дронов. Некогда с тобой тут говорить. Мне шавуху привезли.";
-
-        waveMaxInAir = 5;
-        waveTargetKills = 20;
-        magazines = 8;
-
-      } else if (waveNumber === 1) {
-
-        setWeapon('rifle')
-        playWaveMusic(2)
-        msg = "Эй, людоед! Глянь, этот чубрик еще не 200. Если ты думаешь, что тебе удастся выжить, то выбрось это из головы. Мы уже подали раппорт о том, что ты пропал без вести.";
-
-        waveMaxInAir = 10;
-        waveTargetKills = 40;
-        magazines = 10;
-
-      } else if (waveNumber === 2) {
-        setWeapon('shotgun')
-        playWaveMusic(3)
-        msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
-        magazines = 12;
-      } else if (waveNumber === 3 && !boss) {
-        setWeapon('machinegun')
-        playWaveMusic("boss")
-        msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
-        spawnBoss()
-        magazines = 12;
-      } else {
-
-        msg = "Поздравь меня. Меня представили к награде.";
-
-        magazines = 12;
-        waveMaxInAir += 5;
-        waveTargetKills += 30;
-      }
-
-      waveKills = 0; // ВАЖНО
-      waveNumber++;
-
-      await showCommanderMessage(10000, msg);
-    }
-  }
-
-  function countEnemyBullets(){
-    return gameObjects.filter(o => o instanceof EnemyBullet).length
-  }
-
-  async function animateCommanderBox(){
-    const box = UI.notification.balloon
-
-    box.style.display = "block"
-
-    // маленькая задержка чтобы браузер применил display
-    await new Promise(r => setTimeout(r,20))
-
-    box.style.right = "40px"
-
-    // ждём завершения анимации
-    await new Promise(r => setTimeout(r,600))
-  }
-
-  async function hideCommanderBox(){
-    const box = UI.notification.balloon
-
-    box.style.right = "-500px"
-
-    await new Promise(r => setTimeout(r,600))
-
-    box.style.display = "none"
-  }
-
-  async function showCommanderMessage(duration = 10000, message = null){
-    const radioStart = GAME_SOUNDS.radioOn
-    const radioEnd = GAME_SOUNDS.radioOff
-
-    const balloon = UI.notification.balloon
-    const p = balloon.querySelector("p");
-    const hint = document.getElementById("continueHint")
-
-    // balloon.style.display = "block";
-    // balloon.classList.add("show");
-
-    await animateCommanderBox()
-
-    radioStart.currentTime = 0
-    await radioStart.play()
-
-    await new Promise(r => setTimeout(r,300))
-
-    const pages = splitTextIntoPages(message)
-    for(let i=0;i<pages.length;i++){
-
-      const page = pages[i] + "..."
-
-      await typeText(p, page)
-
-      hint.style.display = "block"
-
-      await waitForContinue()
-
-      hint.style.display = "none"
-    }
-
-    radioEnd.currentTime = 0
-    await radioEnd.play()
-
-    await hideCommanderBox()
-
-    // balloon.style.display = "none"
-  }
-
-  function fadeScreen(duration=800){
-    const f = document.getElementById("fade")
-    return new Promise(resolve=>{
-      f.style.transition = `opacity ${duration/2}ms`
-      f.style.opacity = 1
-      setTimeout(()=>{
-        f.style.opacity = 0
-        setTimeout(resolve, duration/2)
-      }, duration/2)
-    })
-  }
-
-  async function crossfadeMusic(from, to, duration=1000){
-    if(to){
-      to.volume = 0
-      if (isMusicOn) {
-        to.play()
-      }
-    }
-    const steps = 20
-    const stepTime = duration/steps
-    for(let i=0;i<=steps;i++){
-      const t = i/steps
-      if(from) from.volume = 0.2*(1-t)
-      if(to)   to.volume = 0.2*t
-      await new Promise(r=>setTimeout(r,stepTime))
-    }
-    if(from) from.pause()
-  }
-
-  class BaseDrone {
-    constructor(x, y, options = {}) {
-      this.x = x
-      this.y = y
-      this.width = options.width || 80
-      this.height = options.height || 60
-      this.speed = options.speed || (Math.random() * 2 + 1)
-      this.direction = options.direction || (Math.random() < 0.5 ? 1 : -1)
-
-      // Позиция зависит от направления
-      if (this.direction > 0) {
-        this.x = -this.width
-      } else {
-        this.x = canvas.width + this.width
-        this.speed = -this.speed
-      }
-
-      this.hp = options.hp || 1
-      this.maxHp = options.hp || 1
-      this.scoreValue = options.scoreValue || 10
-      this.damage = options.damage || 1
-
-      this.alive = true
-      this.type = options.type || 'base'
-
-      // Анимация
-      this.frame = 0
-      this.frameTimer = 0
-      this.frameDelay = options.frameDelay || 8
-
-      // Изображение
-      this.image = options.image || droneImg
-    }
-
-    update(delta) {
-      // Базовое движение
-      this.x += this.speed
-
-      // Разворот при достижении края
-      if (this.x < -this.width || this.x > canvas.width + this.width) {
-        this.speed *= -1
-      }
-
-      // Легкое покачивание
-      this.y += Math.sin(performance.now() * 0.003) * 0.3
-
-      // Анимация
-      this.frameTimer += delta
-      if (this.frameTimer >= this.frameDelay) {
-        this.frame = (this.frame + 1) % 4 // 4 кадра анимации
-        this.frameTimer = 0
-      }
-    }
-
-    draw(ctx) {
-      ctx.save()
-      ctx.globalAlpha = this.getOpacity()
-
-      // Рисуем как в старом коде - целое изображение
-      if (this.image && this.image.complete) {
-        ctx.drawImage(
-          this.image,
-          this.x,
-          this.y,
-          this.width,
-          this.height
-        )
-      } else {
-        // Запасной вариант
-        ctx.fillStyle = this.getColor()
-        ctx.fillRect(this.x, this.y, this.width, this.height)
-      }
-
-      // Полоска здоровья для сильных дронов
-      if (this.maxHp > 1) {
-        this.drawHealthBar(ctx)
-      }
-
-      if (DEBUG.showHitboxes) {
-        showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
-      }
-    }
-
-
-    drawHealthBar(ctx) {
-      const barWidth = this.width
-      const barHeight = 5
-      const healthPercent = this.hp / this.maxHp
-
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
-      ctx.fillRect(this.x, this.y - 10, barWidth, barHeight)
-
-      ctx.fillStyle = '#0f0'
-      ctx.fillRect(this.x, this.y - 10, barWidth * healthPercent, barHeight)
-    }
-
-    getColor() {
-      switch(this.type) {
-        case 'normal': return '#ff4444'
-        case 'grenadier': return '#ff8800'
-        case 'kamikaze': return '#ff00ff'
-        default: return '#ff0000'
-      }
-    }
-
-    getOpacity() {
-      return 1.0
-    }
-
-    takeDamage(amount) {
-      this.hp -= amount
-
-      if (this.hp <= 0) {
-        this.alive = false
-        return true
-      }
-      return false
-    }
-
-    onDeath() {
-      // Эффект при смерти
-      spawnExplosion(this.x + this.width/2, this.y + this.height/2)
-    }
-  }
-
-  class NormalDrone extends BaseDrone {
-    constructor(y) {
-      super(0, y, {
-        type: 'normal',
-        width: 80,
-        height: 60,
-        hp: 1,
-        scoreValue: 10,
-        frameDelay: 8,
-        image: droneImg
-      })
-
-      this.fireTimer = Math.random() * 1000
-      this.fireCooldown = 800 + Math.random() * 1200
-    }
-
-    update(delta) {
-      super.update(delta)
-
-      // Стрельба
-      this.fireTimer += delta
-
-      const drones = gameObjects.filter(o => o instanceof BaseDrone)
-      const attackingDrones = drones
-        .slice()
-        .sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x))
-        .slice(0, MAX_ATTACKING_DRONES)
-
-      if (attackingDrones.includes(this) &&
-        this.fireTimer >= this.fireCooldown &&
-        globalEnemyFireCooldown <= 0) {
-        this.shoot()
-      }
-    }
-
-    shoot() {
-      this.fireTimer = 0
-      if (countEnemyBullets() < waveManager.maxBullets) {
-        spawn(new EnemyBullet(
-          this.x + this.width / 2,
-          this.y + this.height
-        ))
-        globalEnemyFireCooldown = 1800 + Math.random() * 400
-      }
-      this.fireCooldown = 1800 + Math.random() * 1200
-    }
-  }
-
-  class GrenadierDrone extends BaseDrone {
-    constructor(y) {
-      super(0, y, {
-        type: 'grenadier',
-        width: 90,
-        height: 70,
-        hp: 2,
-        scoreValue: 25,
-        frameDelay: 10,
-        image: droneImg // Можно заменить на другой спрайт
-      })
-
-      this.dropTimer = 120 + Math.random() * 120
-      this.grenadeCooldown = 3000
-    }
-
-    update(delta) {
-      super.update(delta)
-
-      // Сброс гранат
-      this.dropTimer -= delta
-      if (this.dropTimer <= 0) {
-        this.dropGrenade()
-        this.dropTimer = this.grenadeCooldown + Math.random() * 1000
-      }
-    }
-
-    dropGrenade() {
-      spawn(new Grenade(this.x, this.y))
-    }
-
-    draw(ctx) {
-      super.draw(ctx)
-      // Дополнительная отметка для гранатометчика
-      ctx.fillStyle = 'orange'
-      ctx.beginPath()
-      ctx.arc(this.x + this.width - 10, this.y + 10, 5, 0, Math.PI * 2)
-      ctx.fill()
-    }
-  }
-
-  class KamikazeDrone extends BaseDrone {
-    constructor() {
-      // Случайная стартовая позиция
-      const side = Math.random()
-      let x, y
-
-      if (side < 0.25) {
-        x = -50
-        y = Math.random() * 200
-      } else if (side < 0.5) {
-        x = canvas.width + 50
-        y = Math.random() * 200
-      } else {
-        x = Math.random() * canvas.width
-        y = -50
-      }
-
-      super(x, y, {
-        type: 'kamikaze',
-        width: 60,
-        height: 60,
-        hp: 1,
-        scoreValue: 30,
-        speed: 4,
-        frameDelay: 6,
-        image: kamikazeImg
-      })
-
-      // Расчет направления к игроку
-      const dx = player.x - this.x
-      const dy = player.y - this.y
-      const dist = Math.hypot(dx, dy)
-
-      this.vx = dx / dist * this.speed
-      this.vy = dy / dist * this.speed
-
-      this.explosionRadius = 80
-    }
-
-    update(delta) {
-      // Камикадзе не использует базовое движение
-      this.x += this.vx
-      this.y += this.vy
-
-      this.frameTimer += delta
-      if (this.frameTimer >= this.frameDelay) {
-        this.frame = (this.frame + 1) % 4
-        this.frameTimer = 0
-      }
-
-      // Проверка столкновения с игроком
-      if (isColliding(this, player)) {
-        this.explode()
-      }
-
-      // Проверка удара о землю
-      if (this.y > canvas.height - groundHeight) {
-        this.explode()
-      }
-    }
-
-    explode() {
-      spawnGroundExplosion(this.x, this.y)
-
-      // Проверка урона игроку
-      const dx = player.x + player.width/2 - (this.x + this.width/2)
-      const dy = player.y + player.height/2 - (this.y + this.height/2)
-      const dist = Math.sqrt(dx*dx + dy*dy)
-
-      if (dist < this.explosionRadius) {
-        if (!DEBUG.godMode && player.alive) {
-          player.die()
-        }
-      }
-
-      this.alive = false
-    }
-
-    draw(ctx) {
-      super.draw(ctx)
-      // Визуальный эффект "мигания" перед взрывом
-      if (Math.random() < 0.1) {
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
-        ctx.beginPath()
-        ctx.arc(this.x + this.width/2, this.y + this.height/2, 30, 0, Math.PI * 2)
-        ctx.fill()
-      }
-    }
-  }
-
-  class Player{
-    constructor(){
-      this.x = 0
-      this.y = 0
-      this.width = 100
-      this.height = 130
-
-      this.speed = 3.8
-      this.direction = 1
-
-      this.frame = 0
-      this.frameTimer = 0
-      this.isMoving = false
-
-      this.vx = 0
-      this.acceleration = 0.45
-      this.friction = 0.88
-
-      this.alive = true
-      this.deathTimer = 2000
-    }
-
-    die() {
-      if (DEBUG.godMode) return
-      player.alive = false
-
-      timeScale = 0.25
-      screenShake.shake(20, 500)
-
-      spawnExplosion(
-        player.x + player.width/2,
-        player.y + player.height/2
-      )
-
-      droneSound.pause();
-      gameMusic.pause()
-      Object.values(waveMusic).forEach(track => pauseTrack(track));
-      const s = PLAYER_SOUNDS['death'].cloneNode()
-      s.volume = 0.4
-      s.play()
-    }
-
-    update(){
-      if(isFirePressed()){
-        this.vx *= 0
-      }
-
-      if(keys["ArrowLeft"]){
-        this.vx -= this.acceleration
-        this.direction = -1
-      }
-
-      if(keys["ArrowRight"]){
-        this.vx += this.acceleration
-        this.direction = 1
-      }
-
-      if(this.vx > this.speed) this.vx = this.speed
-      if(this.vx < -this.speed) this.vx = -this.speed
-
-      this.vx *= this.friction
-
-      this.x += this.vx
-      this.isMoving = Math.abs(this.vx) > 0.1
-
-      if(this.x < 0) this.x = 0
-      if(this.x + this.width > canvas.width)
-        this.x = canvas.width - this.width
-
-      if(this.isMoving){
-
-        this.frameTimer++
-
-        if(this.frameTimer > 15){
-          this.frame++
-          this.frameTimer = 0
-        }
-
-        if(this.frame >= WALK_FRAMES){
-          this.frame = 0
-        }
-      } else {
-        this.frame = 0
-      }
-    }
-
-    draw(){
-      ctx.save()
-
-      if(this.direction === -1){
-        ctx.scale(-1,1)
-
-        ctx.drawImage(
-          playerWalkSprite,
-          this.frame * WALK_FRAME_WIDTH,
-          0,
-          WALK_FRAME_WIDTH,
-          WALK_FRAME_HEIGHT,
-          -this.x - this.width,
-          this.y,
-          this.width,
-          this.height
-        )
-      } else {
-        ctx.drawImage(
-          playerWalkSprite,
-          this.frame * WALK_FRAME_WIDTH,
-          0,
-          WALK_FRAME_WIDTH,
-          WALK_FRAME_HEIGHT,
-          this.x,
-          this.y,
-          this.width,
-          this.height
-        )
-      }
-      ctx.restore()
-
-      if (DEBUG.showHitboxes) {
-        showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
-      }
-    }
-  }
-
-  class Bullet {
-    constructor(x, y, dx, dy) {
-      this.x = x
-      this.y = y
-      this.vx = dx
-      this.vy = dy
-      this.size = 6 // Размер пули
-      this.alive = true
-    }
-
-    update() {
-      this.x += this.vx
-      this.y += this.vy
-
-      // Удаляем если за экраном
-      if (this.x > canvas.width + 50 || this.x < -50 ||
-        this.y > canvas.height + 50 || this.y < -50) {
-        this.alive = false
-      }
-    }
-
-    draw(ctx) {
-      ctx.fillStyle = "yellow"
-      ctx.fillRect(this.x, this.y, this.size, this.size)
-    }
-  }
-
-  class EnemyBullet{
-    constructor(x,y){
-      this.x=x
-      this.y=y
-      this.speed=4
-      this.width = 12
-      this.height = 20
-      // Добавляем size для совместимости с isColliding
-      this.size = Math.min(this.width, this.height)
-
-      this.alive = true
-    }
-    update(){this.y+=this.speed}
-    draw(){
-      ctx.drawImage(
-        enemyBulletImg,
-        this.x,
-        this.y,
-        this.width,
-        this.height
-      )
-
-      if (DEBUG.showHitboxes) {
-        showHitboxRect(this.x, this.y, this.width, this.height)
-      }
-    }
-  }
-
-  class BossDrone {
-    constructor(){
-      this.width = 300
-      this.height = 260
-
-      this.x = canvas.width/2 - this.width/2
-      this.y = -120
-
-      this.speed = 1
-
-      this.hp = 200
-      this.maxHp = 200
-
-      this.spawnTimer = 0
-      this.missileTimer = 0
-
-      this.active = false
-
-      this.alive = true
-
-      this.maxMinions = 8 // Максимум дронов-миньонов одновременно
-      this.spawnedMinions = 0
-    }
-
-    update(delta){
-      // плавный въезд на экран
-      if(this.y < 40){
-        this.y += this.speed
-      }
-      // спавн дронов
-      this.phaseTimer += delta
-      if (this.hp < this.maxHp * 0.5 && this.phase === 1) {
-        this.phase = 2
-        console.log("Boss phase 2!") // Важное сообщение оставляем
-      }
-
-      // Фаза 1: редко спавнит дронов
-      if (this.phase === 1) {
-        this.spawnTimer += delta
-        if (this.spawnTimer > 6000) { // 6 секунд
-          this.spawnTimer = 0
-          if (countDrones() < 15) {
-            spawnNormalDrone() // Только 1 дрон
-          }
-        }
-      }
-
-      // Фаза 2: спавнит больше, но все равно с лимитом
-      if (this.phase === 2) {
-        this.spawnTimer += delta
-        if (this.spawnTimer > 4000) { // 4 секунды
-          this.spawnTimer = 0
-          if (countDrones() < 20) {
-            // Спавним 1-2 дрона
-            for (let i = 0; i < 2; i++) {
-              if (Math.random() < 0.5) {
-                spawnNormalDrone()
-              } else {
-                spawnGrenadier()
-              }
-            }
-          }
-        }
-      }
-
-      // ракета
-      this.missileTimer += delta
-      if (this.missileTimer > 4000) { // УВЕЛИЧИЛИ до 4 секунд
-        this.missileTimer = 0
-        // Только одна ракета за раз
-        if (gameObjects.filter(o => o instanceof Missile).length < 3) {
-          spawn(new Missile(
-            this.x + this.width/2,
-            this.y + this.height,
-            player.x + player.width/2
-          ))
-        }
-      }
-    }
-
-    draw(){
-      ctx.drawImage(bossImg,this.x,this.y,this.width,this.height)
-
-      if (DEBUG.showHitboxes) {
-        showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
-      }
-    }
-  }
-
-  class Missile{
-    constructor(x,y,targetX){
-      this.x = x
-      this.y = y
-
-      this.targetX = targetX
-
-      this.speed = 4
-      this.size = 12
-
-      this.alive = true
-    }
-
-    update(){
-      if(this.x < this.targetX) this.x += 1.5
-      if(this.x > this.targetX) this.x -= 1.5
-
-      this.y += this.speed
-    }
-
-    draw(){
-      ctx.drawImage(missileImg,this.x,this.y,16,32)
-    }
-  }
-
-  class Explosion {
-    constructor(x, y, width = EXPLOSION_FRAME_WIDTH, height = EXPLOSION_FRAME_HEIGHT) {
-      this.x = x + width/2;
-      this.y = y + height/2;
-      this.frame = 0;
-      this.timer = 0;
-
-      this.alive = true
-    }
-
-    update(delta) {
-      this.timer += delta;
-      if (this.timer >= EXPLOSION_FRAME_DURATION) {
-        this.timer = 0;
-        this.frame++;
-        if (this.frame >= EXPLOSION_FRAME_COUNT) {
-          this.alive = false; // взрыв закончился
-        }
-      }
-    }
-
-    draw(ctx) {
-      if (this.alive) {
-        ctx.drawImage(
-          explosionSprite,
-          this.frame * EXPLOSION_FRAME_WIDTH, 0,
-          EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
-          this.x - EXPLOSION_FRAME_WIDTH/2,
-          this.y - EXPLOSION_FRAME_HEIGHT/2,
-          EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT
-        );
-      }
-    }
-  }
-
-  class Grenade {
-    constructor(x,y){
-      this.x = x
-      this.y = y
-
-      this.vy = 3
-
-      this.width = 20
-      this.height = 20
-
-      this.timer = 180
-      this.onGround = false
-      this.exploded = false
-
-      this.alive = true
-    }
-
-    update(){
-      if(!this.onGround){
-        this.y += this.vy
-
-        if(this.y >= canvas.height - groundHeight - this.height){
-          this.y = canvas.height - groundHeight - this.height
-          this.onGround = true
-        }
-        return
-      }
-
-      // лежит на земле
-      this.timer--
-
-      if(this.timer <= 0 && !this.exploded){
-        this.exploded = true
-
-        explodeGrenade(this)
-
-        this.alive = false
-      }
-    }
-    draw(){
-      if(this.onGround && this.timer < 60){
-        if(Math.floor(this.timer/10)%2===0){
-          ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
-
-          ctx.beginPath()
-          ctx.arc(this.x+10,this.y+10,30,0,Math.PI*2)
-          ctx.strokeStyle="red"
-          ctx.stroke()
-        }
-      } else {
-        ctx.drawImage(grenadeImg,this.x,this.y,this.width,this.height)
-      }
-    }
-  }
-
-  function explodeGrenade(g){
-    spawnGroundExplosion(g.x,g.y)
-
-    const explosionRadius = 80
-
-    const gx = g.x + g.width/2
-    const gy = g.y + g.height/2
-
-    const px = player.x + player.width/2
-    const py = player.y + player.height/2
-
-    const dx = px - gx
-    const dy = py - gy
-
-    const dist = Math.sqrt(dx*dx + dy*dy)
-
-    if(dist < explosionRadius){
-      if(!DEBUG.godMode && player.alive){
-        player.die()
-      }
-    }
-  }
-
-  class GroundExplosion {
-    constructor(x, y){
-      this.x = x;
-      this.y = y - 30;
-      this.frame = 0;
-      this.timer = 0;
-
-      this.alive = true
-    }
-
-    update(){
-      this.timer++;
-
-      if(this.timer % 3 === 0){
-        this.frame++;
-      }
-
-      if(this.frame >= GROUND_EXPLOSION_FRAMES){
-        this.alive = false;
-      }
-    }
-
-    draw(ctx){
-      ctx.drawImage(
-        groundExplosionSprite,
-        this.frame * GROUND_EXPLOSION_FRAME_WIDTH,
-        0,
-        GROUND_EXPLOSION_FRAME_WIDTH,
-        GROUND_EXPLOSION_FRAME_HEIGHT,
-        this.x - GROUND_EXPLOSION_FRAME_WIDTH/2,
-        this.y - GROUND_EXPLOSION_FRAME_HEIGHT/2,
-        GROUND_EXPLOSION_FRAME_WIDTH,
-        GROUND_EXPLOSION_FRAME_HEIGHT
-      );
-    }
-  }
-
-  // Функции спавна
-  function spawnNormalDrone() {
-    const maxDrones = waveManager.maxDrones
-    if (countDrones() >= maxDrones) return
-
-    const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
-    spawn(drone)
-    return drone
-  }
-
-  function spawnGrenadier() {
-    const maxDrones = waveManager.maxDrones
-    if (countDrones() >= maxDrones) return
-
-    const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
-    spawn(drone)
-    return drone
-  }
-
-  function spawnKamikaze() {
-    const maxDrones = waveManager.maxDrones
-    if (countDrones() >= maxDrones) return
-
-    const drone = new KamikazeDrone()
-    spawn(drone)
-    return drone
-  }
-
-  // Обновленная функция countDrones для подсчета всех типов
-  function countDrones() {
-    return gameObjects.filter(o => o instanceof BaseDrone).length
-  }
-
-  // Обновленная функция calculateDroneScore
-  function calculateDroneScore(drone) {
-    const rawScore = drone.scoreValue *
-      (1 + Math.min(survivalTime / 60, 5)) *
-      (1 + Math.min(countDrones() / 20, 4))
-
-    return Math.floor(rawScore)
-  }
-
-  function spawnBoss(){
-    spawn(new BossDrone())
-    const boss = gameObjects.find(o => o instanceof BossDrone)
-    boss.active = true
-  }
-
-  async function restartGame(){
-    // Отключаем эффекты для игры
-    EffectsManager.disableForGame()
-
-    initGame()
-    currentState = GameState.GAME
-
-    const ui = document.getElementById("ui")
-    ui.style.display = "none"
-    ui.classList.remove("game_over_bg")
-    effectsLayer.style.display = "block"
-
-    await fadeScreen()
-    gameOverMusic.pause()
-    await crossfadeMusic(gameOverMusic, gameMusic)
-
-    droneSound.currentTime = 0
-    droneSound.playbackRate = 0.8
-    droneSound.volume = 0.001
-    droneSound.play()
-
-    document.body.classList.add("hide-cursor")
-    player = new Player()
-    gameObjects = []
-    spawnDrone()
-  }
-
-  // ... (Sound, Scoring, Leaderboard functions remain the same)
-  function playSound(freq,duration){
-    let audioCtx=new (window.AudioContext||window.webkitAudioContext)()
-    let osc=audioCtx.createOscillator()
-    let gain=audioCtx.createGain()
-    osc.connect(gain)
-    gain.connect(audioCtx.destination)
-    osc.frequency.value=freq
-    osc.start()
-    gain.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+duration)
-    osc.stop(audioCtx.currentTime+duration)
-  }
-
-  function saveScore(){
-    leaderboard.push({name:playerName,score:score,time:Math.floor(survivalTime)})
-    leaderboard.sort((a,b)=>{
-      if(b.score!==a.score) return b.score-a.score
-      return b.time-a.time
-    })
-    leaderboard=leaderboard.slice(0,10)
-  }
-
-  async function saveScoreOnline(){
-    const {data, error} = await db
-      .from("leaderboard")
-      .insert([{name: playerName,score: score}])
-    if(error){console.error(error)}
-  }
-
-  async function loadLeaderboard(){
-    const { data } = await db
-      .from("leaderboard")
-      .select("*")
-      .order("score", { ascending:false })
-      .limit(5)
-    leaderboard = data
-    renderLeaderboard()
-  }
-
-  function renderLeaderboard(){
-    let html="<h3>Top Survivors</h3>"
-    leaderboard.forEach((p,i)=>{
-      html+=`${i+1}. ${p.name} — ${p.score} pts<br>`
-    })
-    document.getElementById("leaderboard").innerHTML=html
-  }
-
-  // let screenShake = {
-  //   intensity: 0,
-  //   duration: 0,
-  //   offsetX: 0,
-  //   offsetY: 0,
-  //
-  //   update() {
-  //     if (this.duration > 0) {
-  //       this.duration--
-  //       this.offsetX = (Math.random() - 0.5) * this.intensity
-  //       this.offsetY = (Math.random() - 0.5) * this.intensity
-  //     } else {
-  //       this.offsetX = 0
-  //       this.offsetY = 0
-  //     }
-  //   },
-  //
-  //   shake(intensity = 10, duration = 15) {
-  //     this.intensity = intensity
-  //     this.duration = duration
-  //   }
-  // }
-  let screenShake = {
-    intensity: 0,
-    duration: 0,
-    offsetX: 0,
-    offsetY: 0,
-
-    update() {
-      // Всегда возвращаем ноль - никакой тряски
-      this.offsetX = 0
-      this.offsetY = 0
-      return {x: 0, y: 0}
-    },
-
-    shake(intensity = 10, duration = 15) {
-      // Ничего не делаем - тряска отключена
-    }
-  }
-
-  function spawnExplosion(x, y) {
-    spawn(new Explosion(x,y))
-
-    const s = droneExplosionSound.cloneNode()
-    s.volume = 0.2
-    s.play()
-    s.onended = () => s.remove()
-  }
-
-  function spawnGroundExplosion(x, y){
-    spawn(new GroundExplosion(x, y))
-
-    const s = groundExplosionSound.cloneNode()
-    s.volume = 0.3
-    s.play()
-
-    // screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
-  }
-
-  // ЗАМЕНИТЕ старую функцию spawnDrone на эту:
-  function spawnDrone() {
-    const maxDrones = waveManager.maxDrones
-    if (countDrones() >= maxDrones) return
-
-    // Используем новый NormalDrone вместо старого Drone
-    spawnNormalDrone()
-
-    if (Math.random() < 0.08) {
-      spawnKamikaze()
-    }
-  }
-
-  function initGame(){
-    // игрок
-    player = new Player()
-
-    // оружие
-    currentWeapon = structuredClone(WEAPONS.pistol)
-    ammoInMagazine = currentWeapon.magazineSize
-    magazines = currentWeapon.magazines
-
-    isReloading = false
-    lastShotTime = 0
-
-    // игра
-    score = 0
-    survivalTime = 0
-    dropTimer = 0
-    shootCooldown = 0
-
-    // облака
-    // initClouds(1)
-    initCitySmoke()
-    initTankSmoke()
-    initFire()
-
-    // музыка
-  }
-
-  async function startGame(){
-    await fadeOutMenu()
-    initGame()
-    await startGameSequence()
-    await animatePlayerIntro()
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    await showCommanderIntro()
-    // await startWaveIntro()
-    await waveManager.startStage(0)
-
-    playerName = document.getElementById("nameInput").value.toUpperCase()
-    if(playerName.length<3) playerName="AAA"
-  }
-
-  async function endGame(){
-    currentState = GameState.GAME_OVER
-
-    // Включаем эффекты обратно для меню
-    EffectsManager.enableForMenu()
-
-    document.body.classList.remove("hide-cursor")
-    document.getElementById("gameMusic").pause()
-
-    Object.values(waveMusic).forEach(track => {
-      track.pause();
-      track.currentTime = 0;
-    });
-
-    gameOverMusic.play()
-
-    await saveScoreOnline()
-    await loadLeaderboard()
-    saveScore()
-
-    const ui = document.getElementById("ui")
-    ui.classList.add("game_over_bg")
-    ui.innerHTML=`
-    <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
-    <button class="nes-btn is-success" onclick="restartGame()">Try Again</button>
-    <div id="leaderboard"></div>
-  `
-    ui.style.display="flex"
-    gameInfo.style.display="block"
-    renderLeaderboard()
-  }
-
-  function update(delta) {
-    const startTime = performance.now()
-
-    if (hitFreeze > 0) {
-      hitFreeze -= delta
-      return
-    }
-
-    if (!player.alive) {
-      player.deathTimer -= delta
-      if (player.deathTimer <= 0) {
-        timeScale = 1
-        endGame()
-      }
-      return
-    }
-
-    player.update()
-
-    // Обновление анимированных спрайтов
-    if (tankSmoke?.alive) tankSmoke.update()
-    if (citySmoke?.alive) citySmoke.update()
-    if (cityFire?.alive) cityFire.update()
-
-    // Обновление облаков
-    for (const cloud of clouds) {
-      cloud.update()
-    }
-
-    // ===== ВАЖНО: СПАВН ДРОНОВ =====
-    // if (waveActive && DEBUG.spawnDrones) {
-    //   spawnTimer += delta
-    //   if (spawnTimer >= 2000 && countDrones() < waveMaxInAir) {
-    //     spawnDrone()
-    //     spawnTimer = 0
-    //   }
-    // }
+      await showCommanderMessage(8000, msg)
+    }
+
+    // async function startWaveIntro() {
+    //   droneSound.currentTime = 0
+    //   droneSound.volume = 0.3
+    //   droneSound.play()
+    //   await new Promise(r => setTimeout(r, 2000)) // небольшая пауза
+    //   gameMusic.play()
     //
-    // // ===== ВАЖНО: ПАУЗА МЕЖДУ ВОЛНАМИ =====
-    // if (wavePause) {
-    //   wavePauseTimer += delta
-    //   if (wavePauseTimer >= wavePauseDuration) {
-    //     wavePause = false
-    //     waveActive = true
-    //     wavePauseTimer = 0
-    //     spawnTimer = 0
-    //   }
+    //   // Теперь разрешаем спавн дронов и первую волну
+    //   waveActive = true
+    //   wavePause = false
+    //   spawnDrone()
+    //   await new Promise(r => setTimeout(r, 1000))
+    //   spawnDrone()
     // }
 
-    // ===== ВАЖНО: КУЛДАУН ВРАГОВ =====
-    if (globalEnemyFireCooldown > 0) {
-      globalEnemyFireCooldown -= delta
+    async function animatePlayerIntro() {
+      player.x = -player.width
+      player.y = canvas.height - groundHeight - player.height
+      player.direction = 1 // идем вправо
+      const targetX = canvas.width * 0.5
+      const speed = 3
+
+      // const stepSound = PLAYER_SOUNDS['footSteps']
+
+      // stepSound.volume = 0.4
+      // stepSound.loop = true
+      // stepSound.currentTime = 0
+      // await stepSound.play()
+
+      return new Promise(resolve => {
+        const interval = setInterval(() => {
+          // “имитация” движения, как при нажатии клавиш
+          player.vx = speed
+          player.isMoving = true
+          player.update()  // обновляем позицию и кадры
+
+          if (player.x >= targetX) {
+            player.x = targetX
+            player.vx = 0
+            player.isMoving = false
+            player.update()
+            clearInterval(interval)
+            resolve()
+          }
+        }, 100)
+      })
     }
 
-    waveManager.update(delta)
+    function splitTextIntoPages(text, maxChars = 140) {
 
-    // Обновление информации о волне
-    if (frameCounter % 30 === 0) {
-      const stage = waveManager.stages[waveManager.currentStageIndex]
-      const waveInfo = document.getElementById('wave-info')
-      if (stage && waveManager.currentWaveIndex < stage.waves.length) {
-        waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
-      } else if (stage) {
-        // Если волны закончились, показываем завершение
-        waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
+      const words = text.split(" ")
+      const pages = []
+
+      let current = ""
+
+      for (const word of words) {
+
+        if ((current + word).length > maxChars) {
+          pages.push(current.trim())
+          current = ""
+        }
+
+        current += word + " "
       }
+
+      if (current.length) pages.push(current.trim())
+
+      return pages
     }
 
-    // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
-    shootCooldown -= delta
+    async function typeText(element, text, speed = 25) {
 
-    if (player.alive && shooting && currentWeapon?.auto) {
-      const dir = getShootDirection()
-      shoot(dir.dx, dir.dy)
+      element.textContent = ""
+
+      let skip = false
+
+      function skipHandler(e) {
+        if (e.code === "Enter") skip = true
+      }
+
+      window.addEventListener("keydown", skipHandler)
+      for (let i = 0; i < text.length; i++) {
+        element.textContent += text[i]
+
+        if (i % 3 === 0 && text[i] !== " ") {
+          const s = GAME_SOUNDS.typeWriter.cloneNode()
+          s.volume = 0.15
+          s.play()
+        }
+
+        if (skip) {
+          element.textContent = text
+          break
+        }
+
+        await new Promise(r => setTimeout(r, speed))
+      }
+
+      window.removeEventListener("keydown", skipHandler)
     }
 
-    // КОЛЛИЗИИ ПУЛЬ И ДРОНОВ
-    if (frameCounter % 2 === 0) { // Проверяем коллизии каждый второй кадр
-      const bullets = gameObjects.filter(o => o instanceof Bullet && o.alive)
-      const drones = gameObjects.filter(o => o instanceof BaseDrone && o.alive)
+    function waitForContinue() {
+      return new Promise(resolve => {
+        function handler(e) {
+          if (e.code === "Enter") {
+            window.removeEventListener("keydown", handler)
+            resolve()
+          }
+        }
+
+        window.addEventListener("keydown", handler)
+      })
+    }
+
+    function buildCollisionGrid() {
+      collisionGrid = {}
+
+      gameObjects.forEach(obj => {
+        if (!obj.alive) return
+
+        const gridX = Math.floor(obj.x / GRID_SIZE)
+        const gridY = Math.floor(obj.y / GRID_SIZE)
+        const key = `${gridX},${gridY}`
+
+        if (!collisionGrid[key]) {
+          collisionGrid[key] = []
+        }
+        collisionGrid[key].push(obj)
+      })
+    }
+
+    function optimizeCollisions() {
+      buildCollisionGrid()
+
+      const bullets = gameObjects.filter(o => o instanceof Bullet)
+      const drones = gameObjects.filter(o => o instanceof Drone)
 
       bullets.forEach(b => {
-        drones.forEach(d => {
-          if (isColliding(b, d)) {
+        const gridX = Math.floor(b.x / GRID_SIZE)
+        const gridY = Math.floor(b.y / GRID_SIZE)
+        const key = `${gridX},${gridY}`
 
+        // Проверяем только объекты в той же ячейке сетки
+        const nearbyObjects = collisionGrid[key] || []
+
+        nearbyObjects.forEach(obj => {
+          if (obj instanceof Drone && isColliding(b, obj)) {
             b.alive = false
-
-            if (d.takeDamage(1)) { // Если дрон умер
-              d.onDeath()
-
-              // Начисляем очки
-              const gained = calculateDroneScore(d)
-              score += gained
-              showScoreGain(gained)
-              waveKills++
-
-              // freeze(40)
-              // screenShake.shake(4, 4)
-            } else {
-            }
+            obj.alive = false
+            // ... остальная логика
           }
         })
       })
     }
 
-    // ===== ВАЖНО: ОБНОВЛЕНИЕ ВСЕХ ОБЪЕКТОВ =====
-    gameObjects.forEach(obj => {
-      if (obj.alive) {
-        obj.update(delta)
+    function freeze(ms) {
+      hitFreeze = ms
+    }
+
+    function spawn(obj) {
+      gameObjects.push(obj)
+    }
+
+    function isFirePressed() {
+      return keys[" "] || keys["Space"]
+    }
+
+    // DEBUG горячие клавиши
+    document.addEventListener("keydown", e => {
+      // spawn boss
+      if (e.key === "b") {
+        spawnBoss()
       }
+
+      // Kill all
+      if (e.key === "k") {
+      }
+
+      if (e.key === "i") {
+        setWeapon('rifle')
+      }
+
+      if (e.key === "s") {
+        setWeapon('shotgun')
+      }
+
+      if (e.key === "m") {
+        setWeapon('machinegun')
+      }
+
+      if (e.code === "Space") {
+        e.preventDefault()
+      }
+
+      if (e.code === "KeyR") {
+        if (isReloading) return
+        startReload()
+      }
+
+      if (e.code === "KeyD") {
+        spawnDrone()
+      }
+
+      keys[e.key] = true
     })
 
-    // ===== ВАЖНО: УДАЛЕНИЕ МЕРТВЫХ ОБЪЕКТОВ =====
-    gameObjects = gameObjects.filter(obj => obj.alive)
 
-    // ===== ВАЖНО: ПРОВЕРКА ПУЛЬ ВРАГОВ =====
-    gameObjects.forEach(obj => {
-      if (obj instanceof EnemyBullet) {
-        if (obj.y > canvas.height - groundHeight) {
-          spawnGroundExplosion(obj.x, obj.y)
-          obj.alive = false
+
+    let currentWeapon
+    let ammoInMagazine
+    let magazines
+
+    function setWeapon(type) {
+      currentWeapon = structuredClone(WEAPONS[type])
+
+      ammoInMagazine = currentWeapon.magazineSize
+      magazines = currentWeapon.magazines
+
+      // можно сбросить перезарядку
+      isReloading = false
+    }
+
+    let lastShotTime = 0
+
+    function shoot(dirX, dirY) {
+      if (dirX === 0 && dirY === 0) return
+      if (isReloading) return
+      if (ammoInMagazine <= 0) return
+
+      if (Date.now() - lastShotTime < currentWeapon.fireRate) return
+
+      lastShotTime = Date.now()
+
+      ammoInMagazine--
+      const currentWeaponName = currentWeapon.name
+      if (WEAPON_SOUNDS[currentWeaponName]) {
+        const s = WEAPON_SOUNDS[currentWeaponName].shoot.cloneNode()
+        s.volume = 0.4
+        s.play()
+      }
+
+      for (let i = 0; i < currentWeapon.bulletsPerShot; i++) {
+
+        let angle = Math.atan2(dirY, dirX)
+
+        if (currentWeapon.spread > 0) {
+
+          const spreadRad =
+            (Math.random() * currentWeapon.spread -
+              currentWeapon.spread / 2) * Math.PI / 180
+
+          angle += spreadRad
         }
 
-        if (isColliding(obj, player)) {
-          if (player.alive) {
+        const dx = Math.cos(angle)
+        const dy = Math.sin(angle)
+
+        const speed = currentWeapon.bulletSpeed
+
+        const x = player.x + player.width / 2
+        const y = player.y + player.height / 2
+
+        spawn(new Bullet(x, y, dx * speed, dy * speed))
+      }
+
+      if (ammoInMagazine <= 0 && magazines > 0) {
+        startReload()
+      }
+    }
+
+    let shooting = false
+
+    const muteBtn = document.getElementById("muteBtn")
+
+    muteBtn.onclick = () => {
+      toggleMusic(); // если музыка выключена, остановим все треки
+
+      !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
+    }
+
+    let currentMusic = null
+
+    let isMusicOn = localStorage.getItem("musicOn");
+    if (!isMusicOn === null) {
+      isMusicOn = true; // по умолчанию музыка включена
+    } else {
+      isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
+    }
+
+    function playTrack(track) {
+      if (isMusicOn) {
+        track.play();
+      }
+    }
+
+    function pauseTrack(track) {
+      track.pause();
+      track.currentTime = 0;
+    }
+
+    function toggleMusic() {
+      isMusicOn = !isMusicOn;
+      localStorage.setItem("musicOn", isMusicOn);
+
+      if (!isMusicOn) {
+        // выключаем всю музыку
+        gameMusic.pause();
+        gameOverMusic.pause();
+        menuMusic.pause();
+        Object.values(waveMusic).forEach(track => pauseTrack(track));
+      } else {
+        menuMusic.play()
+      }
+    }
+
+    function playWaveMusic(wave) {
+      if (currentMusic) {
+        currentMusic.pause()
+        currentMusic.currentTime = 0
+      }
+
+      const music = waveMusic[wave]
+
+      if (music && isMusicOn) {
+        music.play()
+        currentMusic = music
+      }
+    }
+
+    function getShootDirection() {
+      let dx = 0
+      let dy = -1   // по умолчанию вверх
+
+      if (keys["ArrowRight"]) {
+        dx = 0.7
+        dy = -0.7
+      }
+
+      if (keys["ArrowLeft"]) {
+        dx = -0.7
+        dy = -0.7
+      }
+
+      return { dx, dy }
+    }
+
+    function startReload() {
+      if (isReloading) return
+      if (magazines <= 0) return
+      if (ammoInMagazine === currentWeapon.magazineSize) return
+
+      isReloading = true
+      const currentWeaponName = currentWeapon.name
+
+      if (WEAPON_SOUNDS[currentWeaponName]) {
+        const r = WEAPON_SOUNDS[currentWeaponName].reload.cloneNode()
+        r.volume = 0.5
+        r.play()
+      }
+
+      setTimeout(() => {
+
+        ammoInMagazine = currentWeapon.magazineSize
+        magazines--
+
+        isReloading = false
+
+      }, currentWeapon.reloadTime)
+
+    }
+
+    // function isColliding(a, b){
+    //   return (
+    //     a.x + HITBOX_PADDING < b.x + b.width - HITBOX_PADDING &&
+    //     a.x + a.width - HITBOX_PADDING > b.x + HITBOX_PADDING &&
+    //     a.y + HITBOX_PADDING < b.y + b.height - HITBOX_PADDING &&
+    //     a.y + a.height - HITBOX_PADDING > b.y + HITBOX_PADDING
+    //   )
+    // }
+
+    function isColliding(a, b) {
+      if (!a || !b || !a.alive || !b.alive) return false
+
+      // Для объектов с size (пули игрока)
+      if (a.size !== undefined) {
+        return (
+          a.x < b.x + b.width &&
+          a.x + a.size > b.x &&
+          a.y < b.y + b.height &&
+          a.y + a.size > b.y
+        )
+      }
+
+      // Для объектов с width/height (вражеские пули, дроны и т.д.)
+      return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+      )
+    }
+
+    // function calculateDroneScore(){
+    //   const base = 10
+    //
+    //   const timeMultiplier = 1 + Math.min(survivalTime / 60, 5)
+    //   const droneMultiplier = 1 + Math.min(countDrones() / 20, 4)
+    //
+    //   return Math.floor(base * timeMultiplier * droneMultiplier)
+    // }
+
+    function showScoreGain(points) {
+      const scoreEl = document.getElementById("score")
+      const pop = document.getElementById("score-pop")
+
+      pop.innerText = "+" + points
+
+      pop.classList.remove("score-pop-show")
+      void pop.offsetWidth
+      pop.classList.add("score-pop-show")
+
+      scoreEl.classList.add("score-pop")
+
+      setTimeout(() => {
+        scoreEl.classList.remove("score-pop")
+      }, 150)
+    }
+
+    // async function checkWaveProgress() {
+    //   const boss = gameObjects.find(o => o instanceof BossDrone)
+    //   if (wavePause) return;
+    //
+    //   if (waveKills >= waveTargetKills) {
+    //     waveActive = false;
+    //   }
+    //
+    //   // цель достигнута и небо чистое
+    //   if (!waveActive && countDrones() === 0) {
+    //
+    //     wavePause = true;
+    //     wavePauseTimer = 0;
+    //
+    //     let msg = "";
+    //
+    //     if (waveNumber === 0) {
+    //
+    //       gameMusic.pause()
+    //
+    //       setWeapon('pistol')
+    //       playWaveMusic(1)
+    //
+    //       msg = "Ты еще живой? С передка передают, что к тебе летит новая группа дронов. Некогда с тобой тут говорить. Мне шавуху привезли.";
+    //
+    //       waveMaxInAir = 5;
+    //       waveTargetKills = 20;
+    //       magazines = 8;
+    //
+    //     } else if (waveNumber === 1) {
+    //
+    //       setWeapon('rifle')
+    //       playWaveMusic(2)
+    //       msg = "Эй, людоед! Глянь, этот чубрик еще не 200. Если ты думаешь, что тебе удастся выжить, то выбрось это из головы. Мы уже подали раппорт о том, что ты пропал без вести.";
+    //
+    //       waveMaxInAir = 10;
+    //       waveTargetKills = 40;
+    //       magazines = 10;
+    //
+    //     } else if (waveNumber === 2) {
+    //       setWeapon('shotgun')
+    //       playWaveMusic(3)
+    //       msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
+    //       magazines = 12;
+    //     } else if (waveNumber === 3 && !boss) {
+    //       setWeapon('machinegun')
+    //       playWaveMusic("boss")
+    //       msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
+    //       spawnBoss()
+    //       magazines = 12;
+    //     } else {
+    //
+    //       msg = "Поздравь меня. Меня представили к награде.";
+    //
+    //       magazines = 12;
+    //       waveMaxInAir += 5;
+    //       waveTargetKills += 30;
+    //     }
+    //
+    //     waveKills = 0; // ВАЖНО
+    //     waveNumber++;
+    //
+    //     await showCommanderMessage(10000, msg);
+    //   }
+    // }
+
+    function countEnemyBullets() {
+      return gameObjects.filter(o => o instanceof EnemyBullet).length
+    }
+
+    async function animateCommanderBox() {
+      const box = UI.notification.balloon
+
+      box.style.display = "block"
+
+      // маленькая задержка чтобы браузер применил display
+      await new Promise(r => setTimeout(r, 20))
+
+      box.style.right = "40px"
+
+      // ждём завершения анимации
+      await new Promise(r => setTimeout(r, 600))
+    }
+
+    async function hideCommanderBox() {
+      const box = UI.notification.balloon
+
+      box.style.right = "-500px"
+
+      await new Promise(r => setTimeout(r, 600))
+
+      box.style.display = "none"
+    }
+
+    async function showCommanderMessage(duration = 10000, message = null) {
+      const radioStart = GAME_SOUNDS.radioOn
+      const radioEnd = GAME_SOUNDS.radioOff
+
+      const balloon = UI.notification.balloon
+      const p = balloon.querySelector("p");
+      const hint = document.getElementById("continueHint")
+
+      // balloon.style.display = "block";
+      // balloon.classList.add("show");
+
+      await animateCommanderBox()
+
+      radioStart.currentTime = 0
+      await radioStart.play()
+
+      await new Promise(r => setTimeout(r, 300))
+
+      const pages = splitTextIntoPages(message)
+      for (let i = 0; i < pages.length; i++) {
+
+        const page = pages[i] + "..."
+
+        await typeText(p, page)
+
+        hint.style.display = "block"
+
+        await waitForContinue()
+
+        hint.style.display = "none"
+      }
+
+      radioEnd.currentTime = 0
+      await radioEnd.play()
+
+      await hideCommanderBox()
+
+      // balloon.style.display = "none"
+    }
+
+    function fadeScreen(duration = 800) {
+      const f = document.getElementById("fade")
+      return new Promise(resolve => {
+        f.style.transition = `opacity ${duration / 2}ms`
+        f.style.opacity = 1
+        setTimeout(() => {
+          f.style.opacity = 0
+          setTimeout(resolve, duration / 2)
+        }, duration / 2)
+      })
+    }
+
+    async function crossfadeMusic(from, to, duration = 1000) {
+      if (to) {
+        to.volume = 0
+        if (isMusicOn) {
+          to.play()
+        }
+      }
+      const steps = 20
+      const stepTime = duration / steps
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps
+        if (from) from.volume = 0.2 * (1 - t)
+        if (to) to.volume = 0.2 * t
+        await new Promise(r => setTimeout(r, stepTime))
+      }
+      if (from) from.pause()
+    }
+
+    class BaseDrone {
+      constructor(x, y, options = {}) {
+        this.x = x
+        this.y = y
+        this.width = options.width || 80
+        this.height = options.height || 60
+        this.speed = options.speed || (Math.random() * 2 + 1)
+        this.direction = options.direction || (Math.random() < 0.5 ? 1 : -1)
+
+        // Позиция зависит от направления
+        if (this.direction > 0) {
+          this.x = -this.width
+        } else {
+          this.x = canvas.width + this.width
+          this.speed = -this.speed
+        }
+
+        this.hp = options.hp || 1
+        this.maxHp = options.hp || 1
+        this.scoreValue = options.scoreValue || 10
+        this.damage = options.damage || 1
+
+        this.alive = true
+        this.type = options.type || 'base'
+
+        // Анимация
+        this.frame = 0
+        this.frameTimer = 0
+        this.frameDelay = options.frameDelay || 8
+
+        // Изображение
+        this.image = options.image || droneImg
+      }
+
+      update(delta) {
+        // Базовое движение
+        this.x += this.speed
+
+        // Разворот при достижении края
+        if (this.x < -this.width || this.x > canvas.width + this.width) {
+          this.speed *= -1
+        }
+
+        // Легкое покачивание
+        this.y += Math.sin(performance.now() * 0.003) * 0.3
+
+        // Анимация
+        this.frameTimer += delta
+        if (this.frameTimer >= this.frameDelay) {
+          this.frame = (this.frame + 1) % 4 // 4 кадра анимации
+          this.frameTimer = 0
+        }
+
+        // ВАЖНО: Дополнительный fail-safe для выхода за границы (например, если дрон ушел слишком высоко)
+        if (this.y < -500 || this.y > canvas.height + 500) {
+          this.alive = false
+        }
+      }
+
+      draw(ctx) {
+        ctx.save()
+        ctx.globalAlpha = this.getOpacity()
+
+        // Рисуем как в старом коде - целое изображение
+        if (this.image && this.image.complete) {
+          ctx.drawImage(
+            this.image,
+            this.x,
+            this.y,
+            this.width,
+            this.height
+          )
+        } else {
+          // Запасной вариант
+          ctx.fillStyle = this.getColor()
+          ctx.fillRect(this.x, this.y, this.width, this.height)
+        }
+
+        // Полоска здоровья для сильных дронов
+        if (this.maxHp > 1) {
+          this.drawHealthBar(ctx)
+        }
+
+        if (DEBUG.showHitboxes) {
+          showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
+        }
+      }
+
+
+      drawHealthBar(ctx) {
+        const barWidth = this.width
+        const barHeight = 5
+        const healthPercent = this.hp / this.maxHp
+
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+        ctx.fillRect(this.x, this.y - 10, barWidth, barHeight)
+
+        ctx.fillStyle = '#0f0'
+        ctx.fillRect(this.x, this.y - 10, barWidth * healthPercent, barHeight)
+      }
+
+      getColor() {
+        switch (this.type) {
+          case 'normal': return '#ff4444'
+          case 'grenadier': return '#ff8800'
+          case 'kamikaze': return '#ff00ff'
+          default: return '#ff0000'
+        }
+      }
+
+      getOpacity() {
+        return 1.0
+      }
+
+      takeDamage(amount) {
+        this.hp -= amount
+
+        if (this.hp <= 0) {
+          this.alive = false
+          return true
+        }
+        return false
+      }
+
+      onDeath() {
+        // Эффект при смерти
+        spawnExplosion(this.x + this.width / 2, this.y + this.height / 2)
+      }
+    }
+
+    class NormalDrone extends BaseDrone {
+      constructor(y) {
+        super(0, y, {
+          type: 'normal',
+          width: 80,
+          height: 60,
+          hp: 1,
+          scoreValue: 10,
+          frameDelay: 8,
+          image: droneImg
+        })
+
+        this.fireTimer = Math.random() * 1000
+        this.fireCooldown = 800 + Math.random() * 1200
+      }
+
+      update(delta) {
+        super.update(delta)
+
+        // Стрельба
+        this.fireTimer += delta
+
+        const drones = gameObjects.filter(o => o instanceof BaseDrone)
+        const attackingDrones = drones
+          .slice()
+          .sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x))
+          .slice(0, MAX_ATTACKING_DRONES)
+
+        if (attackingDrones.includes(this) &&
+          this.fireTimer >= this.fireCooldown &&
+          globalEnemyFireCooldown <= 0) {
+          this.shoot()
+        }
+      }
+
+      shoot() {
+        this.fireTimer = 0
+        if (countEnemyBullets() < waveManager.maxBullets) {
+          spawn(new EnemyBullet(
+            this.x + this.width / 2,
+            this.y + this.height
+          ))
+          globalEnemyFireCooldown = 1800 + Math.random() * 400
+        }
+        this.fireCooldown = 1800 + Math.random() * 1200
+      }
+    }
+
+    class GrenadierDrone extends BaseDrone {
+      constructor(y) {
+        super(0, y, {
+          type: 'grenadier',
+          width: 90,
+          height: 70,
+          hp: 2,
+          scoreValue: 25,
+          frameDelay: 10,
+          image: droneImg // Можно заменить на другой спрайт
+        })
+
+        this.dropTimer = 120 + Math.random() * 120
+        this.grenadeCooldown = 3000
+      }
+
+      update(delta) {
+        super.update(delta)
+
+        // Сброс гранат
+        this.dropTimer -= delta
+        if (this.dropTimer <= 0) {
+          this.dropGrenade()
+          this.dropTimer = this.grenadeCooldown + Math.random() * 1000
+        }
+      }
+
+      dropGrenade() {
+        spawn(new Grenade(this.x, this.y))
+      }
+
+      draw(ctx) {
+        super.draw(ctx)
+        // Дополнительная отметка для гранатометчика
+        ctx.fillStyle = 'orange'
+        ctx.beginPath()
+        ctx.arc(this.x + this.width - 10, this.y + 10, 5, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+
+    class KamikazeDrone extends BaseDrone {
+      constructor() {
+        // Случайная стартовая позиция
+        const side = Math.random()
+        let x, y
+
+        if (side < 0.25) {
+          x = -50
+          y = Math.random() * 200
+        } else if (side < 0.5) {
+          x = canvas.width + 50
+          y = Math.random() * 200
+        } else {
+          x = Math.random() * canvas.width
+          y = -50
+        }
+
+        super(x, y, {
+          type: 'kamikaze',
+          width: 60,
+          height: 60,
+          hp: 1,
+          scoreValue: 30,
+          speed: 4,
+          frameDelay: 6,
+          image: kamikazeImg
+        })
+
+        // Расчет направления к игроку
+        const dx = player.x - this.x
+        const dy = player.y - this.y
+        const dist = Math.hypot(dx, dy)
+
+        this.vx = dx / dist * this.speed
+        this.vy = dy / dist * this.speed
+
+        this.explosionRadius = 80
+      }
+
+      update(delta) {
+        // Камикадзе не использует базовое движение
+        this.x += this.vx
+        this.y += this.vy
+
+        this.frameTimer += delta
+        if (this.frameTimer >= this.frameDelay) {
+          this.frame = (this.frame + 1) % 4
+          this.frameTimer = 0
+        }
+
+        // Проверка столкновения с игроком
+        if (isColliding(this, player)) {
+          this.explode()
+        }
+
+        // Проверка удара о землю
+        if (this.y > canvas.height - groundHeight) {
+          this.explode()
+        }
+
+        // ВАЖНО: Проверка выхода за боковые границы или слишком высоко вверх
+        if (this.x < -200 || this.x > canvas.width + 200 || this.y < -300) {
+          this.alive = false
+        }
+      }
+
+      explode() {
+        spawnGroundExplosion(this.x, this.y)
+
+        // Проверка урона игроку
+        const dx = player.x + player.width / 2 - (this.x + this.width / 2)
+        const dy = player.y + player.height / 2 - (this.y + this.height / 2)
+        const dist = Math.sqrt(dx * dx + dy * dy)
+
+        if (dist < this.explosionRadius) {
+          if (!DEBUG.godMode && player.alive) {
             player.die()
           }
-          obj.alive = false
+        }
+
+        this.alive = false
+      }
+
+      draw(ctx) {
+        super.draw(ctx)
+        // Визуальный эффект "мигания" перед взрывом
+        if (Math.random() < 0.1) {
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
+          ctx.beginPath()
+          ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 30, 0, Math.PI * 2)
+          ctx.fill()
         }
       }
-    })
-
-    // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
-    survivalTime += delta / 1000
-    checkWaveProgress()
-
-    // ===== ВАЖНО: UI ОБНОВЛЕНИЕ =====
-    uiTimer += delta
-    if (uiTimer > 100) {
-      document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
-      document.getElementById("score").innerText = score
-      uiTimer = 0
     }
 
-    // ===== ВАЖНО: ЗВУК ДРОНОВ =====
-    let targetVolume = 0.05 + (countDrones() / 50) * 0.25
-    droneSound.volume = targetVolume
+    class Player {
+      constructor() {
+        this.x = 0
+        this.y = 0
+        this.width = 100
+        this.height = 130
 
-    const endTime = performance.now()
-    const frameTime = endTime - startTime
-    if (frameTime > 16) { // Если кадр длится дольше 16ms (меньше 60fps)
-      console.warn(`Long frame: ${frameTime.toFixed(2)}ms, Drones: ${countDrones()}`)
-    }
-  }
+        this.speed = 3.8
+        this.direction = 1
 
-  function draw() {
-    // Очистка канваса
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+        this.frame = 0
+        this.frameTimer = 0
+        this.isMoving = false
 
-    // Фон
-    if (background.complete) {
-      ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
-    }
+        this.vx = 0
+        this.acceleration = 0.45
+        this.friction = 0.88
 
-    // Облака
-    drawClouds(ctx)
+        this.alive = true
+        this.deathTimer = 2000
+      }
 
-    // Анимированные спрайты
-    if (tankSmoke?.alive) tankSmoke.draw(ctx)
-    if (citySmoke?.alive) citySmoke.draw(ctx)
-    if (cityFire?.alive) cityFire.draw(ctx)
+      die() {
+        if (DEBUG.godMode) return
+        player.alive = false
 
-    // Земля
-    ctx.fillStyle = "rgba(0,0,0,0)"
-    ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight)
+        timeScale = 0.25
+        screenShake.shake(20, 500)
 
-    // Танк
-    if (tankImg.complete) {
-      ctx.drawImage(tankImg, tank.x, tank.y, tank.w, tank.h)
-    }
+        spawnExplosion(
+          player.x + player.width / 2,
+          player.y + player.height / 2
+        )
 
-    // Разрушенный город
-    if (destroyedCityImg.complete) {
-      ctx.drawImage(destroyedCityImg, destroyedCity.x, destroyedCity.y, destroyedCity.w, destroyedCity.h)
-    }
+        droneSound.pause();
+        gameMusic.pause()
+        Object.values(waveMusic).forEach(track => pauseTrack(track));
+        const s = PLAYER_SOUNDS['death'].cloneNode()
+        s.volume = 0.4
+        s.play()
+      }
 
-    // Игрок
-    if (player?.alive) {
-      player.draw()
-    }
+      update() {
+        if (isFirePressed()) {
+          this.vx *= 0
+        }
 
-    // Игровые объекты
-    for (const obj of gameObjects) {
-      if (obj.alive) {
-        obj.draw(ctx)
+        if (keys["ArrowLeft"]) {
+          this.vx -= this.acceleration
+          this.direction = -1
+        }
+
+        if (keys["ArrowRight"]) {
+          this.vx += this.acceleration
+          this.direction = 1
+        }
+
+        if (this.vx > this.speed) this.vx = this.speed
+        if (this.vx < -this.speed) this.vx = -this.speed
+
+        this.vx *= this.friction
+
+        this.x += this.vx
+        this.isMoving = Math.abs(this.vx) > 0.1
+
+        if (this.x < 0) this.x = 0
+        if (this.x + this.width > canvas.width)
+          this.x = canvas.width - this.width
+
+        if (this.isMoving) {
+
+          this.frameTimer++
+
+          if (this.frameTimer > 15) {
+            this.frame++
+            this.frameTimer = 0
+          }
+
+          if (this.frame >= WALK_FRAMES) {
+            this.frame = 0
+          }
+        } else {
+          this.frame = 0
+        }
+      }
+
+      draw() {
+        ctx.save()
+
+        if (this.direction === -1) {
+          ctx.scale(-1, 1)
+
+          ctx.drawImage(
+            playerWalkSprite,
+            this.frame * WALK_FRAME_WIDTH,
+            0,
+            WALK_FRAME_WIDTH,
+            WALK_FRAME_HEIGHT,
+            -this.x - this.width,
+            this.y,
+            this.width,
+            this.height
+          )
+        } else {
+          ctx.drawImage(
+            playerWalkSprite,
+            this.frame * WALK_FRAME_WIDTH,
+            0,
+            WALK_FRAME_WIDTH,
+            WALK_FRAME_HEIGHT,
+            this.x,
+            this.y,
+            this.width,
+            this.height
+          )
+        }
+        ctx.restore()
+
+        if (DEBUG.showHitboxes) {
+          showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
+        }
       }
     }
 
-    // Босс
-    const boss = gameObjects.find(o => o instanceof BossDrone && o.alive)
-    if (boss?.active) {
-      const barWidth = 400
-      const barHeight = 20
-      const x = (canvas.width - barWidth) / 2
-      const y = 20
+    class Bullet {
+      constructor(x, y, dx, dy) {
+        this.x = x
+        this.y = y
+        this.vx = dx
+        this.vy = dy
+        this.size = 6 // Размер пули
+        this.alive = true
+      }
 
-      ctx.fillStyle = "rgba(255, 0, 0, 0.3)"
-      ctx.fillRect(x, y, barWidth, barHeight)
+      update() {
+        this.x += this.vx
+        this.y += this.vy
 
-      const healthPercent = boss.hp / boss.maxHp
-      ctx.fillStyle = "#00ff00"
-      ctx.fillRect(x, y, barWidth * healthPercent, barHeight)
+        // Удаляем если за экраном
+        if (this.x > canvas.width + 50 || this.x < -50 ||
+          this.y > canvas.height + 50 || this.y < -50) {
+          this.alive = false
+        }
+      }
 
-      ctx.strokeStyle = "white"
-      ctx.lineWidth = 2
-      ctx.strokeRect(x, y, barWidth, barHeight)
-
-      ctx.fillStyle = "white"
-      ctx.font = "14px 'Press Start 2P', cursive"
-      ctx.textAlign = "center"
-      ctx.fillText("BOSS: Обнулитель 3000", canvas.width / 2, y + 40)
+      draw(ctx) {
+        ctx.fillStyle = "yellow"
+        ctx.fillRect(this.x, this.y, this.size, this.size)
+      }
     }
 
-    // UI
-    ctx.save()
-    ctx.fillStyle = "white"
-    ctx.font = "20px monospace"
-    ctx.shadowColor = "black"
-    ctx.shadowBlur = 4
-    ctx.shadowOffsetX = 2
-    ctx.shadowOffsetY = 2
+    class EnemyBullet {
+      constructor(x, y) {
+        this.x = x
+        this.y = y
+        this.speed = 4
+        this.width = 12
+        this.height = 20
+        // Добавляем size для совместимости с isColliding
+        this.size = Math.min(this.width, this.height)
 
-    ctx.fillText(currentWeapon?.name || "Pistol", 20, 200)
-    ctx.fillText(`Ammo: ${ammoInMagazine || 0} / ${currentWeapon?.magazineSize || 15}`, 20, 240)
-    ctx.fillText(`Magazines: ${magazines || 0}`, 20, 270)
+        this.alive = true
+      }
+      update() { this.y += this.speed }
+      draw() {
+        ctx.drawImage(
+          enemyBulletImg,
+          this.x,
+          this.y,
+          this.width,
+          this.height
+        )
 
-    if (isReloading) {
-      ctx.fillStyle = "yellow"
-      ctx.fillText("RELOADING...", 20, 100)
+        if (DEBUG.showHitboxes) {
+          showHitboxRect(this.x, this.y, this.width, this.height)
+        }
+      }
     }
-    ctx.restore()
 
-    // Экран смерти
-    if (!player?.alive) {
+    class BossDrone {
+      constructor() {
+        this.width = 300
+        this.height = 260
+
+        this.x = canvas.width / 2 - this.width / 2
+        this.y = -120
+
+        this.speed = 1
+
+        this.hp = 200
+        this.maxHp = 200
+
+        this.spawnTimer = 0
+        this.missileTimer = 0
+
+        this.active = false
+
+        this.alive = true
+
+        this.maxMinions = 8 // Максимум дронов-миньонов одновременно
+        this.spawnedMinions = 0
+      }
+
+      update(delta) {
+        // плавный въезд на экран
+        if (this.y < 40) {
+          this.y += this.speed
+        }
+        // спавн дронов
+        this.phaseTimer += delta
+        if (this.hp < this.maxHp * 0.5 && this.phase === 1) {
+          this.phase = 2
+          console.log("Boss phase 2!") // Важное сообщение оставляем
+        }
+
+        // Фаза 1: редко спавнит дронов
+        if (this.phase === 1) {
+          this.spawnTimer += delta
+          if (this.spawnTimer > 6000) { // 6 секунд
+            this.spawnTimer = 0
+            if (countDrones() < 15) {
+              spawnNormalDrone() // Только 1 дрон
+            }
+          }
+        }
+
+        // Фаза 2: спавнит больше, но все равно с лимитом
+        if (this.phase === 2) {
+          this.spawnTimer += delta
+          if (this.spawnTimer > 4000) { // 4 секунды
+            this.spawnTimer = 0
+            if (countDrones() < 20) {
+              // Спавним 1-2 дрона
+              for (let i = 0; i < 2; i++) {
+                if (Math.random() < 0.5) {
+                  spawnNormalDrone()
+                } else {
+                  spawnGrenadier()
+                }
+              }
+            }
+          }
+        }
+
+        // ракета
+        this.missileTimer += delta
+        if (this.missileTimer > 4000) { // УВЕЛИЧИЛИ до 4 секунд
+          this.missileTimer = 0
+          // Только одна ракета за раз
+          if (gameObjects.filter(o => o instanceof Missile).length < 3) {
+            spawn(new Missile(
+              this.x + this.width / 2,
+              this.y + this.height,
+              player.x + player.width / 2
+            ))
+          }
+        }
+      }
+
+      draw() {
+        ctx.drawImage(bossImg, this.x, this.y, this.width, this.height)
+
+        if (DEBUG.showHitboxes) {
+          showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
+        }
+      }
+    }
+
+    class Missile {
+      constructor(x, y, targetX) {
+        this.x = x
+        this.y = y
+
+        this.targetX = targetX
+
+        this.speed = 4
+        this.size = 12
+
+        this.alive = true
+      }
+
+      update() {
+        if (this.x < this.targetX) this.x += 1.5
+        if (this.x > this.targetX) this.x -= 1.5
+
+        this.y += this.speed
+      }
+
+      draw() {
+        ctx.drawImage(missileImg, this.x, this.y, 16, 32)
+      }
+    }
+
+    class Explosion {
+      constructor(x, y, width = EXPLOSION_FRAME_WIDTH, height = EXPLOSION_FRAME_HEIGHT) {
+        this.x = x + width / 2;
+        this.y = y + height / 2;
+        this.frame = 0;
+        this.timer = 0;
+
+        this.alive = true
+      }
+
+      update(delta) {
+        this.timer += delta;
+        if (this.timer >= EXPLOSION_FRAME_DURATION) {
+          this.timer = 0;
+          this.frame++;
+          if (this.frame >= EXPLOSION_FRAME_COUNT) {
+            this.alive = false; // взрыв закончился
+          }
+        }
+      }
+
+      draw(ctx) {
+        if (this.alive) {
+          ctx.drawImage(
+            explosionSprite,
+            this.frame * EXPLOSION_FRAME_WIDTH, 0,
+            EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
+            this.x - EXPLOSION_FRAME_WIDTH / 2,
+            this.y - EXPLOSION_FRAME_HEIGHT / 2,
+            EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT
+          );
+        }
+      }
+    }
+
+    class Grenade {
+      constructor(x, y) {
+        this.x = x
+        this.y = y
+
+        this.vy = 3
+
+        this.width = 20
+        this.height = 20
+
+        this.timer = 180
+        this.onGround = false
+        this.exploded = false
+
+        this.alive = true
+      }
+
+      update() {
+        if (!this.onGround) {
+          this.y += this.vy
+
+          if (this.y >= canvas.height - groundHeight - this.height) {
+            this.y = canvas.height - groundHeight - this.height
+            this.onGround = true
+          }
+          return
+        }
+
+        // лежит на земле
+        this.timer--
+
+        if (this.timer <= 0 && !this.exploded) {
+          this.exploded = true
+
+          explodeGrenade(this)
+
+          this.alive = false
+        }
+      }
+      draw() {
+        if (this.onGround && this.timer < 60) {
+          if (Math.floor(this.timer / 10) % 2 === 0) {
+            ctx.drawImage(grenadeImg, this.x, this.y, this.width, this.height)
+
+            ctx.beginPath()
+            ctx.arc(this.x + 10, this.y + 10, 30, 0, Math.PI * 2)
+            ctx.strokeStyle = "red"
+            ctx.stroke()
+          }
+        } else {
+          ctx.drawImage(grenadeImg, this.x, this.y, this.width, this.height)
+        }
+      }
+    }
+
+    function explodeGrenade(g) {
+      spawnGroundExplosion(g.x, g.y)
+
+      const explosionRadius = 80
+
+      const gx = g.x + g.width / 2
+      const gy = g.y + g.height / 2
+
+      const px = player.x + player.width / 2
+      const py = player.y + player.height / 2
+
+      const dx = px - gx
+      const dy = py - gy
+
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (dist < explosionRadius) {
+        if (!DEBUG.godMode && player.alive) {
+          player.die()
+        }
+      }
+    }
+
+    class GroundExplosion {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y - 30;
+        this.frame = 0;
+        this.timer = 0;
+
+        this.alive = true
+      }
+
+      update() {
+        this.timer++;
+
+        if (this.timer % 3 === 0) {
+          this.frame++;
+        }
+
+        if (this.frame >= GROUND_EXPLOSION_FRAMES) {
+          this.alive = false;
+        }
+      }
+
+      draw(ctx) {
+        ctx.drawImage(
+          groundExplosionSprite,
+          this.frame * GROUND_EXPLOSION_FRAME_WIDTH,
+          0,
+          GROUND_EXPLOSION_FRAME_WIDTH,
+          GROUND_EXPLOSION_FRAME_HEIGHT,
+          this.x - GROUND_EXPLOSION_FRAME_WIDTH / 2,
+          this.y - GROUND_EXPLOSION_FRAME_HEIGHT / 2,
+          GROUND_EXPLOSION_FRAME_WIDTH,
+          GROUND_EXPLOSION_FRAME_HEIGHT
+        );
+      }
+    }
+
+    // Функции спавна
+    function spawnNormalDrone() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
+      spawn(drone)
+      return drone
+    }
+
+    function spawnGrenadier() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
+      spawn(drone)
+      return drone
+    }
+
+    function spawnKamikaze() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new KamikazeDrone()
+      spawn(drone)
+      return drone
+    }
+
+    // Обновленная функция countDrones для подсчета всех типов
+    function countDrones() {
+      return gameObjects.filter(o => o instanceof BaseDrone && o.alive).length
+    }
+
+    // Обновленная функция calculateDroneScore
+    function calculateDroneScore(drone) {
+      const rawScore = drone.scoreValue *
+        (1 + Math.min(survivalTime / 60, 5)) *
+        (1 + Math.min(countDrones() / 20, 4))
+
+      return Math.floor(rawScore)
+    }
+
+    function spawnBoss() {
+      spawn(new BossDrone())
+      const boss = gameObjects.find(o => o instanceof BossDrone)
+      boss.active = true
+    }
+
+    async function restartGame() {
+      // Отключаем эффекты для игры
+      EffectsManager.disableForGame()
+
+      initGame()
+      currentState = GameState.GAME
+
+      const ui = document.getElementById("ui")
+      ui.style.display = "none"
+      ui.classList.remove("game_over_bg")
+      effectsLayer.style.display = "block"
+
+      await fadeScreen()
+      gameOverMusic.pause()
+      await crossfadeMusic(gameOverMusic, gameMusic)
+
+      droneSound.currentTime = 0
+      droneSound.playbackRate = 0.8
+      droneSound.volume = 0.001
+      droneSound.play()
+
+      document.body.classList.add("hide-cursor")
+      player = new Player()
+      gameObjects = []
+      spawnDrone()
+    }
+
+    // ... (Sound, Scoring, Leaderboard functions remain the same)
+    function playSound(freq, duration) {
+      let audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+      let osc = audioCtx.createOscillator()
+      let gain = audioCtx.createGain()
+      osc.connect(gain)
+      gain.connect(audioCtx.destination)
+      osc.frequency.value = freq
+      osc.start()
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration)
+      osc.stop(audioCtx.currentTime + duration)
+    }
+
+    function saveScore() {
+      leaderboard.push({ name: playerName, score: score, time: Math.floor(survivalTime) })
+      leaderboard.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        return b.time - a.time
+      })
+      leaderboard = leaderboard.slice(0, 10)
+    }
+
+    async function saveScoreOnline() {
+      const { data, error } = await db
+        .from("leaderboard")
+        .insert([{ name: playerName, score: score }])
+      if (error) { console.error(error) }
+    }
+
+    async function loadLeaderboard() {
+      const { data } = await db
+        .from("leaderboard")
+        .select("*")
+        .order("score", { ascending: false })
+        .limit(5)
+      leaderboard = data
+      renderLeaderboard()
+    }
+
+    function renderLeaderboard() {
+      let html = "<h3>Top Survivors</h3>"
+      leaderboard.forEach((p, i) => {
+        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
+      })
+      document.getElementById("leaderboard").innerHTML = html
+    }
+
+    // let screenShake = {
+    //   intensity: 0,
+    //   duration: 0,
+    //   offsetX: 0,
+    //   offsetY: 0,
+    //
+    //   update() {
+    //     if (this.duration > 0) {
+    //       this.duration--
+    //       this.offsetX = (Math.random() - 0.5) * this.intensity
+    //       this.offsetY = (Math.random() - 0.5) * this.intensity
+    //     } else {
+    //       this.offsetX = 0
+    //       this.offsetY = 0
+    //     }
+    //   },
+    //
+    //   shake(intensity = 10, duration = 15) {
+    //     this.intensity = intensity
+    //     this.duration = duration
+    //   }
+    // }
+    let screenShake = {
+      intensity: 0,
+      duration: 0,
+      offsetX: 0,
+      offsetY: 0,
+
+      update() {
+        // Всегда возвращаем ноль - никакой тряски
+        this.offsetX = 0
+        this.offsetY = 0
+        return { x: 0, y: 0 }
+      },
+
+      shake(intensity = 10, duration = 15) {
+        // Ничего не делаем - тряска отключена
+      }
+    }
+
+    function spawnExplosion(x, y) {
+      spawn(new Explosion(x, y))
+
+      const s = droneExplosionSound.cloneNode()
+      s.volume = 0.2
+      s.play()
+      s.onended = () => s.remove()
+    }
+
+    function spawnGroundExplosion(x, y) {
+      spawn(new GroundExplosion(x, y))
+
+      const s = groundExplosionSound.cloneNode()
+      s.volume = 0.3
+      s.play()
+
+      // screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
+    }
+
+    // ЗАМЕНИТЕ старую функцию spawnDrone на эту:
+    // function spawnDrone() {
+    //   const maxDrones = waveManager.maxDrones
+    //   if (countDrones() >= maxDrones) return
+    //
+    //   // Используем новый NormalDrone вместо старого Drone
+    //   spawnNormalDrone()
+    //
+    //   if (Math.random() < 0.08) {
+    //     spawnKamikaze()
+    //   }
+    // }
+
+    function initGame() {
+      // игрок
+      player = new Player()
+
+      // оружие
+      currentWeapon = structuredClone(WEAPONS.pistol)
+      ammoInMagazine = currentWeapon.magazineSize
+      magazines = currentWeapon.magazines
+
+      isReloading = false
+      lastShotTime = 0
+
+      // игра
+      score = 0
+      survivalTime = 0
+      dropTimer = 0
+      shootCooldown = 0
+
+      // облака
+      // initClouds(1)
+      initCitySmoke()
+      initTankSmoke()
+      initFire()
+
+      // музыка
+    }
+
+    async function startGame() {
+      await fadeOutMenu()
+      initGame()
+      await startGameSequence()
+      await animatePlayerIntro()
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      await showCommanderIntro()
+      // await startWaveIntro()
+      await waveManager.startStage(0)
+
+      playerName = document.getElementById("nameInput").value.toUpperCase()
+      if (playerName.length < 3) playerName = "AAA"
+    }
+
+    async function endGame() {
+      currentState = GameState.GAME_OVER
+
+      // Включаем эффекты обратно для меню
+      EffectsManager.enableForMenu()
+
+      document.body.classList.remove("hide-cursor")
+      document.getElementById("gameMusic").pause()
+
+      Object.values(waveMusic).forEach(track => {
+        track.pause();
+        track.currentTime = 0;
+      });
+
+      gameOverMusic.play()
+
+      await saveScoreOnline()
+      await loadLeaderboard()
+      saveScore()
+
+      const ui = document.getElementById("ui")
+      ui.classList.add("game_over_bg")
+      ui.innerHTML = `
+    <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
+    <button class="nes-btn is-success" onclick="restartGame()">Try Again</button>
+    <div id="leaderboard"></div>
+  `
+      ui.style.display = "flex"
+      gameInfo.style.display = "block"
+      renderLeaderboard()
+    }
+
+    function update(delta) {
+      const startTime = performance.now()
+
+      if (hitFreeze > 0) {
+        hitFreeze -= delta
+        return
+      }
+
+      if (!player.alive) {
+        player.deathTimer -= delta
+        if (player.deathTimer <= 0) {
+          timeScale = 1
+          endGame()
+        }
+        return
+      }
+
+      player.update()
+
+      // Обновление анимированных спрайтов
+      if (tankSmoke?.alive) tankSmoke.update()
+      if (citySmoke?.alive) citySmoke.update()
+      if (cityFire?.alive) cityFire.update()
+
+      // Обновление облаков
+      for (const cloud of clouds) {
+        cloud.update()
+      }
+
+      // ===== ВАЖНО: СПАВН ДРОНОВ =====
+      // if (waveActive && DEBUG.spawnDrones) {
+      //   spawnTimer += delta
+      //   if (spawnTimer >= 2000 && countDrones() < waveMaxInAir) {
+      //     spawnDrone()
+      //     spawnTimer = 0
+      //   }
+      // }
+      //
+      // // ===== ВАЖНО: ПАУЗА МЕЖДУ ВОЛНАМИ =====
+      // if (wavePause) {
+      //   wavePauseTimer += delta
+      //   if (wavePauseTimer >= wavePauseDuration) {
+      //     wavePause = false
+      //     waveActive = true
+      //     wavePauseTimer = 0
+      //     spawnTimer = 0
+      //   }
+      // }
+
+      // ===== ВАЖНО: КУЛДАУН ВРАГОВ =====
+      if (globalEnemyFireCooldown > 0) {
+        globalEnemyFireCooldown -= delta
+      }
+
+      waveManager.update(delta)
+
+      // Обновление информации о волне
+      if (frameCounter % 30 === 0) {
+        const stage = waveManager.stages[waveManager.currentStageIndex]
+        const waveInfo = document.getElementById('wave-info')
+        if (stage && waveManager.currentWaveIndex < stage.waves.length) {
+          waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
+        } else if (stage) {
+          // Если волны закончились, показываем завершение
+          waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
+        }
+      }
+
+      // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
+      shootCooldown -= delta
+
+      if (player.alive && shooting && currentWeapon?.auto) {
+        const dir = getShootDirection()
+        shoot(dir.dx, dir.dy)
+      }
+
+      // КОЛЛИЗИИ ПУЛЬ И ДРОНОВ
+      if (frameCounter % 2 === 0) { // Проверяем коллизии каждый второй кадр
+        const bullets = gameObjects.filter(o => o instanceof Bullet && o.alive)
+        const drones = gameObjects.filter(o => o instanceof BaseDrone && o.alive)
+
+        bullets.forEach(b => {
+          drones.forEach(d => {
+            if (isColliding(b, d)) {
+
+              b.alive = false
+
+              if (d.takeDamage(1)) { // Если дрон умер
+                d.onDeath()
+
+                // Начисляем очки
+                const gained = calculateDroneScore(d)
+                score += gained
+                showScoreGain(gained)
+                // waveKills++
+
+                // freeze(40)
+                // screenShake.shake(4, 4)
+              } else {
+              }
+            }
+          })
+        })
+      }
+
+      // ===== ВАЖНО: ОБНОВЛЕНИЕ ВСЕХ ОБЪЕКТОВ =====
+      gameObjects.forEach(obj => {
+        if (obj.alive) {
+          obj.update(delta)
+        }
+      })
+
+      // ===== ВАЖНО: УДАЛЕНИЕ МЕРТВЫХ ОБЪЕКТОВ =====
+      gameObjects = gameObjects.filter(obj => obj.alive)
+
+      // ===== ВАЖНО: ПРОВЕРКА ПУЛЬ ВРАГОВ =====
+      gameObjects.forEach(obj => {
+        if (obj instanceof EnemyBullet) {
+          if (obj.y > canvas.height - groundHeight) {
+            spawnGroundExplosion(obj.x, obj.y)
+            obj.alive = false
+          }
+
+          if (isColliding(obj, player)) {
+            if (player.alive) {
+              player.die()
+            }
+            obj.alive = false
+          }
+        }
+      })
+
+      // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
+      survivalTime += delta / 1000
+      // checkWaveProgress()
+
+      // ===== ВАЖНО: UI ОБНОВЛЕНИЕ =====
+      uiTimer += delta
+      if (uiTimer > 100) {
+        document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
+        document.getElementById("score").innerText = score
+        uiTimer = 0
+      }
+
+      // ===== ВАЖНО: ЗВУК ДРОНОВ =====
+      // let targetVolume = 0.05 + (countDrones() / 50) * 0.25
+      // droneSound.volume = targetVolume
+
+      const endTime = performance.now()
+      const frameTime = endTime - startTime
+      if (frameTime > 16) { // Если кадр длится дольше 16ms (меньше 60fps)
+        console.warn(`Long frame: ${frameTime.toFixed(2)}ms, Drones: ${countDrones()}`)
+      }
+    }
+
+    function draw() {
+      // Очистка канваса
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // Фон
+      if (background.complete) {
+        ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
+      }
+
+      // Облака
+      drawClouds(ctx)
+
+      // Анимированные спрайты
+      if (tankSmoke?.alive) tankSmoke.draw(ctx)
+      if (citySmoke?.alive) citySmoke.draw(ctx)
+      if (cityFire?.alive) cityFire.draw(ctx)
+
+      // Земля
+      ctx.fillStyle = "rgba(0,0,0,0)"
+      ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight)
+
+      // Танк
+      if (tankImg.complete) {
+        ctx.drawImage(tankImg, tank.x, tank.y, tank.w, tank.h)
+      }
+
+      // Разрушенный город
+      if (destroyedCityImg.complete) {
+        ctx.drawImage(destroyedCityImg, destroyedCity.x, destroyedCity.y, destroyedCity.w, destroyedCity.h)
+      }
+
+      // Игрок
+      if (player?.alive) {
+        player.draw()
+      }
+
+      // Игровые объекты
+      for (const obj of gameObjects) {
+        if (obj.alive) {
+          obj.draw(ctx)
+        }
+      }
+
+      // Босс
+      const boss = gameObjects.find(o => o instanceof BossDrone && o.alive)
+      if (boss?.active) {
+        const barWidth = 400
+        const barHeight = 20
+        const x = (canvas.width - barWidth) / 2
+        const y = 20
+
+        ctx.fillStyle = "rgba(255, 0, 0, 0.3)"
+        ctx.fillRect(x, y, barWidth, barHeight)
+
+        const healthPercent = boss.hp / boss.maxHp
+        ctx.fillStyle = "#00ff00"
+        ctx.fillRect(x, y, barWidth * healthPercent, barHeight)
+
+        ctx.strokeStyle = "white"
+        ctx.lineWidth = 2
+        ctx.strokeRect(x, y, barWidth, barHeight)
+
+        ctx.fillStyle = "white"
+        ctx.font = "14px 'Press Start 2P', cursive"
+        ctx.textAlign = "center"
+        ctx.fillText("BOSS: Обнулитель 3000", canvas.width / 2, y + 40)
+      }
+
+      // UI
       ctx.save()
-      ctx.fillStyle = "rgba(0,0,0,0.7)"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      ctx.fillStyle = "red"
-      ctx.font = "96px 'Press Start 2P'"
-      ctx.textAlign = "center"
+      ctx.fillStyle = "white"
+      ctx.font = "20px monospace"
       ctx.shadowColor = "black"
-      ctx.shadowBlur = 10
-      ctx.fillText("Ты 200!", canvas.width / 2, canvas.height / 2)
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 2
+      ctx.shadowOffsetY = 2
+
+      ctx.fillText(currentWeapon?.name || "Pistol", 20, 200)
+      ctx.fillText(`Ammo: ${ammoInMagazine || 0} / ${currentWeapon?.magazineSize || 15}`, 20, 240)
+      ctx.fillText(`Magazines: ${magazines || 0}`, 20, 270)
+
+      if (isReloading) {
+        ctx.fillStyle = "yellow"
+        ctx.fillText("RELOADING...", 20, 100)
+      }
+      ctx.restore()
+
+      // Экран смерти
+      if (!player?.alive) {
+        ctx.save()
+        ctx.fillStyle = "rgba(0,0,0,0.7)"
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+        ctx.fillStyle = "red"
+        ctx.font = "96px 'Press Start 2P'"
+        ctx.textAlign = "center"
+        ctx.shadowColor = "black"
+        ctx.shadowBlur = 10
+        ctx.fillText("Ты 200!", canvas.width / 2, canvas.height / 2)
+        ctx.restore()
+      }
+
+      // UI текст
+      document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
+      document.getElementById("score").innerText = score
+    }
+
+
+    function drawClouds(ctx) {
+      if (!cloudsImg?.complete) return
+
+      ctx.save()
+      // Сортируем облака по высоте
+      const sortedClouds = [...clouds].sort((a, b) => a.y - b.y)
+
+      for (const cloud of sortedClouds) {
+        ctx.globalAlpha = cloud.opacity
+        ctx.drawImage(
+          cloudsImg,
+          cloud.x,
+          cloud.y,
+          cloud.width,
+          cloud.height
+        )
+      }
       ctx.restore()
     }
 
-    // UI текст
-    document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
-    document.getElementById("score").innerText = score
-  }
+    let last = 0
 
+    function gameLoop(t) {
+      if (!gameLoopRunning) {
+        // Если игра не активна, делаем длинные паузы
+        setTimeout(() => requestAnimationFrame(gameLoop), 100)
+        return
+      }
 
-  function drawClouds(ctx) {
-    if (!cloudsImg?.complete) return
+      // FPS контроль
+      frameCount++
+      if (t - lastFrameTime > 1000) {
+        fps = frameCount
+        frameCount = 0
+        lastFrameTime = t
+        // Можно показать FPS для отладки
+        // console.log('FPS:', fps)
+      }
 
-    ctx.save()
-    // Сортируем облака по высоте
-    const sortedClouds = [...clouds].sort((a, b) => a.y - b.y)
+      const rawDelta = Math.min(t - last, 100) // Ограничиваем дельту
+      const delta = rawDelta * timeScale
+      last = t
 
-    for (const cloud of sortedClouds) {
-      ctx.globalAlpha = cloud.opacity
-      ctx.drawImage(
-        cloudsImg,
-        cloud.x,
-        cloud.y,
-        cloud.width,
-        cloud.height
-      )
+      switch (currentState) {
+        case GameState.MENU:
+          // В меню обновляемся реже
+          if (frameCount % 3 === 0) { // Каждый 3-й кадр
+            updateMenu(delta)
+            drawMenu()
+          }
+          break
+
+        case GameState.GAME:
+          updateGame(delta)
+          drawGame()
+          break
+
+        case GameState.GAME_OVER:
+          if (frameCount % 3 === 0) {
+            updateGameOver(delta)
+            drawGameOver()
+          }
+          break
+      }
+
+      requestAnimationFrame(gameLoop)
     }
-    ctx.restore()
-  }
 
-  let last=0
+    function updateMenu(delta) {
 
-  function gameLoop(t) {
-    if (!gameLoopRunning) {
-      // Если игра не активна, делаем длинные паузы
-      setTimeout(() => requestAnimationFrame(gameLoop), 100)
-      return
     }
 
-    // FPS контроль
-    frameCount++
-    if (t - lastFrameTime > 1000) {
-      fps = frameCount
-      frameCount = 0
-      lastFrameTime = t
-      // Можно показать FPS для отладки
-      // console.log('FPS:', fps)
+    function drawMenu() {
+
     }
 
-    const rawDelta = Math.min(t - last, 100) // Ограничиваем дельту
-    const delta = rawDelta * timeScale
-    last = t
+    function updateGame(delta) {
+      update(delta)
+    }
 
-    switch(currentState) {
-      case GameState.MENU:
-        // В меню обновляемся реже
-        if (frameCount % 3 === 0) { // Каждый 3-й кадр
-          updateMenu(delta)
-          drawMenu()
-        }
-        break
+    function drawGame() {
+      draw()
 
-      case GameState.GAME:
-        updateGame(delta)
-        drawGame()
-        break
+    }
 
-      case GameState.GAME_OVER:
-        if (frameCount % 3 === 0) {
-          updateGameOver(delta)
-          drawGameOver()
-        }
-        break
+    function updateGameOver(delta) {
+
+    }
+
+    function drawGameOver() {
+
     }
 
     requestAnimationFrame(gameLoop)
-  }
 
-  function updateMenu(delta){
+    document.getElementById("startBtn").onclick = startGame
 
-  }
+    loadLeaderboard()
 
-  function drawMenu(){
-
-  }
-
-  function updateGame(delta){
-    update(delta)
-  }
-
-  function drawGame(){
-    draw()
-
-  }
-
-  function updateGameOver(delta){
-
-  }
-
-  function drawGameOver(){
-
-  }
-
-  requestAnimationFrame(gameLoop)
-
-  document.getElementById("startBtn").onclick=startGame
-
-  loadLeaderboard()
-
-  menuMusic.volume = 0.1
-  if (isMusicOn) {
-    menuMusic.play()
-  }
-
-  document.body.addEventListener("click", () => {
-    if(isMusicOn){
+    menuMusic.volume = 0.1
+    if (isMusicOn) {
       menuMusic.play()
     }
-  }, { once:true })
 
-  const bar = document.getElementById("loading-bar")
+    document.body.addEventListener("click", () => {
+      if (isMusicOn) {
+        menuMusic.play()
+      }
+    }, { once: true })
 
-  let progress = 0
+    const bar = document.getElementById("loading-bar")
 
-  const interval = setInterval(() => {
-    progress += 10
-    bar.value = progress
+    let progress = 0
 
-    if (progress >= 100) {
-      clearInterval(interval)
-    }
-  }, 100)
+    const interval = setInterval(() => {
+      progress += 10
+      bar.value = progress
 
-  window.addEventListener("load", () => {
-    document.getElementById("loading-screen").style.display = "none"
-  })
+      if (progress >= 100) {
+        clearInterval(interval)
+      }
+    }, 100)
 
-  // Добавьте в конец файла для отладки
-  const perfMonitor = {
-    frames: 0,
-    lastTime: performance.now(),
+    window.addEventListener("load", () => {
+      document.getElementById("loading-screen").style.display = "none"
+    })
 
-    update() {
-      this.frames++
-      const now = performance.now()
-      if (now - this.lastTime >= 1000) {
-        console.log(`FPS: ${this.frames}, Objects: ${gameObjects.length}`)
-        this.frames = 0
-        this.lastTime = now
+    // Добавьте в конец файла для отладки
+    const perfMonitor = {
+      frames: 0,
+      lastTime: performance.now(),
+
+      update() {
+        this.frames++
+        const now = performance.now()
+        if (now - this.lastTime >= 1000) {
+          console.log(`FPS: ${this.frames}, Objects: ${gameObjects.length}`)
+          this.frames = 0
+          this.lastTime = now
+        }
       }
     }
-  }
-</script>
+  </script>
 
 </body>
+
 </html>
