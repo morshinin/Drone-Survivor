@@ -3481,53 +3481,69 @@
         shoot(dir.dx, dir.dy)
       }
 
-      // КОЛЛИЗИИ ПУЛЬ И ДРОНОВ
-      if (frameCounter % 2 === 0) { // Проверяем коллизии каждый второй кадр
-        const bullets = gameObjects.filter(o => o instanceof Bullet && o.alive)
-        const drones = gameObjects.filter(o => o instanceof BaseDrone && o.alive)
+      // ===== ОПТИМИЗИРОВАННЫЙ ЦИКЛ ОБНОВЛЕНИЯ И КОЛЛИЗИЙ =====
+      const stillAlive = []
+      const activeDrones = []
+      const activeBullets = []
+      const activeEnemyBullets = []
 
-        bullets.forEach(b => {
-          drones.forEach(d => {
+      // 1. Одиночный проход: обновление, фильтрация и категоризация
+      for (let i = 0; i < gameObjects.length; i++) {
+        const obj = gameObjects[i]
+
+        if (obj.alive) {
+          obj.update(delta)
+
+          if (obj.alive) {
+            stillAlive.push(obj)
+
+            // Категоризация для коллизий
+            if (obj instanceof BaseDrone) activeDrones.push(obj)
+            else if (obj instanceof Bullet) activeBullets.push(obj)
+            else if (obj instanceof EnemyBullet) activeEnemyBullets.push(obj)
+          }
+        }
+      }
+
+      // Обновляем глобальный список
+      gameObjects = stillAlive
+
+      // 2. Коллизии пуль игрока и дронов
+      // Запускаем каждый второй кадр для дополнительной оптимизации
+      if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
+        for (const b of activeBullets) {
+          if (!b.alive) continue
+
+          for (const d of activeDrones) {
+            if (!d.alive) continue
+
             if (isColliding(b, d)) {
-
               b.alive = false
-
-              if (d.takeDamage(1)) { // Если дрон умер
+              if (d.takeDamage(1)) {
                 d.onDeath()
-
-                // Начисляем очки
                 const gained = calculateDroneScore(d)
                 score += gained
                 showScoreGain(gained)
-                // waveKills++
-
-                // freeze(40)
-                // screenShake.shake(4, 4)
-              } else {
               }
+              break // Пуля исчезла
             }
-          })
-        })
+          }
+        }
       }
 
-      // ===== ВАЖНО: ОБНОВЛЕНИЕ ВСЕХ ОБЪЕКТОВ =====
-      gameObjects.forEach(obj => {
-        if (obj.alive) {
-          obj.update(delta)
-        }
-      })
+      // 3. Проверка пуль врагов (земля и игрок)
+      if (activeEnemyBullets.length > 0) {
+        for (const obj of activeEnemyBullets) {
+          if (!obj.alive) continue
 
-      // ===== ВАЖНО: УДАЛЕНИЕ МЕРТВЫХ ОБЪЕКТОВ =====
-      gameObjects = gameObjects.filter(obj => obj.alive)
-
-      // ===== ВАЖНО: ПРОВЕРКА ПУЛЬ ВРАГОВ =====
-      gameObjects.forEach(obj => {
-        if (obj instanceof EnemyBullet) {
+          // Земля
           if (obj.y > canvas.height - groundHeight) {
             spawnGroundExplosion(obj.x, obj.y)
             obj.alive = false
+            continue
           }
 
+          // Игрок
           if (isColliding(obj, player)) {
             if (player.alive) {
               player.die()
@@ -3535,7 +3551,7 @@
             obj.alive = false
           }
         }
-      })
+      }
 
       // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
       survivalTime += delta / 1000
@@ -3632,10 +3648,6 @@
       ctx.save()
       ctx.fillStyle = "white"
       ctx.font = "20px monospace"
-      ctx.shadowColor = "black"
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 2
-      ctx.shadowOffsetY = 2
 
       ctx.fillText(currentWeapon?.name || "Pistol", 20, 200)
       ctx.fillText(`Ammo: ${ammoInMagazine || 0} / ${currentWeapon?.magazineSize || 15}`, 20, 240)
