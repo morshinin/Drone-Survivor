@@ -1319,12 +1319,7 @@
 
         this.isActive = false // ВАЖНО
 
-        if (stage.bossWave) {
-          // Для босса особая логика — только спавн босса, без волн
-          showCommanderMessage(5000, stage.startMessage).then(() => {
-            spawnBoss()
-          })
-        } else if (stage.startMessage) {
+        if (stage.startMessage) {
           // Показываем сообщение, затем запускаем волну
           showCommanderMessage(5000, stage.startMessage).then(() => {
             this.isActive = true
@@ -2879,7 +2874,10 @@
         this.alive = true
         this.category = 'enemyBullet'
       }
-      update() { this.y += this.speed }
+      update() {
+        this.y += this.speed
+        if (this.y > canvas.height + 100) this.alive = false
+      }
       draw() {
         ctx.drawImage(
           enemyBulletImg,
@@ -2911,6 +2909,7 @@
         this.spawnTimer = 0
         this.missileTimer = 0
         this.active = false
+        this.category = 'drone' // Важно для коллизий
         this.maxMinions = 8
         this.spawnedMinions = 0
       }
@@ -2922,9 +2921,9 @@
         }
         // спавн дронов
         this.phaseTimer += delta
-        if (this.hp < this.maxHp * 0.5 && this.phase === 1) {
+        if (this.hp <= this.maxHp * 0.5 && this.phase === 1) {
           this.phase = 2
-          console.log("Boss phase 2!") // Важное сообщение оставляем
+          console.log("Boss phase 2 triggered! HP:", this.hp)
         }
 
         // Фаза 1: редко спавнит дронов
@@ -2961,13 +2960,8 @@
         if (this.missileTimer > 4000) { // УВЕЛИЧИЛИ до 4 секунд
           this.missileTimer = 0
           // Только одна ракета за раз
-          // Оптимизация: считаем ракеты только среди объектов типа Missile
-          let missilesCount = 0
-          for (let i = 0; i < gameObjects.length; i++) {
-            if (gameObjects[i] instanceof Missile) missilesCount++
-          }
-
-          if (missilesCount < 3) {
+          // Оптимизация: используем глобальный счетчик или простой лимит
+          if (globalEnemyBulletsCount < 40) {
             spawn(new Missile(
               this.x + this.width / 2,
               this.y + this.height,
@@ -3012,6 +3006,7 @@
         if (this.x > this.targetX) this.x -= 1.5
 
         this.y += this.speed
+        if (this.y > canvas.height + 100) this.alive = false
       }
 
       draw() {
