@@ -802,6 +802,9 @@
 
         if (hasOpacity) {
           ctx.restore()
+        } else {
+          // Гарантируем сброс альфы, если не использовали save/restore
+          ctx.globalAlpha = 1.0
         }
       }
 
@@ -2545,14 +2548,9 @@
         // Стрельба
         this.fireTimer += delta
 
-        const drones = gameObjects.filter(o => o instanceof BaseDrone)
-        const attackingDrones = drones
-          .slice()
-          .sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x))
-          .slice(0, MAX_ATTACKING_DRONES)
-
-        if (attackingDrones.includes(this) &&
-          this.fireTimer >= this.fireCooldown &&
+        // Убрали тяжелый фильтр и сортировку для оптимизации CPU.
+        // Ограничение стрельбы теперь полагается на globalEnemyFireCooldown и индивидуальные таймеры.
+        if (this.fireTimer >= this.fireCooldown &&
           globalEnemyFireCooldown <= 0) {
           this.shoot()
         }
@@ -2886,27 +2884,21 @@
       }
     }
 
-    class BossDrone {
+    class BossDrone extends BaseDrone {
       constructor() {
-        this.width = 300
-        this.height = 260
-
-        this.x = canvas.width / 2 - this.width / 2
-        this.y = -120
-
+        super(canvas.width / 2 - 150, -120, {
+          width: 300,
+          height: 260,
+          hp: 200,
+          image: bossImg
+        })
         this.speed = 1
-
-        this.hp = 200
-        this.maxHp = 200
-
+        this.phase = 1
+        this.phaseTimer = 0
         this.spawnTimer = 0
         this.missileTimer = 0
-
         this.active = false
-
-        this.alive = true
-
-        this.maxMinions = 8 // Максимум дронов-миньонов одновременно
+        this.maxMinions = 8
         this.spawnedMinions = 0
       }
 
@@ -2956,7 +2948,13 @@
         if (this.missileTimer > 4000) { // УВЕЛИЧИЛИ до 4 секунд
           this.missileTimer = 0
           // Только одна ракета за раз
-          if (gameObjects.filter(o => o instanceof Missile).length < 3) {
+          // Оптимизация: считаем ракеты только среди объектов типа Missile
+          let missilesCount = 0
+          for (let i = 0; i < gameObjects.length; i++) {
+            if (gameObjects[i] instanceof Missile) missilesCount++
+          }
+
+          if (missilesCount < 3) {
             spawn(new Missile(
               this.x + this.width / 2,
               this.y + this.height,
@@ -2966,8 +2964,15 @@
         }
       }
 
-      draw() {
-        ctx.drawImage(bossImg, this.x, this.y, this.width, this.height)
+      onDeath() {
+        super.onDeath()
+        // Можно добавить специфичные для босса эффекты
+      }
+
+      draw(ctx) {
+        if (this.image && this.image.complete) {
+          ctx.drawImage(this.image, Math.floor(this.x), Math.floor(this.y), Math.floor(this.width), Math.floor(this.height))
+        }
 
         if (DEBUG.showHitboxes) {
           showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
@@ -2996,7 +3001,7 @@
       }
 
       draw() {
-        ctx.drawImage(missileImg, this.x, this.y, 16, 32)
+        ctx.drawImage(missileImg, Math.floor(this.x), Math.floor(this.y), 16, 32)
       }
     }
 
@@ -3510,9 +3515,9 @@
             stillAlive.push(obj)
 
             // Категоризация для коллизий
-            if (obj instanceof BaseDrone) activeDrones.push(obj)
+            if (obj instanceof BaseDrone || obj instanceof BossDrone) activeDrones.push(obj)
             else if (obj instanceof Bullet) activeBullets.push(obj)
-            else if (obj instanceof EnemyBullet) activeEnemyBullets.push(obj)
+            else if (obj instanceof EnemyBullet || obj instanceof Missile) activeEnemyBullets.push(obj)
           }
         }
       }
@@ -3695,21 +3700,19 @@
     function drawClouds(ctx) {
       if (!cloudsImg?.complete) return
 
-      ctx.save()
-      // Сортируем облака по высоте
-      const sortedClouds = [...clouds].sort((a, b) => a.y - b.y)
-
-      for (const cloud of sortedClouds) {
+      // Сортировка убрана для оптимизации CPU. Облака статичны по слоям.
+      for (let i = 0; i < clouds.length; i++) {
+        const cloud = clouds[i]
         ctx.globalAlpha = cloud.opacity
         ctx.drawImage(
           cloudsImg,
-          cloud.x,
-          cloud.y,
-          cloud.width,
-          cloud.height
+          Math.floor(cloud.x),
+          Math.floor(cloud.y),
+          Math.floor(cloud.width),
+          Math.floor(cloud.height)
         )
       }
-      ctx.restore()
+      ctx.globalAlpha = 1.0 // СБРОС АЛЬФЫ для предотвращения бага отрисовки
     }
 
     let last = 0
