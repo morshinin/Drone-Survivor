@@ -742,6 +742,12 @@
         this.opacity = options.opacity || 1.0
         this.loop = options.loop !== undefined ? options.loop : true
 
+        // Кэшируем вычисления размеров
+        this.sw = this.image.width / this.columns
+        this.sh = this.image.height / Math.ceil(this.totalFrames / this.columns)
+        this.dw = this.width * (this.scale || 1.0)
+        this.dh = this.height * (this.scale || 1.0)
+
         // Вычисляем количество строк
         this.rows = Math.ceil(this.totalFrames / this.columns)
 
@@ -771,27 +777,32 @@
       }
 
       draw(ctx) {
-        if (!this.image || !this.image.complete) return
+        if (!this.image || !this.image.complete || !this.alive) return
 
         const col = this.frame % this.columns
         const row = Math.floor(this.frame / this.columns)
 
-        ctx.save()
-        ctx.globalAlpha = this.opacity
+        const hasOpacity = this.opacity < 1.0
+        if (hasOpacity) {
+          ctx.save()
+          ctx.globalAlpha = this.opacity
+        }
 
         ctx.drawImage(
           this.image,
-          col * (this.image.width / this.columns),
-          row * (this.image.height / this.rows),
-          this.image.width / this.columns,
-          this.image.height / this.rows,
-          this.x,
-          this.y,
-          this.width * this.scale,
-          this.height * this.scale
+          Math.floor(col * this.sw),
+          Math.floor(row * this.sh),
+          Math.floor(this.sw),
+          Math.floor(this.sh),
+          Math.floor(this.x),
+          Math.floor(this.y),
+          Math.floor(this.dw),
+          Math.floor(this.dh)
         )
 
-        ctx.restore()
+        if (hasOpacity) {
+          ctx.restore()
+        }
       }
 
       setFrame(frame) {
@@ -1454,7 +1465,8 @@
         this._debugTimer += delta
         if (this._debugTimer >= 3000) {
           this._debugTimer = 0
-          console.log(`[WAIT] wave=${this.currentWaveIndex + 1}, aliveDrones=${alive}, gameObjects=${gameObjects.length}, spawned=${this.currentWaveSpawnCount}/${totalDrones}`)
+          const vfxCount = gameObjects.filter(o => o instanceof Explosion || o instanceof GroundExplosion).length
+          console.log(`[WAIT] wave=${this.currentWaveIndex + 1}, aliveDrones=${alive}, gameObjects=${gameObjects.length}, vfx=${vfxCount}, spawned=${this.currentWaveSpawnCount}/${totalDrones}`)
         }
 
         if (alive === 0) {
@@ -2448,15 +2460,15 @@
         if (this.image && this.image.complete) {
           ctx.drawImage(
             this.image,
-            this.x,
-            this.y,
-            this.width,
-            this.height
+            Math.floor(this.x),
+            Math.floor(this.y),
+            Math.floor(this.width),
+            Math.floor(this.height)
           )
         } else {
           // Запасной вариант
           ctx.fillStyle = this.getColor()
-          ctx.fillRect(this.x, this.y, this.width, this.height)
+          ctx.fillRect(Math.floor(this.x), Math.floor(this.y), Math.floor(this.width), Math.floor(this.height))
         }
 
         // Полоска здоровья для сильных дронов
@@ -2842,7 +2854,7 @@
 
       draw(ctx) {
         ctx.fillStyle = "yellow"
-        ctx.fillRect(this.x, this.y, this.size, this.size)
+        ctx.fillRect(Math.floor(this.x), Math.floor(this.y), Math.floor(this.size), Math.floor(this.size))
       }
     }
 
@@ -3013,10 +3025,10 @@
         if (this.alive) {
           ctx.drawImage(
             explosionSprite,
-            this.frame * EXPLOSION_FRAME_WIDTH, 0,
+            Math.floor(this.frame * EXPLOSION_FRAME_WIDTH), 0,
             EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
-            this.x - EXPLOSION_FRAME_WIDTH / 2,
-            this.y - EXPLOSION_FRAME_HEIGHT / 2,
+            Math.floor(this.x - EXPLOSION_FRAME_WIDTH / 2),
+            Math.floor(this.y - EXPLOSION_FRAME_HEIGHT / 2),
             EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT
           );
         }
@@ -3126,12 +3138,12 @@
       draw(ctx) {
         ctx.drawImage(
           groundExplosionSprite,
-          this.frame * GROUND_EXPLOSION_FRAME_WIDTH,
+          Math.floor(this.frame * GROUND_EXPLOSION_FRAME_WIDTH),
           0,
           GROUND_EXPLOSION_FRAME_WIDTH,
           GROUND_EXPLOSION_FRAME_HEIGHT,
-          this.x - GROUND_EXPLOSION_FRAME_WIDTH / 2,
-          this.y - GROUND_EXPLOSION_FRAME_HEIGHT / 2,
+          Math.floor(this.x - GROUND_EXPLOSION_FRAME_WIDTH / 2),
+          Math.floor(this.y - GROUND_EXPLOSION_FRAME_HEIGHT / 2),
           GROUND_EXPLOSION_FRAME_WIDTH,
           GROUND_EXPLOSION_FRAME_HEIGHT
         );
