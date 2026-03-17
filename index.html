@@ -755,7 +755,7 @@
       if (!src) return
 
       if (!POOLED_SOUNDS[src]) {
-        console.log(`[AUDIO] Creating pool for: ${src.split('/').pop()}`)
+        // console.log(`[AUDIO] Creating pool for: ${src.split('/').pop()}`)
         POOLED_SOUNDS[src] = new SoundPool(audioAsset)
       }
       POOLED_SOUNDS[src].play(volume)
@@ -1380,10 +1380,10 @@
         // Сохраняем общее количество дронов в волне как константу
         this.totalWaveDrones = this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
 
-        console.log(`Starting wave ${this.currentWaveIndex + 1}/${stage.waves.length}: ${wave.name}`,
-          'Original:', wave.drones,
-          'Copy:', this.currentWaveDrones,
-          'Total:', this.totalWaveDrones)
+        // console.log(`Starting wave ${this.currentWaveIndex + 1}/${stage.waves.length}: ${wave.name}`,
+        //   'Original:', wave.drones,
+        //   'Copy:', this.currentWaveDrones,
+        //   'Total:', this.totalWaveDrones)
 
         this.isPaused = false
         this.spawnTimer = 0
@@ -1393,7 +1393,7 @@
       // Завершить этап
       completeStage() {
         const stage = this.stages[this.currentStageIndex]
-        console.log(`Stage ${this.currentStageIndex + 1} (${stage.name}) completed!`)
+        // console.log(`Stage ${this.currentStageIndex + 1} (${stage.name}) completed!`)
 
         this.isActive = false
         this.stageComplete = true
@@ -1406,10 +1406,10 @@
           this.currentStageIndex++
           this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
           if (this.currentStageIndex < this.stages.length) {
-            console.log(`Moving to stage ${this.currentStageIndex + 1}: ${this.stages[this.currentStageIndex].name}`)
+            // console.log(`Moving to stage ${this.currentStageIndex + 1}: ${this.stages[this.currentStageIndex].name}`)
             this.startStage(this.currentStageIndex)
           } else {
-            console.log("All stages completed! Starting infinite mode...")
+            // console.log("All stages completed! Starting infinite mode...")
             this.startInfiniteMode()
           }
         }
@@ -1464,7 +1464,7 @@
           const prevWave = stage.waves[this.currentWaveIndex - 1]
 
           if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
-            console.log(`Pause ended, starting next wave ${this.currentWaveIndex + 1}/${stage.waves.length}`)
+            // console.log(`Pause ended, starting next wave ${this.currentWaveIndex + 1}/${stage.waves.length}`)
             this.isPaused = false
             this.spawnTimer = 0
             this.startCurrentWave()
@@ -1474,7 +1474,7 @@
 
         // Проверяем индекс волны
         if (this.currentWaveIndex >= stage.waves.length) {
-          console.log("All waves completed, completing stage")
+          // console.log("All waves completed, completing stage")
           this.completeStage()
           return
         }
@@ -1497,7 +1497,7 @@
         const alive = countDrones()
 
         if (alive === 0) {
-          console.log(`Wave ${this.currentWaveIndex + 1} completed`)
+          // console.log(`Wave ${this.currentWaveIndex + 1} completed`)
           this.currentWaveIndex++
 
           if (this.currentWaveIndex < stage.waves.length) {
@@ -1538,8 +1538,8 @@
         typeEntry.count--
         this.currentWaveSpawnCount++
 
-        console.log(`Spawning ${typeEntry.type}, remaining:`,
-          this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', '))
+        // console.log(`Spawning ${typeEntry.type}, remaining:`,
+          this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', ')
 
         this.spawnDroneByType(typeEntry.type)
       }
@@ -1968,7 +1968,7 @@
       buildCollisionGrid()
 
       const bullets = gameObjects.filter(o => o instanceof Bullet)
-      const drones = gameObjects.filter(o => o instanceof Drone)
+      const drones = gameObjects.filter(o => o instanceof BaseDrone)
 
       bullets.forEach(b => {
         const gridX = Math.floor(b.x / GRID_SIZE)
@@ -3511,16 +3511,16 @@
       waveManager.update(delta)
 
       // Обновление информации о волне
-      if (frameCounter % 30 === 0) {
-        const stage = waveManager.stages[waveManager.currentStageIndex]
-        const waveInfo = document.getElementById('wave-info')
-        if (stage && waveManager.currentWaveIndex < stage.waves.length) {
-          waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
-        } else if (stage) {
-          // Если волны закончились, показываем завершение
-          waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
-        }
-      }
+      // if (frameCounter % 30 === 0) {
+      //   const stage = waveManager.stages[waveManager.currentStageIndex]
+      //   const waveInfo = document.getElementById('wave-info')
+      //   if (stage && waveManager.currentWaveIndex < stage.waves.length) {
+      //     waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
+      //   } else if (stage) {
+      //     // Если волны закончились, показываем завершение
+      //     waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
+      //   }
+      // }
 
       // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
       shootCooldown -= delta
@@ -3580,7 +3580,7 @@
           const c = o.category || 'none'
           counts[c] = (counts[c] || 0) + 1
         })
-        console.log(`[PERF] Objs:${stillAlive.length} ` + JSON.stringify(counts))
+        // console.log(`[PERF] Objs:${stillAlive.length} ` + JSON.stringify(counts))
       }
 
       // 2. Коллизии пуль игрока и дронов
@@ -3748,8 +3748,8 @@
       }
 
       // UI текст
-      document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
-      document.getElementById("score").innerText = score
+      // document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
+      // document.getElementById("score").innerText = score
     }
 
 
