@@ -1078,7 +1078,9 @@
     const GameState = {
       MENU: "menu",
       GAME: "game",
-      GAME_OVER: "game_over"
+      GAME_OVER: "game_over",
+      DIALOG: "dialog",
+      PAUSED: "paused",
     }
 
     let currentState = GameState.MENU
@@ -1185,7 +1187,7 @@
       initStages() {
         // Этап 1: Начало
         this.stages.push(new StageConfig('Начало', {
-          startMessage: 'Основные силы противника!',
+          startMessage: 'Charlie’s hot, Alpha’s somewhere… probably. Move out.',
           waves: [
             new WaveConfig('Разведка', {
               drones: [{ type: DroneType.NORMAL, count: 5 }],
@@ -1206,13 +1208,14 @@
               spawnInterval: 900
             })
           ],
-          endMessage: 'Ты еще жив? Удивительно...',
+          endMessage: '…You’re still up? Huh. That’s… not according to plan.',
           pauseAfter: 4000
         }))
 
         // Этап 2: Нарастание
         this.stages.push(new StageConfig('Нарастание', {
-          startMessage: 'Основные силы противника!',
+          startMessage: `Squad, roger that—actually, wait, I didn’t say anything yet.
+Anyway, get moving.`,
           waves: [
             new WaveConfig('Волна 1', {
               drones: [
@@ -1241,13 +1244,15 @@
               spawnInterval: 500
             })
           ],
-          endMessage: 'Ты еще жив? Удивительно...',
+          endMessage: `Well I’ll be damned.
+You actually made it, soldier.`,
           pauseAfter: 5000
         }))
 
         // Этап 3: Тяжелый
         this.stages.push(new StageConfig('Тяжелый', {
-          startMessage: 'Сейчас будет жарко!',
+          startMessage: `This is Command… I think.
+Contact expected. Try not to die immediately.`,
           waves: [
             new WaveConfig('Волна 1', {
               drones: [
@@ -1277,13 +1282,15 @@
               spawnInterval: 350
             })
           ],
-          endMessage: 'Ты справился с основными силами! Но это еще не конец...',
+          endMessage: `You’re alive.
+I’m marking that as a… success.`,
           pauseAfter: 6000
         }))
 
         // Этап 4: Босс
         this.stages.push(new StageConfig('Босс', {
-          startMessage: 'Внимание! Летит что-то большое!',
+          startMessage: `That’s not standard issue…
+Who signed off on that thing?`,
           bossWave: true,
           waves: [
             new WaveConfig('Босс и свита', {
@@ -1296,13 +1303,14 @@
               spawnInterval: 1200
             })
           ],
-          endMessage: 'БОСС УНИЧТОЖЕН! Ты герой!',
+          endMessage: `Well… that worked.
+Command approves. Probably.`,
           pauseAfter: 8000
         }))
 
         // Этап 5: Бесконечный режим
         this.stages.push(new StageConfig('Бесконечность', {
-          startMessage: 'Режим бесконечной битвы активирован! Держись сколько сможешь!',
+          startMessage: `Stay alive, Charlie.`,
           waves: this.generateInfiniteWaves(),
           infiniteMode: true
         }))
@@ -1625,13 +1633,13 @@
 
         switch (type.type) {
           case DroneType.NORMAL:
-            spawnDrone()
+            spawnNormalDrone()
             break
           case DroneType.GRENADIER:
-            waveManager.spawnGrenadier()
+            spawnGrenadier()
             break
           case DroneType.KAMIKAZE:
-            waveManager.spawnKamikaze()
+            spawnKamikaze()
             break
         }
 
@@ -1662,70 +1670,70 @@
     }
 
     // В обработчик клавиш добавьте:
-    document.addEventListener("keydown", e => {
-      // ... существующие клавиши ...
-
-      // Тестирование конкретных волн
-      if (e.key === "1") { // Этап 1, волна 1
-        waveManager.testWave(0, 0)
-      }
-      if (e.key === "2") { // Этап 1, волна 2
-        waveManager.testWave(0, 1)
-      }
-      if (e.key === "3") { // Этап 1, волна 3
-        waveManager.testWave(0, 2)
-      }
-
-      if (e.key === "4") { // Этап 2, волна 1
-        waveManager.testWave(1, 0)
-      }
-      if (e.key === "5") { // Этап 2, волна 2
-        waveManager.testWave(1, 1)
-      }
-      if (e.key === "6") { // Этап 2, волна 3
-        waveManager.testWave(1, 2)
-      }
-
-      if (e.key === "7") { // Этап 3, волна 1
-        waveManager.testWave(2, 0)
-      }
-      if (e.key === "8") { // Этап 3, волна 2
-        waveManager.testWave(2, 1)
-      }
-      if (e.key === "9") { // Этап 3, волна 3
-        waveManager.testWave(2, 2)
-      }
-
-      if (e.key === "0") { // Босс этап
-        waveManager.testStage(3)
-      }
-
-      if (e.key === "-") { // Бесконечный режим
-        waveManager.startInfiniteMode()
-      }
-
-      // Тестирование групп
-      if (e.key === "g") { // группа гранатометчиков
-        spawnGroup(DroneType.GRENADIER, 5, 800)
-      }
-
-      if (e.key === "c") { // смешанная группа
-        spawnMixedGroup([
-          { type: DroneType.NORMAL, count: 8 },
-          { type: DroneType.GRENADIER, count: 3 },
-          { type: DroneType.KAMIKAZE, count: 2 }
-        ], 600)
-      }
-
-      if (e.key === "p") { // прогрессивная волна
-        spawnProgressiveWave(5, [
-          { type: DroneType.NORMAL, add: 2 },
-          { type: DroneType.GRENADIER, add: 1 },
-          { type: DroneType.NORMAL, add: 3 },
-          { type: DroneType.KAMIKAZE, add: 2 }
-        ], 500)
-      }
-    })
+    // document.addEventListener("keydown", e => {
+    //   // ... существующие клавиши ...
+    //
+    //   // Тестирование конкретных волн
+    //   if (e.key === "1") { // Этап 1, волна 1
+    //     waveManager.testWave(0, 0)
+    //   }
+    //   if (e.key === "2") { // Этап 1, волна 2
+    //     waveManager.testWave(0, 1)
+    //   }
+    //   if (e.key === "3") { // Этап 1, волна 3
+    //     waveManager.testWave(0, 2)
+    //   }
+    //
+    //   if (e.key === "4") { // Этап 2, волна 1
+    //     waveManager.testWave(1, 0)
+    //   }
+    //   if (e.key === "5") { // Этап 2, волна 2
+    //     waveManager.testWave(1, 1)
+    //   }
+    //   if (e.key === "6") { // Этап 2, волна 3
+    //     waveManager.testWave(1, 2)
+    //   }
+    //
+    //   if (e.key === "7") { // Этап 3, волна 1
+    //     waveManager.testWave(2, 0)
+    //   }
+    //   if (e.key === "8") { // Этап 3, волна 2
+    //     waveManager.testWave(2, 1)
+    //   }
+    //   if (e.key === "9") { // Этап 3, волна 3
+    //     waveManager.testWave(2, 2)
+    //   }
+    //
+    //   if (e.key === "0") { // Босс этап
+    //     waveManager.testStage(3)
+    //   }
+    //
+    //   if (e.key === "-") { // Бесконечный режим
+    //     waveManager.startInfiniteMode()
+    //   }
+    //
+    //   // Тестирование групп
+    //   if (e.key === "g") { // группа гранатометчиков
+    //     spawnGroup(DroneType.GRENADIER, 5, 800)
+    //   }
+    //
+    //   if (e.key === "c") { // смешанная группа
+    //     spawnMixedGroup([
+    //       { type: DroneType.NORMAL, count: 8 },
+    //       { type: DroneType.GRENADIER, count: 3 },
+    //       { type: DroneType.KAMIKAZE, count: 2 }
+    //     ], 600)
+    //   }
+    //
+    //   if (e.key === "p") { // прогрессивная волна
+    //     spawnProgressiveWave(5, [
+    //       { type: DroneType.NORMAL, add: 2 },
+    //       { type: DroneType.GRENADIER, add: 1 },
+    //       { type: DroneType.NORMAL, add: 3 },
+    //       { type: DroneType.KAMIKAZE, add: 2 }
+    //     ], 500)
+    //   }
+    // })
 
     // Класс для облаков
     class Cloud {
@@ -1819,15 +1827,23 @@
     async function showCommanderIntro() {
       await new Promise(r => setTimeout(r, 500))
 
-      const msg = `
-    Значит так, товарищ солдат. Соответственно… соответственно.
-— Слушай боевую задачу.
-В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
-Будешь оказывать содействие в организации снабжения и связи.
-Ротация будет каждые… очень скоро.
-В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
-Кто без команды пойдёт назад — будет принят за наступающие силы противника.
-    `
+//       const msg = `
+//     Значит так, товарищ солдат. Соответственно… соответственно.
+// — Слушай боевую задачу.
+// В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
+// Будешь оказывать содействие в организации снабжения и связи.
+// Ротация будет каждые… очень скоро.
+// В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
+// Кто без команды пойдёт назад — будет принят за наступающие силы противника.
+//     `
+      const msg = `Alright, listen up, soldier.
+Here’s the situation… yeah… here’s the situation.
+Your mission: at H-hour, you move out to reinforce a fortified position.
+Units from the 69th are already dug in — area’s considered secure.
+You’ll assist with supply lines and comms.
+Rotations will be… happening soon enough.
+In case of injury, you’ll be… taken care of and evacuated to the rear.
+Anyone falling back without orders will be treated as hostile.`
       await showCommanderMessage(8000, msg)
     }
 
