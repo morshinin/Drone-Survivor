@@ -15,6 +15,7 @@ Text changes
 Optimization
 Remove freeze and screen shake
 Change commander messages
+Pause and dialog states
 
 ## 0.17.3
 

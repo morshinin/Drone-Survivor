@@ -633,6 +633,8 @@
     const groundExplosionSound = document.getElementById("groundExplosionSound")
     const gameOverMusic = document.getElementById("gameOverMusic")
     const gameInfo = document.getElementById("game-info")
+    const timerEl = document.getElementById("timer")
+    const scoreEl = document.getElementById("score")
     const effectsLayer = document.getElementById("effects-layer")
     const canvas = document.getElementById("game")
     const ctx = canvas.getContext("2d")
@@ -1090,6 +1092,50 @@
     let lastFpsFrameCount = 0
     let fps = 0
     let gameLoopInstances = 0
+
+    function isGameplayActive() {
+      return currentState === GameState.GAME
+    }
+
+    function isDialogActive() {
+      return currentState === GameState.DIALOG
+    }
+
+    function isPauseActive() {
+      return currentState === GameState.PAUSED
+    }
+
+    function updateAmbient(delta) {
+      if (tankSmoke?.alive) tankSmoke.update()
+      if (citySmoke?.alive) citySmoke.update()
+      if (cityFire?.alive) cityFire.update()
+
+      for (const cloud of clouds) {
+        cloud.update()
+      }
+    }
+
+    function updateHud(delta) {
+      uiTimer += delta
+      if (uiTimer > 100) {
+        timerEl.innerText = survivalTime.toFixed(1) + "s"
+        scoreEl.innerText = score
+        uiTimer = 0
+      }
+
+      // if (frameCounter % 30 === 0) {
+      //   const stage = waveManager.stages[waveManager.currentStageIndex]
+      //   const waveInfo = document.getElementById('wave-info')
+      //
+      //   if (!waveInfo) return
+      //
+      //   if (stage && waveManager.currentWaveIndex < stage.waves.length) {
+      //     waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
+      //   } else if (stage) {
+      //     waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
+      //   }
+      // }
+    }
 
     const GRID_SIZE = 100
     let collisionGrid = {}
@@ -1669,72 +1715,6 @@ Command approves. Probably.`,
       spawnNext()
     }
 
-    // В обработчик клавиш добавьте:
-    // document.addEventListener("keydown", e => {
-    //   // ... существующие клавиши ...
-    //
-    //   // Тестирование конкретных волн
-    //   if (e.key === "1") { // Этап 1, волна 1
-    //     waveManager.testWave(0, 0)
-    //   }
-    //   if (e.key === "2") { // Этап 1, волна 2
-    //     waveManager.testWave(0, 1)
-    //   }
-    //   if (e.key === "3") { // Этап 1, волна 3
-    //     waveManager.testWave(0, 2)
-    //   }
-    //
-    //   if (e.key === "4") { // Этап 2, волна 1
-    //     waveManager.testWave(1, 0)
-    //   }
-    //   if (e.key === "5") { // Этап 2, волна 2
-    //     waveManager.testWave(1, 1)
-    //   }
-    //   if (e.key === "6") { // Этап 2, волна 3
-    //     waveManager.testWave(1, 2)
-    //   }
-    //
-    //   if (e.key === "7") { // Этап 3, волна 1
-    //     waveManager.testWave(2, 0)
-    //   }
-    //   if (e.key === "8") { // Этап 3, волна 2
-    //     waveManager.testWave(2, 1)
-    //   }
-    //   if (e.key === "9") { // Этап 3, волна 3
-    //     waveManager.testWave(2, 2)
-    //   }
-    //
-    //   if (e.key === "0") { // Босс этап
-    //     waveManager.testStage(3)
-    //   }
-    //
-    //   if (e.key === "-") { // Бесконечный режим
-    //     waveManager.startInfiniteMode()
-    //   }
-    //
-    //   // Тестирование групп
-    //   if (e.key === "g") { // группа гранатометчиков
-    //     spawnGroup(DroneType.GRENADIER, 5, 800)
-    //   }
-    //
-    //   if (e.key === "c") { // смешанная группа
-    //     spawnMixedGroup([
-    //       { type: DroneType.NORMAL, count: 8 },
-    //       { type: DroneType.GRENADIER, count: 3 },
-    //       { type: DroneType.KAMIKAZE, count: 2 }
-    //     ], 600)
-    //   }
-    //
-    //   if (e.key === "p") { // прогрессивная волна
-    //     spawnProgressiveWave(5, [
-    //       { type: DroneType.NORMAL, add: 2 },
-    //       { type: DroneType.GRENADIER, add: 1 },
-    //       { type: DroneType.NORMAL, add: 3 },
-    //       { type: DroneType.KAMIKAZE, add: 2 }
-    //     ], 500)
-    //   }
-    // })
-
     // Класс для облаков
     class Cloud {
       constructor() {
@@ -1781,6 +1761,18 @@ Command approves. Probably.`,
 
     // ... (Input listeners and utility functions remain the same)
     document.addEventListener("keydown", e => {
+      if (e.code === "KeyP") {
+        if (currentState === GameState.GAME) {
+          currentState = GameState.PAUSED
+        } else if (currentState === GameState.PAUSED) {
+          currentState = GameState.GAME
+        }
+      }
+
+      if (currentState === GameState.PAUSED) {
+        return
+      }
+
       if (e.code === "Space") {
         shooting = true
 
@@ -1790,9 +1782,18 @@ Command approves. Probably.`,
           shoot(dir.dx, dir.dy)
         }
       }
+
       keys[e.key] = true
     })
+
     document.addEventListener("keyup", e => {
+      if (currentState === GameState.PAUSED) {
+        if (e.code === "Space") {
+          shooting = false
+        }
+        return
+      }
+
       if (e.code === "Space") {
         shooting = false
       }
@@ -2361,15 +2362,15 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     async function showCommanderMessage(duration = 10000, message = null) {
+      const prevState = currentState
+      currentState = GameState.DIALOG
+
       const radioStart = GAME_SOUNDS.radioOn
       const radioEnd = GAME_SOUNDS.radioOff
 
       const balloon = UI.notification.balloon
       const p = balloon.querySelector("p");
       const hint = document.getElementById("continueHint")
-
-      // balloon.style.display = "block";
-      // balloon.classList.add("show");
 
       await animateCommanderBox()
 
@@ -2397,7 +2398,9 @@ Anyone falling back without orders will be treated as hostile.`
 
       await hideCommanderBox()
 
-      // balloon.style.display = "none"
+      if (currentState === GameState.DIALOG) {
+        currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
+      }
     }
 
     function fadeScreen(duration = 800) {
@@ -3470,6 +3473,144 @@ Anyone falling back without orders will be treated as hostile.`
       renderLeaderboard()
     }
 
+    function updateDialog(delta) {
+      updateAmbient(delta)
+      updateHud(delta)
+    }
+
+    function updatePaused(delta) {
+      // Ничего из игрового мира не двигаем.
+      // Если захочешь мигающий PAUSED — можно обновлять только его.
+    }
+
+    function updateGameplay(delta) {
+      const startTime = performance.now()
+
+      if (hitFreeze > 0) {
+        hitFreeze -= delta
+        return
+      }
+
+      if (!player.alive) {
+        player.deathTimer -= delta
+        if (player.deathTimer <= 0) {
+          timeScale = 1
+          endGame()
+        }
+        return
+      }
+
+      player.update()
+
+      if (globalEnemyFireCooldown > 0) {
+        globalEnemyFireCooldown -= delta
+      }
+
+      waveManager.update(delta)
+
+      shootCooldown -= delta
+
+      if (player.alive && shooting && currentWeapon?.auto) {
+        const dir = getShootDirection()
+        shoot(dir.dx, dir.dy)
+      }
+
+      const stillAlive = []
+      const activeDrones = []
+      const activeBullets = []
+      const activeEnemyBullets = []
+
+      globalActiveDronesCount = 0
+      globalEnemyBulletsCount = 0
+      globalVFXCount = 0
+
+      for (let i = 0; i < gameObjects.length; i++) {
+        const obj = gameObjects[i]
+
+        if (obj.alive) {
+          obj.update(delta)
+
+          if (obj.alive) {
+            stillAlive.push(obj)
+
+            if (obj.category === 'drone') {
+              activeDrones.push(obj)
+              globalActiveDronesCount++
+            } else if (obj.category === 'bullet') {
+              activeBullets.push(obj)
+            } else if (obj.category === 'enemyBullet') {
+              activeEnemyBullets.push(obj)
+              globalEnemyBulletsCount++
+            } else if (obj.category === 'vfx') {
+              globalVFXCount++
+            }
+          }
+        }
+      }
+
+      gameObjects = stillAlive
+
+      perfLogTimer += delta
+      if (perfLogTimer > 3000) {
+        perfLogTimer = 0
+        const counts = { bullet: 0, enemyBullet: 0, drone: 0, vfx: 0, none: 0 }
+        gameObjects.forEach(o => {
+          const c = o.category || 'none'
+          counts[c] = (counts[c] || 0) + 1
+        })
+        console.log(`[PERF] Objs:${stillAlive.length} ` + JSON.stringify(counts))
+      }
+
+      if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
+        for (const b of activeBullets) {
+          if (!b.alive) continue
+
+          for (const d of activeDrones) {
+            if (!d.alive) continue
+
+            if (isColliding(b, d)) {
+              b.alive = false
+              if (d.takeDamage(1)) {
+                d.onDeath()
+                const gained = calculateDroneScore(d)
+                score += gained
+                showScoreGain(gained)
+              }
+              break
+            }
+          }
+        }
+      }
+
+      if (activeEnemyBullets.length > 0) {
+        for (const obj of activeEnemyBullets) {
+          if (!obj.alive) continue
+
+          if (obj.y > canvas.height - groundHeight) {
+            spawnGroundExplosion(obj.x, obj.y)
+            obj.alive = false
+            continue
+          }
+
+          if (isColliding(obj, player)) {
+            if (player.alive) {
+              player.die()
+            }
+            obj.alive = false
+          }
+        }
+      }
+
+      survivalTime += delta / 1000
+      updateHud(delta)
+
+      const endTime = performance.now()
+      const frameTime = endTime - startTime
+      if (frameTime > 16) {
+        // console.warn(`Slow update: ${frameTime.toFixed(2)}ms, Objs: ${gameObjects.length}`)
+      }
+    }
+
     function update(delta) {
       const startTime = performance.now()
 
@@ -3791,12 +3932,10 @@ Anyone falling back without orders will be treated as hostile.`
 
     function gameLoop(t) {
       if (!gameLoopRunning) {
-        // Если игра не активна, делаем длинные паузы
         setTimeout(() => requestAnimationFrame(gameLoop), 100)
         return
       }
 
-      // FPS контроль
       frameCounter++
       if (t - lastFrameTime > 1000) {
         fps = frameCounter - (lastFpsFrameCount || 0)
@@ -3804,22 +3943,34 @@ Anyone falling back without orders will be treated as hostile.`
         lastFrameTime = t
       }
 
-      const rawDelta = Math.min(t - last, 100) // Ограничиваем дельту
+      const rawDelta = Math.min(t - last, 100)
       const delta = rawDelta * timeScale
       last = t
 
       switch (currentState) {
         case GameState.MENU:
-          // В меню обновляемся реже
-          if (frameCounter % 3 === 0) { // Каждый 3-й кадр
+          if (frameCounter % 3 === 0) {
             updateMenu(delta)
             drawMenu()
           }
           break
 
         case GameState.GAME:
-          updateGame(delta)
+          updateAmbient(delta)
+          updateGameplay(delta)
           drawGame()
+          break
+
+        case GameState.DIALOG:
+          updateDialog(delta)
+          drawGame()
+          break
+
+        case GameState.PAUSED:
+          if (frameCounter % 6 === 0) {
+            updatePaused(delta)
+            drawPaused()
+          }
           break
 
         case GameState.GAME_OVER:
@@ -3838,6 +3989,24 @@ Anyone falling back without orders will be treated as hostile.`
 
       requestAnimationFrame(gameLoop)
     }
+
+    function drawPaused() {
+      draw()
+
+      ctx.save()
+      ctx.fillStyle = "rgba(0,0,0,0.45)"
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      ctx.fillStyle = "#ffffff"
+      ctx.font = "42px 'Press Start 2P'"
+      ctx.textAlign = "center"
+      ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2)
+
+      ctx.font = "18px 'Press Start 2P'"
+      ctx.fillText("Press P to continue", canvas.width / 2, canvas.height / 2 + 60)
+      ctx.restore()
+    }
+
 
     function updateMenu(delta) {
 
