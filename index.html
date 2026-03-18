@@ -28,7 +28,7 @@
       color: lime;
 
       image-rendering: pixelated;
-      image-rendering: crisp-edges;
+      /*image-rendering: crisp-edges;*/
 
       display: flex;
       justify-content: center;
@@ -50,72 +50,6 @@
     .game_over_bg {
       background-image: url("game_over_bg.png");
       background-size: cover;
-    }
-
-    .crt {
-      background-image: url("menu_bg.png");
-      background-size: 105%;
-      background-position: center;
-      background-repeat: no-repeat;
-      /*text-shadow: 0 0 0.2em currentColor, 1px 1px rgba(255, 0, 255, 0.5),*/
-      /*  -1px -1px rgba(0, 255, 255, 0.4);*/
-      /*position: relative;*/
-
-      /*&:before,*/
-      /*&:after {*/
-      /*  content: "";*/
-      /*  transform: translateZ(0);*/
-      /*  pointer-events: none;*/
-      /*  opacity: 0.5;*/
-      /*  mix-blend-mode: overlay;*/
-      /*  position: absolute;*/
-      /*  height: 100%;*/
-      /*  width: 100%;*/
-      /*  left: 0;*/
-      /*  top: 0;*/
-      /*  z-index: 1;*/
-      /*}*/
-
-      /*&:before {*/
-      /*  background: repeating-linear-gradient(var(--crt-red) 0px,*/
-      /*      var(--crt-green) 2px,*/
-      /*      var(--crt-blue) 4px);*/
-      /*}*/
-
-      /*&:after {*/
-      /*  background: repeating-linear-gradient(90deg,*/
-      /*      var(--crt-red) 1px,*/
-      /*      var(--crt-green) 2px,*/
-      /*      var(--crt-blue) 3px);*/
-      /*}*/
-    }
-
-    /* Добавьте после .crt */
-    .crt::before,
-    .crt::after {
-      /*content: "";*/
-      /*transform: translateZ(0);*/
-      /*pointer-events: none;*/
-      /*mix-blend-mode: overlay;*/
-      /*position: absolute;*/
-      /*height: 100%;*/
-      /*width: 100%;*/
-      /*left: 0;*/
-      /*top: 0;*/
-      /*z-index: 1;*/
-    }
-
-    .crt::before {
-      /*background: repeating-linear-gradient(var(--crt-red) 0px,*/
-      /*    var(--crt-green) 2px,*/
-      /*    var(--crt-blue) 4px);*/
-    }
-
-    .crt::after {
-      /*background: repeating-linear-gradient(90deg,*/
-      /*    var(--crt-red) 1px,*/
-      /*    var(--crt-green) 2px,*/
-      /*    var(--crt-blue) 3px);*/
     }
 
     /* Класс для отключения CRT эффектов */
@@ -144,7 +78,6 @@
       text-align: center;
       padding-top: 20%;
       z-index: 2;
-      /*animation: glitch1 1s infinite;*/
     }
 
     button {
@@ -152,15 +85,6 @@
       font-size: 20px;
       cursor: pointer;
       margin-top: 10px;
-    }
-
-    #timer {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      z-index: 1;
     }
 
     .hide-cursor {
@@ -198,18 +122,6 @@
     .score-pop-show {
       opacity: 1;
       transform: translateY(-20px);
-    }
-
-    /* СТИЛЬ ДЛЯ НОВОГО СЧЕТЧИКА */
-    #drones-alive {
-      position: absolute;
-      top: 40px;
-      /* Ниже основного счетчика */
-      left: 20px;
-      font-size: 22px;
-      font-weight: bold;
-      color: #ff4444;
-      /* Красный цвет */
     }
 
     #leaderboard {
@@ -307,13 +219,10 @@
       display: inline-block;
       width: 100px;
       height: 100px;
-      /*background-image: url('commander.png');*/
-      /*background-size: cover;*/
       margin-right: 10px;
       vertical-align: middle;
       flex-shrink: 0;
       align-self: flex-end;
-      /* animation: radioFlicker 2s infinite alternate; */
     }
 
     .nes-balloon {
@@ -329,28 +238,14 @@
     #game-container {
       position: relative;
       width: 1500px;
-      /* как у канваса */
       height: 800px;
 
       border-radius: 30px;
       overflow: hidden;
 
-      /*animation: blur 30ms infinite, jerk 50ms infinite, bgMove 40s linear infinite;*/
       box-shadow:
         inset 0 0 80px rgba(0, 0, 0, 0.6),
         inset 0 0 20px rgba(0, 0, 0, 0.8);
-    }
-
-    #game-container::after {
-      /*content: "";*/
-      /*position: absolute;*/
-      /*inset: 0;*/
-      /*pointer-events: none;*/
-
-      /*background: radial-gradient(circle,*/
-      /*    rgba(0, 0, 0, 0) 60%,*/
-      /*    rgba(0, 0, 0, 0.55) 100%);*/
-      /*z-index: 5;*/
     }
 
     #game-container.no-bg {
@@ -365,103 +260,11 @@
       z-index: 1;
     }
 
-    #cloud-layer {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0.6;
-    }
-
-    #effects-layer {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 4;
-    }
-
-    .smoke {
-      position: absolute;
-      width: 80px;
-      pointer-events: none;
-      /* чтобы клики проходили в игру */
-      z-index: 4;
-    }
-
-    .background-moto {
-      position: absolute;
-      bottom: 90px;
-      /* чтобы «мотоцикл» был на земле */
-      right: -200px;
-      /* старт за экраном */
-      width: 30px;
-      /* animation: motoMove 40s linear alternate; */
-      /* туда-сюда */
-    }
-
     #continueHint {
       opacity: 0;
       margin-top: 10px;
       font-size: 14px;
       animation: blink 1s infinite;
-    }
-
-    @keyframes radioFlicker {
-      from {
-        filter: brightness(0.9)
-      }
-
-      to {
-        filter: brightness(1.1)
-      }
-    }
-
-    @keyframes blink {
-      0% {
-        opacity: 0
-      }
-
-      50% {
-        opacity: 1
-      }
-
-      100% {
-        opacity: 0
-      }
-    }
-
-    @keyframes motoMove {
-      0% {
-        right: -200px;
-      }
-
-      50% {
-        right: calc(100% - 200px);
-      }
-
-      100% {
-        right: -200px;
-      }
-    }
-
-    @keyframes bgMove {
-      /* 0% {
-        background-position: center top;
-      }
-
-      50% {
-        background-position: center bottom;
-      }
-
-      100% {
-        background-position: center top;
-      } */
     }
 
     @keyframes blink {
@@ -477,52 +280,6 @@
         opacity: 1
       }
     }
-
-    @keyframes jerk {
-      /* 50% {
-        transform: translateX(1px);
-      }
-
-      51% {
-        transform: translateX(0);
-      } */
-    }
-
-    @keyframes jerkUp {
-      /* 0% {
-        transform: translateY(1px);
-      }
-
-      100% {
-        transform: translateY(0);
-      } */
-    }
-
-    @keyframes glitch1 {
-      /* 0% {
-        transform: translateX(0);
-      }
-
-      30% {
-        transform: translateX(0);
-      }
-
-      31% {
-        transform: translateX(10px);
-      }
-
-      32% {
-        transform: translateX(0);
-      }
-
-      98% {
-        transform: translateX(0);
-      }
-
-      100% {
-        transform: translateX(10px);
-      } */
-    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -534,24 +291,12 @@
     <canvas id="game" width="1500" height="800">
     </canvas>
 
-    <div id="effects-layer">
-      <!--    <img src="fire.gif" alt="" class="smoke" style="left:124px; bottom:75px; width:40px;">-->
-      <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">
-    </div>
+<!--    <div id="effects-layer">-->
+<!--      <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">-->
+<!--    </div>-->
 
-    <div id="timer"></div>
     <div id="score"></div>
     <div id="score-pop"></div>
-    <!-- Добавьте после <div id="score-pop"></div> -->
-<!--    <div id="wave-info" style="-->
-<!--  position: absolute;-->
-<!--  top: 60px;-->
-<!--  left: 20px;-->
-<!--  color: #ffaa00;-->
-<!--  font-size: 18px;-->
-<!--  text-shadow: 2px 2px black;-->
-<!--  z-index: 1;-->
-<!--">Этап: Начало | Волна: 1/3</div>-->
   </div>
 
   <div id="fade"></div>
@@ -610,7 +355,7 @@
 
 
   <script>
-    // ... (Supabase config remains the same)
+    // ... (Supabase config)
     const SUPABASE_URL = "https://zsdwmjdalfnmvtlwoygs.supabase.co"
     const SUPABASE_KEY = "sb_publishable_B9tdTmqKndQysFngs7vT2Q_TqYVx7bt"
 
@@ -622,7 +367,6 @@
     const HITBOX_PADDING = 12
     const GAME_VERSION = "0.17.3"
 
-    // const MAX_ENEMY_BULLETS = 60
     document.getElementById("game-version").innerText = GAME_VERSION
 
     const menuMusic = document.getElementById("menuMusic")
@@ -728,6 +472,7 @@
         container: document.getElementById("game-container"),
       }
     }
+
     // Пул звуков для предотвращения утечек памяти при cloneNode
     class SoundPool {
       constructor(audioElement, size = 15) {
@@ -757,13 +502,11 @@
       if (!src) return
 
       if (!POOLED_SOUNDS[src]) {
-        // console.log(`[AUDIO] Creating pool for: ${src.split('/').pop()}`)
         POOLED_SOUNDS[src] = new SoundPool(audioAsset)
       }
       POOLED_SOUNDS[src].play(volume)
     }
 
-    // ПЕРЕМЕСТИТЕ ЭТОТ КЛАСС ВВЕРХ, например после GAME_SOUNDS
     class AnimatedSprite {
       constructor(x, y, image, options = {}) {
         this.x = x
@@ -894,7 +637,6 @@
       SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
     }
 
-    // И добавьте правильную инициализацию:
     let citySmoke = null
     let tankSmoke = null
     let cityFire = null
@@ -982,18 +724,6 @@
 
     const groundHeight = 40
 
-    // let spawnTimer = 0
-    // let spawnInterval = 2000
-    //
-    // let waveNumber = 0;       // текущая волна
-    // let waveMaxInAir = 10;    // сколько дронов может быть одновременно
-    // let waveTargetKills = 40; // сколько нужно сбить
-    // let waveKills = 0;        // сбитые дроны в волне
-    // let waveActive = true;    // можно ли спавнить дронов
-    // let wavePause = false;       // идёт пауза между волнами
-    // let wavePauseTimer = 0;      // таймер паузы в мс
-    // const wavePauseDuration = 6000; // 6 секунд пауза
-
     let gameObjects = []
     let isReloading = false
     let uiTimer = 0
@@ -1042,8 +772,6 @@
     let globalActiveDronesCount = 0
     let globalEnemyBulletsCount = 0
     let globalVFXCount = 0
-
-
 
     let player
     let playerName = "AAA"
@@ -1118,23 +846,9 @@
     function updateHud(delta) {
       uiTimer += delta
       if (uiTimer > 100) {
-        timerEl.innerText = survivalTime.toFixed(1) + "s"
         scoreEl.innerText = score
         uiTimer = 0
       }
-
-      // if (frameCounter % 30 === 0) {
-      //   const stage = waveManager.stages[waveManager.currentStageIndex]
-      //   const waveInfo = document.getElementById('wave-info')
-      //
-      //   if (!waveInfo) return
-      //
-      //   if (stage && waveManager.currentWaveIndex < stage.waves.length) {
-      //     waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
-      //   } else if (stage) {
-      //     waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
-      //   }
-      // }
     }
 
     const GRID_SIZE = 100
@@ -1167,8 +881,6 @@
 
         // Возвращаем анимацию UI
         ui.style.animation = 'glitch1 1s infinite'
-
-        // console.log('Visual effects enabled for menu')
       }
     }
 
@@ -1379,9 +1091,7 @@ Command approves. Probably.`,
         return waves
       }
 
-      // Запустить конкретный этап
       startStage(index) {
-        // Убеждаемся, что индекс в пределах массива
         if (index >= this.stages.length) {
           if (this.infiniteMode) {
             this.startInfiniteMode()
@@ -1434,11 +1144,6 @@ Command approves. Probably.`,
         // Сохраняем общее количество дронов в волне как константу
         this.totalWaveDrones = this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
 
-        // console.log(`Starting wave ${this.currentWaveIndex + 1}/${stage.waves.length}: ${wave.name}`,
-        //   'Original:', wave.drones,
-        //   'Copy:', this.currentWaveDrones,
-        //   'Total:', this.totalWaveDrones)
-
         this.isPaused = false
         this.spawnTimer = 0
         this.currentWaveSpawnCount = 0
@@ -1447,7 +1152,6 @@ Command approves. Probably.`,
       // Завершить этап
       completeStage() {
         const stage = this.stages[this.currentStageIndex]
-        // console.log(`Stage ${this.currentStageIndex + 1} (${stage.name}) completed!`)
 
         this.isActive = false
         this.stageComplete = true
@@ -1460,10 +1164,8 @@ Command approves. Probably.`,
           this.currentStageIndex++
           this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
           if (this.currentStageIndex < this.stages.length) {
-            // console.log(`Moving to stage ${this.currentStageIndex + 1}: ${this.stages[this.currentStageIndex].name}`)
             this.startStage(this.currentStageIndex)
           } else {
-            // console.log("All stages completed! Starting infinite mode...")
             this.startInfiniteMode()
           }
         }
@@ -1518,7 +1220,6 @@ Command approves. Probably.`,
           const prevWave = stage.waves[this.currentWaveIndex - 1]
 
           if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
-            // console.log(`Pause ended, starting next wave ${this.currentWaveIndex + 1}/${stage.waves.length}`)
             this.isPaused = false
             this.spawnTimer = 0
             this.startCurrentWave()
@@ -1528,7 +1229,6 @@ Command approves. Probably.`,
 
         // Проверяем индекс волны
         if (this.currentWaveIndex >= stage.waves.length) {
-          // console.log("All waves completed, completing stage")
           this.completeStage()
           return
         }
@@ -1551,7 +1251,6 @@ Command approves. Probably.`,
         const alive = countDrones()
 
         if (alive === 0) {
-          // console.log(`Wave ${this.currentWaveIndex + 1} completed`)
           this.currentWaveIndex++
 
           if (this.currentWaveIndex < stage.waves.length) {
@@ -1592,8 +1291,7 @@ Command approves. Probably.`,
         typeEntry.count--
         this.currentWaveSpawnCount++
 
-        // console.log(`Spawning ${typeEntry.type}, remaining:`,
-          this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', ')
+        this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', ')
 
         this.spawnDroneByType(typeEntry.type)
       }
@@ -1657,7 +1355,6 @@ Command approves. Probably.`,
 
     // Спавн смешанной группы
     function spawnMixedGroup(droneTypes, interval = 500) {
-      // droneTypes: [{type: DroneType.NORMAL, count: 5}, {type: DroneType.GRENADIER, count: 2}]
       const total = droneTypes.reduce((sum, d) => sum + d.count, 0)
       let spawned = 0
 
@@ -1695,8 +1392,6 @@ Command approves. Probably.`,
 
     // Спавн волны с нарастающей сложностью
     function spawnProgressiveWave(baseCount, increments, interval = 500) {
-      // baseCount: базовое количество
-      // increments: [{type: DroneType.NORMAL, add: 2}, {type: DroneType.GRENADIER, add: 1}]
       let wave = 0
 
       function spawnNext() {
@@ -1848,34 +1543,12 @@ Anyone falling back without orders will be treated as hostile.`
       await showCommanderMessage(8000, msg)
     }
 
-    // async function startWaveIntro() {
-    //   droneSound.currentTime = 0
-    //   droneSound.volume = 0.3
-    //   droneSound.play()
-    //   await new Promise(r => setTimeout(r, 2000)) // небольшая пауза
-    //   gameMusic.play()
-    //
-    //   // Теперь разрешаем спавн дронов и первую волну
-    //   waveActive = true
-    //   wavePause = false
-    //   spawnDrone()
-    //   await new Promise(r => setTimeout(r, 1000))
-    //   spawnDrone()
-    // }
-
     async function animatePlayerIntro() {
       player.x = -player.width
       player.y = canvas.height - groundHeight - player.height
       player.direction = 1 // идем вправо
       const targetX = canvas.width * 0.5
       const speed = 3
-
-      // const stepSound = PLAYER_SOUNDS['footSteps']
-
-      // stepSound.volume = 0.4
-      // stepSound.loop = true
-      // stepSound.currentTime = 0
-      // await stepSound.play()
 
       return new Promise(resolve => {
         const interval = setInterval(() => {
@@ -1897,14 +1570,12 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     function splitTextIntoPages(text, maxChars = 140) {
-
       const words = text.split(" ")
       const pages = []
 
       let current = ""
 
       for (const word of words) {
-
         if ((current + word).length > maxChars) {
           pages.push(current.trim())
           current = ""
@@ -1919,9 +1590,7 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     async function typeText(element, text, speed = 25) {
-
       element.textContent = ""
-
       let skip = false
 
       function skipHandler(e) {
@@ -2000,7 +1669,6 @@ Anyone falling back without orders will be treated as hostile.`
             b.alive = false
             obj.alive = false
             updateScore()
-            // ... остальная логика
           }
         })
       })
@@ -2020,15 +1688,6 @@ Anyone falling back without orders will be treated as hostile.`
 
     // DEBUG горячие клавиши
     document.addEventListener("keydown", e => {
-      // spawn boss
-      if (e.key === "b") {
-        spawnBoss()
-      }
-
-      // Kill all
-      if (e.key === "k") {
-      }
-
       if (e.key === "i") {
         setWeapon('rifle')
       }
@@ -2050,14 +1709,8 @@ Anyone falling back without orders will be treated as hostile.`
         startReload()
       }
 
-      if (e.code === "KeyD") {
-        spawnDrone()
-      }
-
       keys[e.key] = true
     })
-
-
 
     let currentWeapon
     let ammoInMagazine
@@ -2218,15 +1871,6 @@ Anyone falling back without orders will be treated as hostile.`
 
     }
 
-    // function isColliding(a, b){
-    //   return (
-    //     a.x + HITBOX_PADDING < b.x + b.width - HITBOX_PADDING &&
-    //     a.x + a.width - HITBOX_PADDING > b.x + HITBOX_PADDING &&
-    //     a.y + HITBOX_PADDING < b.y + b.height - HITBOX_PADDING &&
-    //     a.y + a.height - HITBOX_PADDING > b.y + HITBOX_PADDING
-    //   )
-    // }
-
     function isColliding(a, b) {
       if (!a || !b || !a.alive || !b.alive) return false
 
@@ -2240,15 +1884,6 @@ Anyone falling back without orders will be treated as hostile.`
         a.y < b.y + h2 &&
         a.y + h1 > b.y
     }
-
-    // function calculateDroneScore(){
-    //   const base = 10
-    //
-    //   const timeMultiplier = 1 + Math.min(survivalTime / 60, 5)
-    //   const droneMultiplier = 1 + Math.min(countDrones() / 20, 4)
-    //
-    //   return Math.floor(base * timeMultiplier * droneMultiplier)
-    // }
 
     function showScoreGain(points) {
       const scoreEl = document.getElementById("score")
@@ -2266,72 +1901,6 @@ Anyone falling back without orders will be treated as hostile.`
         scoreEl.classList.remove("score-pop")
       }, 150)
     }
-
-    // async function checkWaveProgress() {
-    //   const boss = gameObjects.find(o => o instanceof BossDrone)
-    //   if (wavePause) return;
-    //
-    //   if (waveKills >= waveTargetKills) {
-    //     waveActive = false;
-    //   }
-    //
-    //   // цель достигнута и небо чистое
-    //   if (!waveActive && countDrones() === 0) {
-    //
-    //     wavePause = true;
-    //     wavePauseTimer = 0;
-    //
-    //     let msg = "";
-    //
-    //     if (waveNumber === 0) {
-    //
-    //       gameMusic.pause()
-    //
-    //       setWeapon('pistol')
-    //       playWaveMusic(1)
-    //
-    //       msg = "Ты еще живой? С передка передают, что к тебе летит новая группа дронов. Некогда с тобой тут говорить. Мне шавуху привезли.";
-    //
-    //       waveMaxInAir = 5;
-    //       waveTargetKills = 20;
-    //       magazines = 8;
-    //
-    //     } else if (waveNumber === 1) {
-    //
-    //       setWeapon('rifle')
-    //       playWaveMusic(2)
-    //       msg = "Эй, людоед! Глянь, этот чубрик еще не 200. Если ты думаешь, что тебе удастся выжить, то выбрось это из головы. Мы уже подали раппорт о том, что ты пропал без вести.";
-    //
-    //       waveMaxInAir = 10;
-    //       waveTargetKills = 40;
-    //       magazines = 10;
-    //
-    //     } else if (waveNumber === 2) {
-    //       setWeapon('shotgun')
-    //       playWaveMusic(3)
-    //       msg = "Кхм... Пшшш... Мы всем штабом в ахуе! Будем звать тебя терминатор Т-200. Нельзя так держаться за жизнь. Ты что не хочешь, чтобы у папы была новая машина?"
-    //       magazines = 12;
-    //     } else if (waveNumber === 3 && !boss) {
-    //       setWeapon('machinegun')
-    //       playWaveMusic("boss")
-    //       msg = "У меня заканчивается рабочий день. Пойду домой. Кстати, смотрел тут видео на ютубе. Там сказали, что в твою сторону летит что-то серьезное. И еще. Завтра сдай 100к, а то у меня бухло заканчивается."
-    //       spawnBoss()
-    //       magazines = 12;
-    //     } else {
-    //
-    //       msg = "Поздравь меня. Меня представили к награде.";
-    //
-    //       magazines = 12;
-    //       waveMaxInAir += 5;
-    //       waveTargetKills += 30;
-    //     }
-    //
-    //     waveKills = 0; // ВАЖНО
-    //     waveNumber++;
-    //
-    //     await showCommanderMessage(10000, msg);
-    //   }
-    // }
 
     function countEnemyBullets() {
       return globalEnemyBulletsCount
@@ -2525,7 +2094,6 @@ Anyone falling back without orders will be treated as hostile.`
         }
       }
 
-
       drawHealthBar(ctx) {
         const barWidth = this.width
         const barHeight = 5
@@ -2604,8 +2172,10 @@ Anyone falling back without orders will be treated as hostile.`
             this.x + this.width / 2,
             this.y + this.height
           ))
+
           globalEnemyFireCooldown = 1800 + Math.random() * 400
         }
+
         this.fireCooldown = 1800 + Math.random() * 1200
       }
     }
@@ -3125,6 +2695,7 @@ Anyone falling back without orders will be treated as hostile.`
           this.alive = false
         }
       }
+
       draw() {
         if (this.onGround && this.timer < 60) {
           if (Math.floor(this.timer / 10) % 2 === 0) {
@@ -3276,7 +2847,6 @@ Anyone falling back without orders will be treated as hostile.`
       document.body.classList.add("hide-cursor")
       player = new Player()
       gameObjects = []
-      spawnDrone()
     }
 
     // ... (Sound, Scoring, Leaderboard functions remain the same)
@@ -3326,28 +2896,6 @@ Anyone falling back without orders will be treated as hostile.`
       document.getElementById("leaderboard").innerHTML = html
     }
 
-    // let screenShake = {
-    //   intensity: 0,
-    //   duration: 0,
-    //   offsetX: 0,
-    //   offsetY: 0,
-    //
-    //   update() {
-    //     if (this.duration > 0) {
-    //       this.duration--
-    //       this.offsetX = (Math.random() - 0.5) * this.intensity
-    //       this.offsetY = (Math.random() - 0.5) * this.intensity
-    //     } else {
-    //       this.offsetX = 0
-    //       this.offsetY = 0
-    //     }
-    //   },
-    //
-    //   shake(intensity = 10, duration = 15) {
-    //     this.intensity = intensity
-    //     this.duration = duration
-    //   }
-    // }
     let screenShake = {
       intensity: 0,
       duration: 0,
@@ -3376,19 +2924,6 @@ Anyone falling back without orders will be treated as hostile.`
       playPooled(groundExplosionSound, 0.3)
       // screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
     }
-
-    // ЗАМЕНИТЕ старую функцию spawnDrone на эту:
-    // function spawnDrone() {
-    //   const maxDrones = waveManager.maxDrones
-    //   if (countDrones() >= maxDrones) return
-    //
-    //   // Используем новый NormalDrone вместо старого Drone
-    //   spawnNormalDrone()
-    //
-    //   if (Math.random() < 0.08) {
-    //     spawnKamikaze()
-    //   }
-    // }
 
     function updateScore() {
       console.log('score updated and is: ', score)
@@ -3607,7 +3142,6 @@ Anyone falling back without orders will be treated as hostile.`
       const endTime = performance.now()
       const frameTime = endTime - startTime
       if (frameTime > 16) {
-        // console.warn(`Slow update: ${frameTime.toFixed(2)}ms, Objs: ${gameObjects.length}`)
       }
     }
 
@@ -3640,44 +3174,12 @@ Anyone falling back without orders will be treated as hostile.`
         cloud.update()
       }
 
-      // ===== ВАЖНО: СПАВН ДРОНОВ =====
-      // if (waveActive && DEBUG.spawnDrones) {
-      //   spawnTimer += delta
-      //   if (spawnTimer >= 2000 && countDrones() < waveMaxInAir) {
-      //     spawnDrone()
-      //     spawnTimer = 0
-      //   }
-      // }
-      //
-      // // ===== ВАЖНО: ПАУЗА МЕЖДУ ВОЛНАМИ =====
-      // if (wavePause) {
-      //   wavePauseTimer += delta
-      //   if (wavePauseTimer >= wavePauseDuration) {
-      //     wavePause = false
-      //     waveActive = true
-      //     wavePauseTimer = 0
-      //     spawnTimer = 0
-      //   }
-      // }
-
       // ===== ВАЖНО: КУЛДАУН ВРАГОВ =====
       if (globalEnemyFireCooldown > 0) {
         globalEnemyFireCooldown -= delta
       }
 
       waveManager.update(delta)
-
-      // Обновление информации о волне
-      // if (frameCounter % 30 === 0) {
-      //   const stage = waveManager.stages[waveManager.currentStageIndex]
-      //   const waveInfo = document.getElementById('wave-info')
-      //   if (stage && waveManager.currentWaveIndex < stage.waves.length) {
-      //     waveInfo.innerHTML = `Этап: ${stage.name} | Волна: ${waveManager.currentWaveIndex + 1}/${stage.waves.length}`
-      //   } else if (stage) {
-      //     // Если волны закончились, показываем завершение
-      //     waveInfo.innerHTML = `Этап: ${stage.name} | Завершен`
-      //   }
-      // }
 
       // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
       shootCooldown -= delta
@@ -3737,7 +3239,6 @@ Anyone falling back without orders will be treated as hostile.`
           const c = o.category || 'none'
           counts[c] = (counts[c] || 0) + 1
         })
-        // console.log(`[PERF] Objs:${stillAlive.length} ` + JSON.stringify(counts))
       }
 
       // 2. Коллизии пуль игрока и дронов
@@ -3787,22 +3288,14 @@ Anyone falling back without orders will be treated as hostile.`
 
       // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
       survivalTime += delta / 1000
-      // checkWaveProgress()
 
       // ===== ВАЖНО: UI ОБНОВЛЕНИЕ =====
       uiTimer += delta
-      // if (uiTimer > 100) {
-      //   uiTimer = 0
-      // }
 
       // ===== ВАЖНО: ЗВУК ДРОНОВ =====
-      // let targetVolume = 0.05 + (countDrones() / 50) * 0.25
-      // droneSound.volume = targetVolume
-
       const endTime = performance.now()
       const frameTime = endTime - startTime
       if (frameTime > 16) {
-        // console.warn(`Slow update: ${frameTime.toFixed(2)}ms, Objs: ${gameObjects.length}`)
       }
     }
 
@@ -3903,12 +3396,7 @@ Anyone falling back without orders will be treated as hostile.`
         ctx.fillText("Ты 200!", canvas.width / 2, canvas.height / 2)
         ctx.restore()
       }
-
-      // UI текст
-      // document.getElementById("timer").innerText = survivalTime.toFixed(1) + "s"
-      // document.getElementById("score").innerText = score
     }
-
 
     function drawClouds(ctx) {
       if (!cloudsImg?.complete) return
@@ -4086,7 +3574,5 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
   </script>
-
 </body>
-
 </html>
