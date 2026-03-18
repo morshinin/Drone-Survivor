@@ -543,15 +543,15 @@
     <div id="score"></div>
     <div id="score-pop"></div>
     <!-- Добавьте после <div id="score-pop"></div> -->
-    <div id="wave-info" style="
-  position: absolute;
-  top: 60px;
-  left: 20px;
-  color: #ffaa00;
-  font-size: 18px;
-  text-shadow: 2px 2px black;
-  z-index: 1;
-">Этап: Начало | Волна: 1/3</div>
+<!--    <div id="wave-info" style="-->
+<!--  position: absolute;-->
+<!--  top: 60px;-->
+<!--  left: 20px;-->
+<!--  color: #ffaa00;-->
+<!--  font-size: 18px;-->
+<!--  text-shadow: 2px 2px black;-->
+<!--  z-index: 1;-->
+<!--">Этап: Начало | Волна: 1/3</div>-->
   </div>
 
   <div id="fade"></div>
@@ -1070,9 +1070,9 @@
     // DEBUG режим для тестирования
     const DEBUG = {
       bossStart: false,   // начать игру сразу с босса
-      godMode: true,     // бессмертие
+      godMode: false,     // бессмертие
       spawnDrones: false, // включить/выключить обычных дронов
-      showHitboxes: true
+      showHitboxes: false,
     }
 
     const GameState = {
