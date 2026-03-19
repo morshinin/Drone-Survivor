@@ -386,6 +386,7 @@
     const WALK_FRAME_WIDTH = 100
     const WALK_FRAME_HEIGHT = 130
 
+    const POOLED_SOUNDS = {}
     // const GRID_SIZE = 100
     // let collisionGrid = {}
 
@@ -446,6 +447,9 @@
     let last = 0
     let progress = 0
 
+    let clouds = []
+    let shooting = false
+
     // ======================
     // DOM REFERENCES
     // ======================
@@ -460,6 +464,8 @@
     const startBtn = document.getElementById("startBtn")
     const leaderboardEl = document.getElementById("leaderboard")
 
+    const muteBtn = document.getElementById("muteBtn")
+
     /* Canvas */
     const canvas = document.getElementById("game")
     const ctx = canvas.getContext("2d")
@@ -471,6 +477,14 @@
     const droneExplosionSound = document.getElementById("droneExplosionSound")
     const groundExplosionSound = document.getElementById("groundExplosionSound")
     const gameOverMusic = document.getElementById("gameOverMusic")
+    const UI = {
+      notification: {
+        balloon: document.getElementById("commander-balloon"),
+      },
+      game: {
+        container: document.getElementById("game-container"),
+      }
+    }
 
     // ======================
     // GAME STATE
@@ -522,6 +536,44 @@
     groundExplosionSprite.src = "ground_explosion_sprite.png";
     const playerWalkSprite = new Image();
     playerWalkSprite.src = "soldier_walk_sprite.png";
+
+    const WEAPON_SOUNDS = {
+      'Pistol': {
+        shoot: new Audio("pistol_shot.mp3"),
+        reload: new Audio("pistol_reload.mp3")
+      },
+      'Assault Rifle': {
+        shoot: new Audio("rifle_shot.mp3"),
+        reload: new Audio("rifle_reload.mp3")
+      },
+      'Shotgun': {
+        shoot: new Audio("shotgun_shot.mp3"),
+        reload: new Audio("shotgun_reload.mp3")
+      },
+      'Machine Gun': {
+        shoot: new Audio("machinegun_shot.mp3"),
+        reload: new Audio("machinegun_reload.mp3")
+      }
+    }
+
+    const PLAYER_SOUNDS = {
+      death: new Audio("death.mp3"),
+      footSteps: new Audio("foot_steps.mp3"),
+    }
+
+    const GAME_SOUNDS = {
+      ambient: new Audio("ambient.mp3"),
+      typeWriter: new Audio("typeWriter.mp3"),
+      radioOn: new Audio("radio_chatter.mp3"),
+      radioOff: new Audio("radio_off.mp3"),
+    }
+
+    let waveMusic = {
+      1: new Audio("wave1.mp3"),
+      2: new Audio("wave2.mp3"),
+      3: new Audio("wave3.mp3"),
+      boss: new Audio("boss.mp3")
+    }
 
     gameVersion.innerText = GAME_VERSION
 
@@ -1949,6 +2001,163 @@ Command approves. Probably.`,
       }
     }
 
+    class Weapon {
+      constructor() {
+        this.name = "Weapon"
+        this.magazineSize = 0
+        this.magazines = 0
+        this.fireRate = 0
+        this.reloadTime = 0
+        this.auto = false
+        this.bulletsPerShot = 1
+        this.bulletSpeed = 10
+        this.spread = 0
+
+        this.ammoInMagazine = 0
+        this.remainingMagazines = 0
+        this.lastShotTime = 0
+        this.reloading = false
+      }
+
+      initAmmo() {
+        this.ammoInMagazine = this.magazineSize
+        this.remainingMagazines = this.magazines
+        this.reloading = false
+        this.lastShotTime = 0
+      }
+
+      canShoot(now = Date.now()) {
+        if (this.reloading) return false
+        if (this.ammoInMagazine <= 0) return false
+        return now - this.lastShotTime >= this.fireRate;
+
+      }
+
+      consumeShot(now = Date.now()) {
+        this.lastShotTime = now
+        this.ammoInMagazine--
+        if (this.ammoInMagazine <= 0 && this.remainingMagazines > 0) {
+          this.reload()
+        }
+      }
+
+      reload() {
+        if (this.reloading) return false
+        if (this.remainingMagazines <= 0) return false
+        if (this.ammoInMagazine === this.magazineSize) return false
+
+        this.reloading = true
+
+        setTimeout(() => {
+          this.ammoInMagazine = this.magazineSize
+          this.remainingMagazines--
+          this.reloading = false
+        }, this.reloadTime)
+
+        return true
+      }
+
+      getShotAngles() {
+        if (this.bulletsPerShot === 1) return [0]
+
+        const angles = []
+        const half = (this.bulletsPerShot - 1) / 2
+        const step = this.spread / Math.max(1, this.bulletsPerShot - 1)
+
+        for (let i = 0; i < this.bulletsPerShot; i++) {
+          angles.push((-this.spread / 2) + i * step)
+        }
+
+        return angles
+      }
+
+      shoot(player, dirX, dirY) {
+        if (!this.canShoot()) return []
+
+        const now = Date.now()
+        this.consumeShot(now)
+
+        const baseAngle = Math.atan2(dirY, dirX)
+        const shots = []
+
+        for (const offsetDeg of this.getShotAngles()) {
+          const angle = baseAngle + (offsetDeg * Math.PI / 180)
+          shots.push({
+            x: player.x + player.width / 2,
+            y: player.y + player.height / 2,
+            vx: Math.cos(angle) * this.bulletSpeed,
+            vy: Math.sin(angle) * this.bulletSpeed
+          })
+        }
+
+        return shots
+      }
+    }
+
+    class PistolWeapon extends Weapon {
+      constructor() {
+        super()
+        this.name = "Pistol"
+        this.magazineSize = 15
+        this.magazines = 8
+        this.fireRate = 400
+        this.reloadTime = 1000
+        this.auto = false
+        this.bulletsPerShot = 1
+        this.bulletSpeed = 11
+        this.spread = 0
+        this.initAmmo()
+      }
+    }
+
+    class RifleWeapon extends Weapon {
+      constructor() {
+        super()
+        this.name = "Assault Rifle"
+        this.magazineSize = 30
+        this.magazines = 6
+        this.fireRate = 200
+        this.reloadTime = 2000
+        this.auto = true
+        this.bulletsPerShot = 1
+        this.bulletSpeed = 13
+        this.spread = 0
+        this.initAmmo()
+      }
+    }
+
+    class ShotgunWeapon extends Weapon {
+      constructor() {
+        super()
+        this.name = "Shotgun"
+        this.magazineSize = 12
+        this.magazines = 5
+        this.fireRate = 600
+        this.reloadTime = 2600
+        this.auto = false
+        this.bulletsPerShot = 6
+        this.bulletSpeed = 10
+        this.spread = 30
+        this.initAmmo()
+      }
+    }
+
+    class MachineGunWeapon extends Weapon {
+      constructor() {
+        super()
+        this.name = "Machine Gun"
+        this.magazineSize = 120
+        this.magazines = 2
+        this.fireRate = 100
+        this.reloadTime = 5000
+        this.auto = true
+        this.bulletsPerShot = 1
+        this.bulletSpeed = 15
+        this.spread = 5
+        this.initAmmo()
+      }
+    }
+
     // ======================
     // HELPERS
     // ======================
@@ -2085,6 +2294,180 @@ Command approves. Probably.`,
       spawn(new GroundExplosion(x, y))
       playPooled(groundExplosionSound, 0.3)
       // screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
+    }
+
+    function createWeapon(type) {
+      switch (type) {
+        case "pistol":
+          return new PistolWeapon()
+        case "rifle":
+          return new RifleWeapon()
+        case "shotgun":
+          return new ShotgunWeapon()
+        case "machinegun":
+          return new MachineGunWeapon()
+        default:
+          return new PistolWeapon()
+      }
+    }
+
+    function setWeapon(type) {
+      currentWeapon = createWeapon(type)
+
+      ammoInMagazine = currentWeapon.magazineSize
+      magazines = currentWeapon.magazines
+
+      // можно сбросить перезарядку
+      isReloading = false
+    }
+
+    function shoot(dirX, dirY) {
+      if (!currentWeapon) return
+      if (dirX === 0 && dirY === 0) return
+      if (isReloading) return
+
+      const shots = currentWeapon.shoot(player, dirX, dirY)
+      if (shots.length === 0) return
+
+      const currentWeaponName = currentWeapon.name
+      if (WEAPON_SOUNDS[currentWeaponName]) {
+        playPooled(WEAPON_SOUNDS[currentWeaponName].shoot, 0.4)
+      }
+
+      for (const s of shots) {
+        spawn(new Bullet(s.x, s.y, s.vx, s.vy))
+      }
+
+      ammoInMagazine = currentWeapon.ammoInMagazine
+      magazines = currentWeapon.remainingMagazines
+
+      isReloading = currentWeapon.reloading
+    }
+
+    function pauseTrack(track) {
+      track.pause();
+      track.currentTime = 0;
+    }
+
+    function startReload() {
+      if (!currentWeapon) return
+      if (isReloading) return
+
+      const started = currentWeapon.reload()
+      if (!started) return
+
+      isReloading = true
+      const currentWeaponName = currentWeapon.name
+
+      if (WEAPON_SOUNDS[currentWeaponName]) {
+        playPooled(WEAPON_SOUNDS[currentWeaponName].reload, 0.4)
+      }
+
+      setTimeout(() => {
+        ammoInMagazine = currentWeapon.ammoInMagazine
+        magazines = currentWeapon.remainingMagazines
+        isReloading = false
+      }, currentWeapon.reloadTime)
+    }
+
+    async function animateCommanderBox() {
+      const box = UI.notification.balloon
+
+      box.style.display = "block"
+
+      // маленькая задержка чтобы браузер применил display
+      await new Promise(r => setTimeout(r, 20))
+
+      box.style.right = "40px"
+
+      // ждём завершения анимации
+      await new Promise(r => setTimeout(r, 600))
+    }
+
+    async function hideCommanderBox() {
+      const box = UI.notification.balloon
+
+      box.style.right = "-500px"
+
+      await new Promise(r => setTimeout(r, 600))
+
+      box.style.display = "none"
+    }
+
+    function explodeGrenade(g) {
+      spawnGroundExplosion(g.x, g.y)
+
+      const explosionRadius = 80
+
+      const gx = g.x + g.width / 2
+      const gy = g.y + g.height / 2
+
+      const px = player.x + player.width / 2
+      const py = player.y + player.height / 2
+
+      const dx = px - gx
+      const dy = py - gy
+
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (dist < explosionRadius) {
+        if (!DEBUG.godMode && player.alive) {
+          player.die()
+        }
+      }
+    }
+
+    function spawnNormalDrone() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
+      spawn(drone)
+      return drone
+    }
+
+    function spawnGrenadier() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
+      spawn(drone)
+      return drone
+    }
+
+    function spawnKamikaze() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new KamikazeDrone()
+      spawn(drone)
+      return drone
+    }
+
+    function spawnBoss() {
+      const boss = new BossDrone()
+      spawn(boss)
+      boss.active = true
+      return boss
+    }
+
+    function playPooled(audioAsset, volume = 0.4) {
+      if (!isMusicOn) return
+      if (!audioAsset) return
+
+      const src = audioAsset.src || audioAsset.getAttribute('src')
+      if (!src) return
+
+      if (!POOLED_SOUNDS[src]) {
+        POOLED_SOUNDS[src] = new SoundPool(audioAsset)
+      }
+      POOLED_SOUNDS[src].play(volume)
+    }
+
+    function showHitboxRect(x, y, width, height, color) {
+      ctx.strokeStyle = color || 'red'
+      ctx.lineWidth = 2
+      ctx.strokeRect(x, y, width, height)
     }
 
     // ======================
@@ -2586,346 +2969,8 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
 
-    class Weapon {
-      constructor() {
-        this.name = "Weapon"
-        this.magazineSize = 0
-        this.magazines = 0
-        this.fireRate = 0
-        this.reloadTime = 0
-        this.auto = false
-        this.bulletsPerShot = 1
-        this.bulletSpeed = 10
-        this.spread = 0
-
-        this.ammoInMagazine = 0
-        this.remainingMagazines = 0
-        this.lastShotTime = 0
-        this.reloading = false
-      }
-
-      initAmmo() {
-        this.ammoInMagazine = this.magazineSize
-        this.remainingMagazines = this.magazines
-        this.reloading = false
-        this.lastShotTime = 0
-      }
-
-      canShoot(now = Date.now()) {
-        if (this.reloading) return false
-        if (this.ammoInMagazine <= 0) return false
-        return now - this.lastShotTime >= this.fireRate;
-
-      }
-
-      consumeShot(now = Date.now()) {
-        this.lastShotTime = now
-        this.ammoInMagazine--
-        if (this.ammoInMagazine <= 0 && this.remainingMagazines > 0) {
-          this.reload()
-        }
-      }
-
-      reload() {
-        if (this.reloading) return false
-        if (this.remainingMagazines <= 0) return false
-        if (this.ammoInMagazine === this.magazineSize) return false
-
-        this.reloading = true
-
-        setTimeout(() => {
-          this.ammoInMagazine = this.magazineSize
-          this.remainingMagazines--
-          this.reloading = false
-        }, this.reloadTime)
-
-        return true
-      }
-
-      getShotAngles() {
-        if (this.bulletsPerShot === 1) return [0]
-
-        const angles = []
-        const half = (this.bulletsPerShot - 1) / 2
-        const step = this.spread / Math.max(1, this.bulletsPerShot - 1)
-
-        for (let i = 0; i < this.bulletsPerShot; i++) {
-          angles.push((-this.spread / 2) + i * step)
-        }
-
-        return angles
-      }
-
-      shoot(player, dirX, dirY) {
-        if (!this.canShoot()) return []
-
-        const now = Date.now()
-        this.consumeShot(now)
-
-        const baseAngle = Math.atan2(dirY, dirX)
-        const shots = []
-
-        for (const offsetDeg of this.getShotAngles()) {
-          const angle = baseAngle + (offsetDeg * Math.PI / 180)
-          shots.push({
-            x: player.x + player.width / 2,
-            y: player.y + player.height / 2,
-            vx: Math.cos(angle) * this.bulletSpeed,
-            vy: Math.sin(angle) * this.bulletSpeed
-          })
-        }
-
-        return shots
-      }
-    }
-
-    class PistolWeapon extends Weapon {
-      constructor() {
-        super()
-        this.name = "Pistol"
-        this.magazineSize = 15
-        this.magazines = 8
-        this.fireRate = 400
-        this.reloadTime = 1000
-        this.auto = false
-        this.bulletsPerShot = 1
-        this.bulletSpeed = 11
-        this.spread = 0
-        this.initAmmo()
-      }
-    }
-
-    class RifleWeapon extends Weapon {
-      constructor() {
-        super()
-        this.name = "Assault Rifle"
-        this.magazineSize = 30
-        this.magazines = 6
-        this.fireRate = 200
-        this.reloadTime = 2000
-        this.auto = true
-        this.bulletsPerShot = 1
-        this.bulletSpeed = 13
-        this.spread = 0
-        this.initAmmo()
-      }
-    }
-
-    class ShotgunWeapon extends Weapon {
-      constructor() {
-        super()
-        this.name = "Shotgun"
-        this.magazineSize = 12
-        this.magazines = 5
-        this.fireRate = 600
-        this.reloadTime = 2600
-        this.auto = false
-        this.bulletsPerShot = 6
-        this.bulletSpeed = 10
-        this.spread = 30
-        this.initAmmo()
-      }
-    }
-
-    class MachineGunWeapon extends Weapon {
-      constructor() {
-        super()
-        this.name = "Machine Gun"
-        this.magazineSize = 120
-        this.magazines = 2
-        this.fireRate = 100
-        this.reloadTime = 5000
-        this.auto = true
-        this.bulletsPerShot = 1
-        this.bulletSpeed = 15
-        this.spread = 5
-        this.initAmmo()
-      }
-    }
-
-    function createWeapon(type) {
-      switch (type) {
-        case "pistol":
-          return new PistolWeapon()
-        case "rifle":
-          return new RifleWeapon()
-        case "shotgun":
-          return new ShotgunWeapon()
-        case "machinegun":
-          return new MachineGunWeapon()
-        default:
-          return new PistolWeapon()
-      }
-    }
-    /* Weapons config */
-    // const WEAPONS = {
-    //   pistol: {
-    //     name: "Pistol",
-    //     magazineSize: 15,
-    //     magazines: 8,
-    //     fireRate: 400, // ms
-    //     reloadTime: 1000,
-    //     auto: false,
-    //     bulletsPerShot: 1,
-    //     bulletSpeed: 11,
-    //     spread: 0,
-    //   },
-    //
-    //   rifle: {
-    //     name: "Assault Rifle",
-    //     magazineSize: 30,
-    //     magazines: 6,
-    //     fireRate: 200,
-    //     reloadTime: 2000,
-    //     auto: true,
-    //     bulletsPerShot: 1,
-    //     bulletSpeed: 13,
-    //     spread: 0,
-    //   },
-    //
-    //   shotgun: {
-    //     name: "Shotgun",
-    //     magazineSize: 12,
-    //     magazines: 5,
-    //     fireRate: 600,
-    //     reloadTime: 2600,
-    //     auto: false,
-    //     bulletsPerShot: 6,
-    //     bulletSpeed: 10,
-    //     spread: 30,
-    //   },
-    //
-    //   machinegun: {
-    //     name: "Machine Gun",
-    //     magazineSize: 120,
-    //     magazines: 2,
-    //     fireRate: 100,
-    //     reloadTime: 5000,
-    //     auto: true,
-    //     bulletsPerShot: 1,
-    //     bulletSpeed: 15,
-    //     spread: 5,
-    //   }
-    // }
-
-    const WEAPON_SOUNDS = {
-      'Pistol': {
-        shoot: new Audio("pistol_shot.mp3"),
-        reload: new Audio("pistol_reload.mp3")
-      },
-      'Assault Rifle': {
-        shoot: new Audio("rifle_shot.mp3"),
-        reload: new Audio("rifle_reload.mp3")
-      },
-      'Shotgun': {
-        shoot: new Audio("shotgun_shot.mp3"),
-        reload: new Audio("shotgun_reload.mp3")
-      },
-      'Machine Gun': {
-        shoot: new Audio("machinegun_shot.mp3"),
-        reload: new Audio("machinegun_reload.mp3")
-      }
-    }
-
-    const PLAYER_SOUNDS = {
-      death: new Audio("death.mp3"),
-      footSteps: new Audio("foot_steps.mp3"),
-    }
-
-    const GAME_SOUNDS = {
-      ambient: new Audio("ambient.mp3"),
-      typeWriter: new Audio("typeWriter.mp3"),
-      radioOn: new Audio("radio_chatter.mp3"),
-      radioOff: new Audio("radio_off.mp3"),
-    }
-
-    const UI = {
-      notification: {
-        balloon: document.getElementById("commander-balloon"),
-      },
-      game: {
-        container: document.getElementById("game-container"),
-      }
-    }
-
-    const POOLED_SOUNDS = {}
-    function playPooled(audioAsset, volume = 0.4) {
-      if (!isMusicOn) return
-      if (!audioAsset) return
-
-      const src = audioAsset.src || audioAsset.getAttribute('src')
-      if (!src) return
-
-      if (!POOLED_SOUNDS[src]) {
-        POOLED_SOUNDS[src] = new SoundPool(audioAsset)
-      }
-      POOLED_SOUNDS[src].play(volume)
-    }
-
-    let waveMusic = {
-      1: new Audio("wave1.mp3"),
-      2: new Audio("wave2.mp3"),
-      3: new Audio("wave3.mp3"),
-      boss: new Audio("boss.mp3")
-    }
-
-    for (const key in waveMusic) {
-      waveMusic[key].loop = false
-      waveMusic[key].volume = 0.1
-    }
-
-    function showHitboxRect(x, y, width, height, color) {
-      ctx.strokeStyle = color || 'red'
-      ctx.lineWidth = 2
-      ctx.strokeRect(x, y, width, height)
-    }
-
     // Создаем экземпляр менеджера
     const waveManager = new WaveManager()
-
-    let clouds = []
-
-    function setWeapon(type) {
-      currentWeapon = createWeapon(type)
-
-      ammoInMagazine = currentWeapon.magazineSize
-      magazines = currentWeapon.magazines
-
-      // можно сбросить перезарядку
-      isReloading = false
-    }
-
-    function shoot(dirX, dirY) {
-      if (!currentWeapon) return
-      if (dirX === 0 && dirY === 0) return
-      if (isReloading) return
-
-      const shots = currentWeapon.shoot(player, dirX, dirY)
-      if (shots.length === 0) return
-
-      const currentWeaponName = currentWeapon.name
-      if (WEAPON_SOUNDS[currentWeaponName]) {
-        playPooled(WEAPON_SOUNDS[currentWeaponName].shoot, 0.4)
-      }
-
-      for (const s of shots) {
-        spawn(new Bullet(s.x, s.y, s.vx, s.vy))
-      }
-
-      ammoInMagazine = currentWeapon.ammoInMagazine
-      magazines = currentWeapon.remainingMagazines
-
-      isReloading = currentWeapon.reloading
-    }
-
-    let shooting = false
-    const muteBtn = document.getElementById("muteBtn")
-
-    muteBtn.onclick = () => {
-      toggleMusic(); // если музыка выключена, остановим все треки
-
-      !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
-    }
 
     // let currentMusic = null
 
@@ -2934,131 +2979,6 @@ Anyone falling back without orders will be treated as hostile.`
       isMusicOn = true; // по умолчанию музыка включена
     } else {
       isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
-    }
-
-    function pauseTrack(track) {
-      track.pause();
-      track.currentTime = 0;
-    }
-
-    function startReload() {
-      if (!currentWeapon) return
-      if (isReloading) return
-
-      const started = currentWeapon.reload()
-      if (!started) return
-
-      isReloading = true
-      const currentWeaponName = currentWeapon.name
-
-      if (WEAPON_SOUNDS[currentWeaponName]) {
-        playPooled(WEAPON_SOUNDS[currentWeaponName].reload, 0.4)
-      }
-
-      setTimeout(() => {
-        ammoInMagazine = currentWeapon.ammoInMagazine
-        magazines = currentWeapon.remainingMagazines
-        isReloading = false
-      }, currentWeapon.reloadTime)
-    }
-
-    async function animateCommanderBox() {
-      const box = UI.notification.balloon
-
-      box.style.display = "block"
-
-      // маленькая задержка чтобы браузер применил display
-      await new Promise(r => setTimeout(r, 20))
-
-      box.style.right = "40px"
-
-      // ждём завершения анимации
-      await new Promise(r => setTimeout(r, 600))
-    }
-
-    async function hideCommanderBox() {
-      const box = UI.notification.balloon
-
-      box.style.right = "-500px"
-
-      await new Promise(r => setTimeout(r, 600))
-
-      box.style.display = "none"
-    }
-
-    function explodeGrenade(g) {
-      spawnGroundExplosion(g.x, g.y)
-
-      const explosionRadius = 80
-
-      const gx = g.x + g.width / 2
-      const gy = g.y + g.height / 2
-
-      const px = player.x + player.width / 2
-      const py = player.y + player.height / 2
-
-      const dx = px - gx
-      const dy = py - gy
-
-      const dist = Math.sqrt(dx * dx + dy * dy)
-
-      if (dist < explosionRadius) {
-        if (!DEBUG.godMode && player.alive) {
-          player.die()
-        }
-      }
-    }
-
-    function spawnNormalDrone() {
-      const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
-
-      const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
-      spawn(drone)
-      return drone
-    }
-
-    function spawnGrenadier() {
-      const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
-
-      const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
-      spawn(drone)
-      return drone
-    }
-
-    function spawnKamikaze() {
-      const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
-
-      const drone = new KamikazeDrone()
-      spawn(drone)
-      return drone
-    }
-
-    function spawnBoss() {
-      const boss = new BossDrone()
-      spawn(boss)
-      boss.active = true
-      return boss
-    }
-
-    let screenShake = {
-      intensity: 0,
-      duration: 0,
-      offsetX: 0,
-      offsetY: 0,
-
-      update() {
-        // Всегда возвращаем ноль - никакой тряски
-        this.offsetX = 0
-        this.offsetY = 0
-        return { x: 0, y: 0 }
-      },
-
-      shake(intensity = 10, duration = 15) {
-        // Ничего не делаем - тряска отключена
-      }
     }
 
     function initGame() {
@@ -3244,6 +3164,12 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     startBtn.onclick = startGame
+
+    muteBtn.onclick = () => {
+      toggleMusic(); // если музыка выключена, остановим все треки
+
+      !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
+    }
 
     document.addEventListener("keydown", e => {
       if (e.code === "Space") {
@@ -3582,6 +3508,28 @@ Anyone falling back without orders will be treated as hostile.`
     // function playTrack(track) {
     //   if (isMusicOn) {
     //     track.play();
+    //   }
+    // }
+
+    // for (const key in waveMusic) {
+    //   waveMusic[key].loop = false
+    //   waveMusic[key].volume = 0.1
+    // }
+    // let screenShake = {
+    //   intensity: 0,
+    //   duration: 0,
+    //   offsetX: 0,
+    //   offsetY: 0,
+    //
+    //   update() {
+    //     // Всегда возвращаем ноль - никакой тряски
+    //     this.offsetX = 0
+    //     this.offsetY = 0
+    //     return { x: 0, y: 0 }
+    //   },
+    //
+    //   shake(intensity = 10, duration = 15) {
+    //     // Ничего не делаем - тряска отключена
     //   }
     // }
 
