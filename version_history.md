@@ -16,6 +16,7 @@ Removed screen shake
 Pause and dialog states
 Wave manager
 Audio manager
+UI manager
 
 ## 0.17.3
 

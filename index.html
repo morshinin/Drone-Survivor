@@ -144,20 +144,6 @@
       z-index: 999;
     }
 
-    #muteBtn {
-      position: fixed;
-      top: 40px;
-      right: 20px;
-      width: 30px;
-      height: 30px;
-      background-image: url(music_icon.png);
-      background-size: cover;
-      background-color: transparent;
-      border: none;
-      margin: 0;
-      padding: 0;
-    }
-
     #game-info {
       position: fixed;
       bottom: 15px;
@@ -292,7 +278,6 @@
     </canvas>
 
     <div id="effects-layer">
-<!--      <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">-->
     </div>
 
     <div id="score"></div>
@@ -319,8 +304,6 @@
   </div>
 
   <div id="ui">
-
-    <button id="muteBtn"></button>
     <div class="nes-field">
       <label for="nameInput">Enter your name (3 letters)</label>
       <input id="nameInput" maxlength="3" type="text" class="nes-input">
@@ -328,9 +311,7 @@
 
     <button id="startBtn" class="nes-btn is-success">Try to Survive</button>
 
-    <div id="leaderboard">
-
-    </div>
+    <div id="leaderboard"></div>
 
     <div id="game-info">
       <div>Drone Survivor</div>
@@ -343,8 +324,6 @@
       </div>
     </div>
   </div>
-
-
 
   <script>
     /* BD Config */
@@ -368,7 +347,6 @@
     const EXPLOSION_FRAME_HEIGHT = 100;
     const EXPLOSION_FRAME_COUNT = 4;
     const EXPLOSION_FRAME_DURATION = 100;
-    // const MAX_ATTACKING_DRONES = 5
 
     const GROUND_EXPLOSION_FRAMES = 9;
     const GROUND_EXPLOSION_FRAME_WIDTH = 100;
@@ -377,10 +355,6 @@
     const WALK_FRAMES = 7
     const WALK_FRAME_WIDTH = 100
     const WALK_FRAME_HEIGHT = 130
-
-    const POOLED_SOUNDS = {}
-    // const GRID_SIZE = 100
-    // let collisionGrid = {}
 
     // DEBUG режим для тестирования
     const DEBUG = {
@@ -433,8 +407,6 @@
     let ammoInMagazine
     let magazines
 
-    let lastShotTime = 0
-
     let last = 0
     let progress = 0
 
@@ -445,30 +417,26 @@
     // DOM REFERENCES
     // ======================
     const gameVersion = document.getElementById("game-version")
-    // const scoreContainer = document.getElementById("score")
     const gameInfo = document.getElementById("game-info")
-    const scoreEl = document.getElementById("score")
+    // const scoreEl = document.getElementById("score")
     const effectsLayer = document.getElementById("effects-layer")
-    const bar = document.getElementById("loading-bar")
-    /* Effects elements */
+    // const bar = document.getElementById("loading-bar")
     const fadeEl = document.getElementById("fade")
     const startBtn = document.getElementById("startBtn")
     const leaderboardEl = document.getElementById("leaderboard")
-
-    const muteBtn = document.getElementById("muteBtn")
 
     /* Canvas */
     const canvas = document.getElementById("game")
     const ctx = canvas.getContext("2d")
 
-    const UI = {
-      notification: {
-        balloon: document.getElementById("commander-balloon"),
-      },
-      game: {
-        container: document.getElementById("game-container"),
-      }
-    }
+    // const UI = {
+    //   notification: {
+    //     balloon: document.getElementById("commander-balloon"),
+    //   },
+    //   game: {
+    //     container: document.getElementById("game-container"),
+    //   }
+    // }
 
     // ======================
     // GAME STATE
@@ -520,44 +488,6 @@
     groundExplosionSprite.src = "ground_explosion_sprite.png";
     const playerWalkSprite = new Image();
     playerWalkSprite.src = "soldier_walk_sprite.png";
-
-    const WEAPON_SOUNDS = {
-      'Pistol': {
-        shoot: new Audio("pistol_shot.mp3"),
-        reload: new Audio("pistol_reload.mp3")
-      },
-      'Assault Rifle': {
-        shoot: new Audio("rifle_shot.mp3"),
-        reload: new Audio("rifle_reload.mp3")
-      },
-      'Shotgun': {
-        shoot: new Audio("shotgun_shot.mp3"),
-        reload: new Audio("shotgun_reload.mp3")
-      },
-      'Machine Gun': {
-        shoot: new Audio("machinegun_shot.mp3"),
-        reload: new Audio("machinegun_reload.mp3")
-      }
-    }
-
-    const PLAYER_SOUNDS = {
-      death: new Audio("death.mp3"),
-      footSteps: new Audio("foot_steps.mp3"),
-    }
-
-    const GAME_SOUNDS = {
-      ambient: new Audio("ambient.mp3"),
-      typeWriter: new Audio("typeWriter.mp3"),
-      radioOn: new Audio("radio_chatter.mp3"),
-      radioOff: new Audio("radio_off.mp3"),
-    }
-
-    let waveMusic = {
-      1: new Audio("wave1.mp3"),
-      2: new Audio("wave2.mp3"),
-      3: new Audio("wave3.mp3"),
-      boss: new Audio("boss.mp3")
-    }
 
     gameVersion.innerText = GAME_VERSION
 
@@ -1362,6 +1292,51 @@ Command approves. Probably.`,
       }
     }
 
+    class UIManager {
+      constructor() {
+        this.el = {}
+        this.hud = {}
+        this.init()
+      }
+
+      init() {
+        this.el.ui = document.getElementById("ui")
+        this.el.gameContainer = document.getElementById("game-container")
+        this.el.loadingScreen = document.getElementById("loading-screen")
+        this.el.loadingBar = document.getElementById("loading-bar")
+        this.el.leaderboard = document.getElementById("leaderboard")
+        this.el.fade = document.getElementById("fade")
+        this.el.commanderBalloon = document.getElementById("commander-balloon")
+        this.el.continueHint = document.getElementById("continueHint")
+        this.el.gameInfo = document.getElementById("game-info")
+
+        this.hud.score = document.getElementById("score")
+        this.hud.scorePop = document.getElementById("score-pop")
+        this.hud.nameInput = document.getElementById("nameInput")
+        this.hud.startBtn = document.getElementById("startBtn")
+      }
+
+      showHitboxRect(x, y, width, height, color) {
+        ctx.strokeStyle = color || 'red'
+        ctx.lineWidth = 2
+        ctx.strokeRect(x, y, width, height)
+      }
+
+      setLoadingProgress(value) {
+        if (this.el.loadingBar) {
+          this.el.loadingBar.value = value
+        }
+      }
+
+      hideLoadingScreen() {
+        if (this.el.loadingScreen) {
+          this.el.loadingScreen.style.display = "none"
+        }
+      }
+    }
+
+    const UI = new UIManager()
+
     const audio = new AudioManager()
 
     audio.registerMusic("menu", "menu.mp3", { loop: true })
@@ -1480,7 +1455,7 @@ Command approves. Probably.`,
         }
 
         if (DEBUG.showHitboxes) {
-          showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
+          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
         }
       }
 
@@ -1817,7 +1792,7 @@ Command approves. Probably.`,
         ctx.restore()
 
         if (DEBUG.showHitboxes) {
-          showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
+          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
         }
       }
     }
@@ -1879,7 +1854,7 @@ Command approves. Probably.`,
         )
 
         if (DEBUG.showHitboxes) {
-          showHitboxRect(this.x, this.y, this.width, this.height)
+          UI.showHitboxRect(this.x, this.y, this.width, this.height)
         }
       }
     }
@@ -1970,7 +1945,7 @@ Command approves. Probably.`,
         }
 
         if (DEBUG.showHitboxes) {
-          showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
+          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
         }
       }
     }
@@ -2496,7 +2471,7 @@ Command approves. Probably.`,
     }
 
     async function animateCommanderBox() {
-      const box = UI.notification.balloon
+      const box = UI.el.commanderBalloon
 
       box.style.display = "block"
 
@@ -2510,7 +2485,7 @@ Command approves. Probably.`,
     }
 
     async function hideCommanderBox() {
-      const box = UI.notification.balloon
+      const box = UI.el.commanderBalloon
 
       box.style.right = "-500px"
 
@@ -2576,11 +2551,6 @@ Command approves. Probably.`,
       return boss
     }
 
-    function showHitboxRect(x, y, width, height, color) {
-      ctx.strokeStyle = color || 'red'
-      ctx.lineWidth = 2
-      ctx.strokeRect(x, y, width, height)
-    }
 
     // ======================
     // GAME FLOW
@@ -2599,7 +2569,6 @@ Command approves. Probably.`,
         if (playerName.length < 3) playerName = "AAA"
       } catch (err) {
         console.error("CRITICAL STARTUP ERROR:", err)
-        alert("Game failed to start: " + err.message)
       }
     }
 
@@ -2726,9 +2695,9 @@ Anyone falling back without orders will be treated as hostile.`
       const prevState = currentState
       currentState = GameState.DIALOG
 
-      const balloon = UI.notification.balloon
-      const p = balloon.querySelector("p");
-      const hint = document.getElementById("continueHint")
+      const balloon = UI.el.commanderBalloon
+      const p = balloon.querySelector("p")
+      const hint = UI.el.continueHint
 
       await animateCommanderBox()
 
@@ -2949,17 +2918,17 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       gameObjects = stillAlive
-
-      perfLogTimer += delta
-      if (perfLogTimer > 3000) {
-        perfLogTimer = 0
-        const counts = { bullet: 0, enemyBullet: 0, drone: 0, vfx: 0, none: 0 }
-        gameObjects.forEach(o => {
-          const c = o.category || 'none'
-          counts[c] = (counts[c] || 0) + 1
-        })
-        console.log(`[PERF] Objs:${stillAlive.length} ` + JSON.stringify(counts))
-      }
+      //
+      // perfLogTimer += delta
+      // if (perfLogTimer > 3000) {
+      //   perfLogTimer = 0
+      //   const counts = { bullet: 0, enemyBullet: 0, drone: 0, vfx: 0, none: 0 }
+      //   gameObjects.forEach(o => {
+      //     const c = o.category || 'none'
+      //     counts[c] = (counts[c] || 0) + 1
+      //   })
+      //   console.log(`[PERF] Objs:${stillAlive.length} ` + JSON.stringify(counts))
+      // }
 
       if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
         for (const b of activeBullets) {
@@ -3017,31 +2986,18 @@ Anyone falling back without orders will be treated as hostile.`
       if (tankSmoke?.alive) tankSmoke.update()
       if (citySmoke?.alive) citySmoke.update()
       if (cityFire?.alive) cityFire.update()
-
-      for (const cloud of clouds) {
-        cloud.update()
-      }
     }
 
     function updateHud(delta) {
       uiTimer += delta
       if (uiTimer > 100) {
-        scoreEl.innerText = score
+        UI.hud.score.innerText = score
         uiTimer = 0
       }
     }
 
     // Создаем экземпляр менеджера
     const waveManager = new WaveManager()
-
-    // let currentMusic = null
-
-    let isMusicOn = localStorage.getItem("musicOn");
-    if (!isMusicOn === null) {
-      isMusicOn = true; // по умолчанию музыка включена
-    } else {
-      isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
-    }
 
     function initGame() {
       // игрок
@@ -3069,9 +3025,6 @@ Anyone falling back without orders will be treated as hostile.`
       if (background.complete) {
         ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
       }
-
-      // Облака
-      drawClouds(ctx)
 
       // Анимированные спрайты
       if (tankSmoke?.alive) tankSmoke.draw(ctx)
@@ -3160,24 +3113,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
 
-    function drawClouds(ctx) {
-      if (!cloudsImg?.complete) return
-
-      // Сортировка убрана для оптимизации CPU. Облака статичны по слоям.
-      for (let i = 0; i < clouds.length; i++) {
-        const cloud = clouds[i]
-        ctx.globalAlpha = cloud.opacity
-        ctx.drawImage(
-          cloudsImg,
-          Math.floor(cloud.x),
-          Math.floor(cloud.y),
-          Math.floor(cloud.width),
-          Math.floor(cloud.height)
-        )
-      }
-      ctx.globalAlpha = 1.0
-    }
-
     function drawPaused() {
       draw()
 
@@ -3220,7 +3155,7 @@ Anyone falling back without orders will be treated as hostile.`
       requestAnimationFrame(gameLoop)
     }
 
-    startBtn.onclick = startGame
+    UI.hud.startBtn.onclick = startGame
 
     document.addEventListener("keydown", e => {
       if (e.code === "Space") {
@@ -3284,20 +3219,18 @@ Anyone falling back without orders will be treated as hostile.`
     })
 
     document.body.addEventListener("click", () => {
-      if (isMusicOn) {
-        audio.playMusic('menu')
-      }
+      audio.playMusic('menu')
     }, { once: true })
 
     window.addEventListener("load", () => {
-      document.getElementById("loading-screen").style.display = "none"
+      UI.hideLoadingScreen()
     })
 
     loadLeaderboard()
 
     const interval = setInterval(() => {
       progress += 10
-      bar.value = progress
+      UI.setLoadingProgress(progress)
 
       if (progress >= 100) {
         clearInterval(interval)
