@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
@@ -291,9 +291,9 @@
     <canvas id="game" width="1500" height="800">
     </canvas>
 
-<!--    <div id="effects-layer">-->
+    <div id="effects-layer">
 <!--      <img src="soldier_legs.png" alt="" class="smoke" style="right:34px; bottom:-4px; width:80px;rotate: 15deg;">-->
-<!--    </div>-->
+    </div>
 
     <div id="score"></div>
     <div id="score-pop"></div>
@@ -318,7 +318,7 @@
 
   <div id="commander-balloon">
     <section class="message -left commander-section">
-      <img class="commander-face" src="commander.gif">
+      <img alt="commander face" class="commander-face" src="commander.gif">
       <div class="nes-balloon from-left">
         <p></p>
         <div id="continueHint">PRESS ENTER</div>
@@ -355,7 +355,7 @@
 
 
   <script>
-    // ... (Supabase config)
+    /* BD Config */
     const SUPABASE_URL = "https://zsdwmjdalfnmvtlwoygs.supabase.co"
     const SUPABASE_KEY = "sb_publishable_B9tdTmqKndQysFngs7vT2Q_TqYVx7bt"
 
@@ -364,115 +364,176 @@
       SUPABASE_KEY
     )
 
-    const HITBOX_PADDING = 12
+    // ======================
+    // CONSTANTS
+    // ======================
+    // const HITBOX_PADDING = 12
     const GAME_VERSION = "0.17.3"
 
-    document.getElementById("game-version").innerText = GAME_VERSION
+    const groundHeight = 40
 
-    const menuMusic = document.getElementById("menuMusic")
-    const gameMusic = document.getElementById("gameMusic")
-    const droneSound = document.getElementById("droneSound")
-    const scoreContainer = document.getElementById("score")
-    const droneExplosionSound = document.getElementById("droneExplosionSound")
-    const groundExplosionSound = document.getElementById("groundExplosionSound")
-    const gameOverMusic = document.getElementById("gameOverMusic")
+    const EXPLOSION_FRAME_WIDTH = 100;
+    const EXPLOSION_FRAME_HEIGHT = 100;
+    const EXPLOSION_FRAME_COUNT = 4;
+    const EXPLOSION_FRAME_DURATION = 100;
+    // const MAX_ATTACKING_DRONES = 5
+
+    const GROUND_EXPLOSION_FRAMES = 9;
+    const GROUND_EXPLOSION_FRAME_WIDTH = 100;
+    const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
+
+    const WALK_FRAMES = 7
+    const WALK_FRAME_WIDTH = 100
+    const WALK_FRAME_HEIGHT = 130
+
+    // const GRID_SIZE = 100
+    // let collisionGrid = {}
+
+    // DEBUG режим для тестирования
+    const DEBUG = {
+      bossStart: false,   // начать игру сразу с босса
+      godMode: false,     // бессмертие
+      spawnDrones: false, // включить/выключить обычных дронов
+      showHitboxes: false,
+    }
+
+
+    // Типы дронов
+    const DroneType = {
+      NORMAL: 'normal',
+      GRENADIER: 'grenadier',
+      KAMIKAZE: 'kamikaze'
+    }
+
+    /* Global Variables */
+    let citySmoke = null
+    let tankSmoke = null
+    let cityFire = null
+
+    let gameObjects = []
+    let isReloading = false
+    let uiTimer = 0
+    let perfLogTimer = 0
+    let keys = {}
+    let timeScale = 1
+    let hitFreeze = 0
+
+    let globalActiveDronesCount = 0
+    let globalEnemyBulletsCount = 0
+    let globalVFXCount = 0
+
+    let player
+    let playerName = "AAA"
+
+    let dropTimer = 0
+    let shootCooldown = 0
+    let globalEnemyFireCooldown = 0
+
+    let score = 0
+    let survivalTime = 0
+
+    let leaderboard = []
+
+    let SMOKE_FRAME_WIDTH
+    let SMOKE_FRAME_HEIGHT
+
+    let currentState
+    let gameLoopRunning = true
+    let lastFrameTime = 0
+    let frameCounter = 0
+    let lastFpsFrameCount = 0
+    let fps = 0
+    let gameLoopInstances = 0
+
+    let currentWeapon
+    let ammoInMagazine
+    let magazines
+
+    let lastShotTime = 0
+
+    let last = 0
+    let progress = 0
+
+    // ======================
+    // DOM REFERENCES
+    // ======================
+    const gameVersion = document.getElementById("game-version")
+    // const scoreContainer = document.getElementById("score")
     const gameInfo = document.getElementById("game-info")
-    const timerEl = document.getElementById("timer")
     const scoreEl = document.getElementById("score")
     const effectsLayer = document.getElementById("effects-layer")
+    const bar = document.getElementById("loading-bar")
+    /* Effects elements */
+    const fadeEl = document.getElementById("fade")
+    const startBtn = document.getElementById("startBtn")
+
+    /* Canvas */
     const canvas = document.getElementById("game")
     const ctx = canvas.getContext("2d")
 
-    const WEAPONS = {
-      pistol: {
-        name: "Pistol",
-        magazineSize: 15,
-        magazines: 8,
-        fireRate: 400, // ms
-        reloadTime: 1000,
-        auto: false,
-        bulletsPerShot: 1,
-        bulletSpeed: 11,
-        spread: 0,
-      },
+    /* Sound */
+    const menuMusic = document.getElementById("menuMusic")
+    const gameMusic = document.getElementById("gameMusic")
+    const droneSound = document.getElementById("droneSound")
+    const droneExplosionSound = document.getElementById("droneExplosionSound")
+    const groundExplosionSound = document.getElementById("groundExplosionSound")
+    const gameOverMusic = document.getElementById("gameOverMusic")
 
-      rifle: {
-        name: "Assault Rifle",
-        magazineSize: 30,
-        magazines: 6,
-        fireRate: 200,
-        reloadTime: 2000,
-        auto: true,
-        bulletsPerShot: 1,
-        bulletSpeed: 13,
-        spread: 0,
-      },
-
-      shotgun: {
-        name: "Shotgun",
-        magazineSize: 12,
-        magazines: 5,
-        fireRate: 600,
-        reloadTime: 2600,
-        auto: false,
-        bulletsPerShot: 6,
-        bulletSpeed: 10,
-        spread: 30,
-      },
-
-      machinegun: {
-        name: "Machine Gun",
-        magazineSize: 120,
-        magazines: 2,
-        fireRate: 100,
-        reloadTime: 5000,
-        auto: true,
-        bulletsPerShot: 1,
-        bulletSpeed: 15,
-        spread: 5,
-      }
+    // ======================
+    // GAME STATE
+    // ======================
+    const GameState = {
+      MENU: "menu",
+      GAME: "game",
+      GAME_OVER: "game_over",
+      DIALOG: "dialog",
+      PAUSED: "paused",
     }
 
-    const WEAPON_SOUNDS = {
-      'Pistol': {
-        shoot: new Audio("pistol_shot.mp3"),
-        reload: new Audio("pistol_reload.mp3")
-      },
-      'Assault Rifle': {
-        shoot: new Audio("rifle_shot.mp3"),
-        reload: new Audio("rifle_reload.mp3")
-      },
-      'Shotgun': {
-        shoot: new Audio("shotgun_shot.mp3"),
-        reload: new Audio("shotgun_reload.mp3")
-      },
-      'Machine Gun': {
-        shoot: new Audio("machinegun_shot.mp3"),
-        reload: new Audio("machinegun_reload.mp3")
-      }
-    }
+    currentState = GameState.MENU
+    // ======================
+    // ASSETS
+    // ======================
+    const background = new Image()
+    background.src = "game_bg.png"
+    const playerImg = new Image()
+    playerImg.src = "soldier.png"
+    const droneImg = new Image()
+    droneImg.src = "mavic.png"
+    const enemyBulletImg = new Image()
+    enemyBulletImg.src = "drone_bullet.png"
+    const bossImg = new Image()
+    bossImg.src = "boss.png"
+    const missileImg = new Image()
+    missileImg.src = "drone_bullet.png"
+    const tankImg = new Image()
+    tankImg.src = "tank.png"
+    const destroyedCityImg = new Image()
+    destroyedCityImg.src = "destroyed_city.png"
+    const grenadeImg = new Image()
+    grenadeImg.src = "grenade.png"
+    const kamikazeImg = new Image()
+    kamikazeImg.src = "kamikaze.png"
+    const smokeSprite = new Image()
+    smokeSprite.src = "tank_smoke_sprite.png"
+    const citySmokeSprite = new Image()
+    citySmokeSprite.src = "city_smoke.png"
+    const cloudsImg = new Image()
+    cloudsImg.src = "clouds_bg.png"
+    const fireSprite = new Image()
+    fireSprite.src = "fire_sprite.png"
+    const explosionSprite = new Image();
+    explosionSprite.src = "explosion_sprite.png";
+    const groundExplosionSprite = new Image();
+    groundExplosionSprite.src = "ground_explosion_sprite.png";
+    const playerWalkSprite = new Image();
+    playerWalkSprite.src = "soldier_walk_sprite.png";
 
-    const PLAYER_SOUNDS = {
-      death: new Audio("death.mp3"),
-      footSteps: new Audio("foot_steps.mp3"),
-    }
+    gameVersion.innerText = GAME_VERSION
 
-    const GAME_SOUNDS = {
-      ambient: new Audio("ambient.mp3"),
-      typeWriter: new Audio("typeWriter.mp3"),
-      radioOn: new Audio("radio_chatter.mp3"),
-      radioOff: new Audio("radio_off.mp3"),
-    }
-
-    const UI = {
-      notification: {
-        balloon: document.getElementById("commander-balloon"),
-      },
-      game: {
-        container: document.getElementById("game-container"),
-      }
-    }
-
+    // ======================
+    // CLASSES
+    // ======================
     // Пул звуков для предотвращения утечек памяти при cloneNode
     class SoundPool {
       constructor(audioElement, size = 15) {
@@ -488,23 +549,9 @@
         const s = this.pool[this.ptr]
         s.volume = volume
         s.currentTime = 0
-        s.play().catch(e => { }) // Игнорируем ошибки автоплея
+        s.play().catch(() => { }) // Игнорируем ошибки автоплея
         this.ptr = (this.ptr + 1) % this.pool.length
       }
-    }
-
-    const POOLED_SOUNDS = {}
-    function playPooled(audioAsset, volume = 0.4) {
-      if (!isMusicOn) return
-      if (!audioAsset) return
-
-      const src = audioAsset.src || audioAsset.getAttribute('src')
-      if (!src) return
-
-      if (!POOLED_SOUNDS[src]) {
-        POOLED_SOUNDS[src] = new SoundPool(audioAsset)
-      }
-      POOLED_SOUNDS[src].play(volume)
     }
 
     class AnimatedSprite {
@@ -589,1419 +636,16 @@
         }
       }
 
-      setFrame(frame) {
-        this.frame = Math.min(frame, this.totalFrames - 1)
-      }
-
-      restart() {
-        this.frame = 0
-        this.timer = 0
-        this.alive = true
-      }
+      // setFrame(frame) {
+      //   this.frame = Math.min(frame, this.totalFrames - 1)
+      // }
+      //
+      // restart() {
+      //   this.frame = 0
+      //   this.timer = 0
+      //   this.alive = true
+      // }
     }
-
-    const background = new Image()
-    background.src = "game_bg.png"
-    const playerImg = new Image()
-    playerImg.src = "soldier.png"
-    const droneImg = new Image()
-    droneImg.src = "mavic.png"
-    const enemyBulletImg = new Image()
-    enemyBulletImg.src = "drone_bullet.png"
-    const bossImg = new Image()
-    bossImg.src = "boss.png"
-    const missileImg = new Image()
-    missileImg.src = "drone_bullet.png"
-    const tankImg = new Image()
-    tankImg.src = "tank.png"
-    const destroyedCityImg = new Image()
-    destroyedCityImg.src = "destroyed_city.png"
-    const grenadeImg = new Image()
-    grenadeImg.src = "grenade.png"
-    const kamikazeImg = new Image()
-    kamikazeImg.src = "kamikaze.png"
-    const smokeSprite = new Image()
-    smokeSprite.src = "tank_smoke_sprite.png"
-    const citySmokeSprite = new Image()
-    citySmokeSprite.src = "city_smoke.png"
-    const cloudsImg = new Image()
-    cloudsImg.src = "clouds_bg.png" // Замените на путь к вашей картинке с облаками
-    const fireSprite = new Image()
-    fireSprite.src = "fire_sprite.png"
-
-    let SMOKE_FRAME_WIDTH
-    let SMOKE_FRAME_HEIGHT
-
-    smokeSprite.onload = () => {
-      SMOKE_FRAME_WIDTH = smokeSprite.width / 2
-      SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
-    }
-
-    let citySmoke = null
-    let tankSmoke = null
-    let cityFire = null
-
-    // Инициализация дыма от города
-    function initCitySmoke() {
-      if (citySmokeSprite.complete) {
-        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
-          columns: 2,
-          totalFrames: 98,
-          frameDelay: 8,
-          scale: 1.5,
-          opacity: 0.6,
-          loop: true
-        })
-      } else {
-        citySmokeSprite.onload = () => {
-          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
-            columns: 2,
-            totalFrames: 98,
-            frameDelay: 8,
-            scale: 1.5,
-            opacity: 0.6,
-            loop: true
-          })
-        }
-      }
-    }
-
-    // Инициализация дыма от танка
-    function initTankSmoke() {
-      if (smokeSprite.complete) {
-        tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
-          columns: 2,
-          totalFrames: 58,
-          frameDelay: 8,
-          scale: 1.2,
-          opacity: 0.4,
-          loop: true
-        })
-      } else {
-        smokeSprite.onload = () => {
-          tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
-            columns: 2,
-            totalFrames: 58,
-            frameDelay: 8,
-            scale: 1.2,
-            opacity: 0.4,
-            loop: true
-          })
-        }
-      }
-    }
-
-    // Инициализация огня
-    function initFire() {
-      if (fireSprite.complete) {
-        cityFire = new AnimatedSprite(100, 600, fireSprite, {
-          columns: 2,
-          totalFrames: 8,
-          frameDelay: 8,
-          scale: 1,
-          opacity: 0.9,
-          width: 144,
-          height: 144,
-          loop: true
-        })
-      } else {
-        fireSprite.onload = () => {
-          cityFire = new AnimatedSprite(100, 600, fireSprite, {
-            columns: 2,
-            totalFrames: 8,
-            frameDelay: 8,
-            scale: 1,
-            opacity: 0.9,
-            width: 144,
-            height: 144,
-            loop: true
-          })
-        }
-      }
-    }
-
-    effectsLayer.style.display = "none"
-
-    const groundHeight = 40
-
-    let gameObjects = []
-    let isReloading = false
-    let uiTimer = 0
-    let perfLogTimer = 0
-    let keys = {}
-    let timeScale = 1
-    let hitFreeze = 0
-
-    const tank = {
-      x: canvas.width * 0.85,
-      y: canvas.height - groundHeight - 150,
-      w: 280,
-      h: 180
-    }
-
-    const destroyedCity = {
-      x: 100,
-      y: canvas.height - groundHeight - 120,
-      w: 180,
-      h: 80
-    }
-
-    const explosionSprite = new Image();
-    explosionSprite.src = "explosion_sprite.png";
-    const EXPLOSION_FRAME_WIDTH = 100;
-    const EXPLOSION_FRAME_HEIGHT = 100;
-    const EXPLOSION_FRAME_COUNT = 4;
-    const EXPLOSION_FRAME_DURATION = 100;
-    const MAX_ATTACKING_DRONES = 5
-
-    const groundExplosionSprite = new Image();
-    groundExplosionSprite.src = "ground_explosion_sprite.png";
-
-    const GROUND_EXPLOSION_FRAMES = 9;
-    const GROUND_EXPLOSION_FRAME_WIDTH = 100;
-    const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
-
-    const playerWalkSprite = new Image();
-    playerWalkSprite.src = "soldier_walk_sprite.png";
-
-    const WALK_FRAMES = 7
-    const WALK_FRAME_WIDTH = 100
-    const WALK_FRAME_HEIGHT = 130
-
-    // Глобальные счетчики для оптимизации
-    let globalActiveDronesCount = 0
-    let globalEnemyBulletsCount = 0
-    let globalVFXCount = 0
-
-    let player
-    let playerName = "AAA"
-
-    let dropTimer = 0
-    let shootCooldown = 0
-    let globalEnemyFireCooldown = 0
-
-    let score = 0
-    let survivalTime = 0
-
-    let leaderboard = []
-
-    let waveMusic = {
-      1: new Audio("wave1.mp3"),
-      2: new Audio("wave2.mp3"),
-      3: new Audio("wave3.mp3"),
-      boss: new Audio("boss.mp3")
-    }
-
-    for (const key in waveMusic) {
-      waveMusic[key].loop = false
-      waveMusic[key].volume = 0.1
-    }
-
-    // DEBUG режим для тестирования
-    const DEBUG = {
-      bossStart: false,   // начать игру сразу с босса
-      godMode: false,     // бессмертие
-      spawnDrones: false, // включить/выключить обычных дронов
-      showHitboxes: false,
-    }
-
-    const GameState = {
-      MENU: "menu",
-      GAME: "game",
-      GAME_OVER: "game_over",
-      DIALOG: "dialog",
-      PAUSED: "paused",
-    }
-
-    let currentState = GameState.MENU
-    let gameLoopRunning = true
-    let lastFrameTime = 0
-    let frameCounter = 0
-    let lastFpsFrameCount = 0
-    let fps = 0
-    let gameLoopInstances = 0
-
-    function isGameplayActive() {
-      return currentState === GameState.GAME
-    }
-
-    function isDialogActive() {
-      return currentState === GameState.DIALOG
-    }
-
-    function isPauseActive() {
-      return currentState === GameState.PAUSED
-    }
-
-    function updateAmbient(delta) {
-      if (tankSmoke?.alive) tankSmoke.update()
-      if (citySmoke?.alive) citySmoke.update()
-      if (cityFire?.alive) cityFire.update()
-
-      for (const cloud of clouds) {
-        cloud.update()
-      }
-    }
-
-    function updateHud(delta) {
-      uiTimer += delta
-      if (uiTimer > 100) {
-        scoreEl.innerText = score
-        uiTimer = 0
-      }
-    }
-
-    const GRID_SIZE = 100
-    let collisionGrid = {}
-
-    const EffectsManager = {
-      // Отключить все визуальные эффекты для игры
-      disableForGame() {
-        const container = document.getElementById('game-container')
-        const ui = document.getElementById('ui')
-
-        // Убираем CRT класс и добавляем no-crt
-        container.classList.remove('crt')
-        container.classList.add('no-crt')
-
-        // Отключаем анимацию UI
-        ui.style.animation = 'none'
-
-        // console.log('Visual effects disabled for game')
-      },
-
-      // Включить эффекты для меню
-      enableForMenu() {
-        const container = document.getElementById('game-container')
-        const ui = document.getElementById('ui')
-
-        // Возвращаем CRT класс и убираем no-crt
-        container.classList.add('crt')
-        container.classList.remove('no-crt')
-
-        // Возвращаем анимацию UI
-        ui.style.animation = 'glitch1 1s infinite'
-      }
-    }
-
-    // Типы дронов
-    const DroneType = {
-      NORMAL: 'normal',
-      GRENADIER: 'grenadier',
-      KAMIKAZE: 'kamikaze'
-    }
-
-    function showHitboxRect(x, y, width, height, color) {
-      ctx.strokeStyle = color || 'red'
-      ctx.lineWidth = 2
-      ctx.strokeRect(x, y, width, height)
-    }
-
-    // Класс для настройки волны
-    class WaveConfig {
-      constructor(name, options = {}) {
-        this.name = name
-        this.drones = options.drones || [] // массив {type: DroneType, count: number}
-        this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
-        this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
-        this.message = options.message || null // сообщение перед волной
-        this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
-        this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
-      }
-    }
-
-    // Класс для большой волны (этапа)
-    class StageConfig {
-      constructor(name, options = {}) {
-        this.name = name
-        this.waves = options.waves || [] // массив WaveConfig
-        this.startMessage = options.startMessage || null // сообщение перед этапом
-        this.endMessage = options.endMessage || null // сообщение после этапа
-        this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
-        this.bossWave = options.bossWave || false // это босс волна?
-      }
-    }
-
-    class WaveManager {
-      constructor() {
-        this.stages = [] // все этапы
-        this.currentStageIndex = 0
-        this.currentWaveIndex = 0
-        this.isActive = false
-        this.isPaused = false
-        this.pauseTimer = 0
-        this.spawnTimer = 0
-        this.stageComplete = false
-        this.infiniteMode = false
-        this.maxDrones = 15
-        this.maxBullets = 30
-
-        // Инициализация этапов
-        this.initStages()
-
-        this.currentWaveDrones = []
-      }
-
-      initStages() {
-        // Этап 1: Начало
-        this.stages.push(new StageConfig('Начало', {
-          startMessage: 'Charlie’s hot, Alpha’s somewhere… probably. Move out.',
-          waves: [
-            new WaveConfig('Разведка', {
-              drones: [{ type: DroneType.NORMAL, count: 5 }],
-              pauseAfter: 2000,
-              spawnInterval: 800
-            }),
-            new WaveConfig('Усиление', {
-              drones: [{ type: DroneType.NORMAL, count: 7 }],
-              pauseAfter: 2500,
-              spawnInterval: 700
-            }),
-            new WaveConfig('Гранатометчики', {
-              drones: [
-                { type: DroneType.NORMAL, count: 4 },
-                { type: DroneType.GRENADIER, count: 3 }
-              ],
-              pauseAfter: 3000,
-              spawnInterval: 900
-            })
-          ],
-          endMessage: '…You’re still up? Huh. That’s… not according to plan.',
-          pauseAfter: 4000
-        }))
-
-        // Этап 2: Нарастание
-        this.stages.push(new StageConfig('Нарастание', {
-          startMessage: `Squad, roger that—actually, wait, I didn’t say anything yet.
-Anyway, get moving.`,
-          waves: [
-            new WaveConfig('Волна 1', {
-              drones: [
-                { type: DroneType.NORMAL, count: 8 },
-                { type: DroneType.GRENADIER, count: 2 }
-              ],
-              pauseAfter: 2500,
-              spawnInterval: 600
-            }),
-            new WaveConfig('Волна 2', {
-              drones: [
-                { type: DroneType.NORMAL, count: 10 },
-                { type: DroneType.GRENADIER, count: 3 },
-                { type: DroneType.KAMIKAZE, count: 2 }
-              ],
-              pauseAfter: 3000,
-              spawnInterval: 550
-            }),
-            new WaveConfig('Волна 3', {
-              drones: [
-                { type: DroneType.NORMAL, count: 12 },
-                { type: DroneType.GRENADIER, count: 4 },
-                { type: DroneType.KAMIKAZE, count: 3 }
-              ],
-              pauseAfter: 3500,
-              spawnInterval: 500
-            })
-          ],
-          endMessage: `Well I’ll be damned.
-You actually made it, soldier.`,
-          pauseAfter: 5000
-        }))
-
-        // Этап 3: Тяжелый
-        this.stages.push(new StageConfig('Тяжелый', {
-          startMessage: `This is Command… I think.
-Contact expected. Try not to die immediately.`,
-          waves: [
-            new WaveConfig('Волна 1', {
-              drones: [
-                { type: DroneType.NORMAL, count: 15 },
-                { type: DroneType.GRENADIER, count: 5 },
-                { type: DroneType.KAMIKAZE, count: 3 }
-              ],
-              pauseAfter: 3000,
-              spawnInterval: 450
-            }),
-            new WaveConfig('Волна 2', {
-              drones: [
-                { type: DroneType.NORMAL, count: 18 },
-                { type: DroneType.GRENADIER, count: 6 },
-                { type: DroneType.KAMIKAZE, count: 4 }
-              ],
-              pauseAfter: 3500,
-              spawnInterval: 400
-            }),
-            new WaveConfig('Волна 3', {
-              drones: [
-                { type: DroneType.NORMAL, count: 20 },
-                { type: DroneType.GRENADIER, count: 7 },
-                { type: DroneType.KAMIKAZE, count: 5 }
-              ],
-              pauseAfter: 4000,
-              spawnInterval: 350
-            })
-          ],
-          endMessage: `You’re alive.
-I’m marking that as a… success.`,
-          pauseAfter: 6000
-        }))
-
-        // Этап 4: Босс
-        this.stages.push(new StageConfig('Босс', {
-          startMessage: `That’s not standard issue…
-Who signed off on that thing?`,
-          bossWave: true,
-          waves: [
-            new WaveConfig('Босс и свита', {
-              drones: [
-                { type: 'boss', count: 1 },
-                { type: DroneType.NORMAL, count: 2 },
-                { type: DroneType.GRENADIER, count: 1 }
-              ],
-              pauseAfter: 0,
-              spawnInterval: 1200
-            })
-          ],
-          endMessage: `Well… that worked.
-Command approves. Probably.`,
-          pauseAfter: 8000
-        }))
-
-        // Этап 5: Бесконечный режим
-        this.stages.push(new StageConfig('Бесконечность', {
-          startMessage: `Stay alive, Charlie.`,
-          waves: this.generateInfiniteWaves(),
-          infiniteMode: true
-        }))
-      }
-
-      generateInfiniteWaves() {
-        const waves = []
-        for (let i = 0; i < 100; i++) {
-          const difficulty = 1 + i * 0.2
-          waves.push(new WaveConfig(`Волна ${i + 1}`, {
-            drones: [
-              { type: DroneType.NORMAL, count: Math.floor(10 * difficulty) },
-              { type: DroneType.GRENADIER, count: Math.floor(3 * difficulty) },
-              { type: DroneType.KAMIKAZE, count: Math.floor(2 * difficulty) }
-            ],
-            pauseAfter: 3000,
-            spawnInterval: Math.max(200, 500 - i * 10)
-          }))
-        }
-        return waves
-      }
-
-      startStage(index) {
-        if (index >= this.stages.length) {
-          if (this.infiniteMode) {
-            this.startInfiniteMode()
-          }
-          return
-        }
-
-        const stage = this.stages[index]
-
-        // ВАЖНО: сбрасываем все счетчики перед стартом этапа
-        this.currentStageIndex = index
-        this.currentWaveIndex = 0
-        this.isActive = true
-        this.stageComplete = false
-        this.isPaused = false
-        this.pauseTimer = 0
-        this.spawnTimer = 0
-        this.currentWaveSpawnCount = 0
-        this.currentWaveDrones = []
-
-        this.isActive = false // ВАЖНО
-
-        if (stage.startMessage) {
-          // Показываем сообщение, затем запускаем волну
-          showCommanderMessage(5000, stage.startMessage).then(() => {
-            this.isActive = true
-            this.startCurrentWave()
-          })
-        } else {
-          // Нет сообщения — сразу запускаем
-          this.isActive = true
-          this.startCurrentWave()
-        }
-      }
-
-      // Запустить текущую волну
-      startCurrentWave() {
-        const stage = this.stages[this.currentStageIndex]
-
-        if (this.currentWaveIndex >= stage.waves.length) {
-          this.completeStage()
-          return
-        }
-
-        const wave = stage.waves[this.currentWaveIndex]
-
-        // ПРИНУДИТЕЛЬНОЕ ГЛУБОКОЕ КОПИРОВАНИЕ
-        this.currentWaveDrones = JSON.parse(JSON.stringify(wave.drones))
-
-        // Сохраняем общее количество дронов в волне как константу
-        this.totalWaveDrones = this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
-
-        this.isPaused = false
-        this.spawnTimer = 0
-        this.currentWaveSpawnCount = 0
-      }
-
-      // Завершить этап
-      completeStage() {
-        const stage = this.stages[this.currentStageIndex]
-
-        this.isActive = false
-        this.stageComplete = true
-        this.pauseTimer = 0
-        this.spawnTimer = 0
-        this.currentWaveSpawnCount = 0
-        this.currentWaveDrones = []
-
-        const nextStage = (cb) => {
-          this.currentStageIndex++
-          this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
-          if (this.currentStageIndex < this.stages.length) {
-            this.startStage(this.currentStageIndex)
-          } else {
-            this.startInfiniteMode()
-          }
-        }
-
-        if (stage.endMessage) {
-          showCommanderMessage(5000, stage.endMessage).then(() => {
-            if (stage.bossWave) {
-              this.startInfiniteMode()
-            } else {
-              nextStage()
-            }
-          })
-        } else {
-          nextStage()
-        }
-      }
-
-      // Запустить бесконечный режим
-      startInfiniteMode() {
-        this.infiniteMode = true
-        this.currentStageIndex = this.stages.length - 1
-        this.currentWaveIndex = 0
-        this.isActive = true
-
-        const stage = this.stages[this.currentStageIndex]
-        if (stage.startMessage) {
-          showCommanderMessage(5000, stage.startMessage).then(() => {
-            this.startCurrentWave()
-          })
-        }
-      }
-
-      // Обновление (вызывать в gameLoop)
-      update(delta) {
-        if (!this.isActive) return
-
-        // Проверяем индекс этапа
-        if (this.currentStageIndex >= this.stages.length) {
-          this.isActive = false
-          return
-        }
-
-        const stage = this.stages[this.currentStageIndex]
-        if (!stage) {
-          this.isActive = false
-          return
-        }
-
-        // ===== ФАЗА ПАУЗЫ МЕЖДУ ВОЛНАМИ =====
-        if (this.isPaused) {
-          this.pauseTimer += delta
-          const prevWave = stage.waves[this.currentWaveIndex - 1]
-
-          if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
-            this.isPaused = false
-            this.spawnTimer = 0
-            this.startCurrentWave()
-          }
-          return
-        }
-
-        // Проверяем индекс волны
-        if (this.currentWaveIndex >= stage.waves.length) {
-          this.completeStage()
-          return
-        }
-
-        const wave = stage.waves[this.currentWaveIndex]
-        const totalDrones = this.totalWaveDrones || 0
-
-        // ===== ФАЗА 1: СПАВН — пока не заспавнены все дроны =====
-        if (this.currentWaveSpawnCount < totalDrones) {
-          this.spawnTimer += delta
-          if (this.spawnTimer >= wave.spawnInterval) {
-            this.spawnTimer = 0
-            this.spawnNextDrone()
-          }
-          return
-        }
-
-        // ===== ФАЗА 2: ОЖИДАНИЕ — все заспавнены, ждём гибели =====
-        // Проверяем каждый кадр (не через spawnTimer), чтобы не пропустить момент
-        const alive = countDrones()
-
-        if (alive === 0) {
-          this.currentWaveIndex++
-
-          if (this.currentWaveIndex < stage.waves.length) {
-            this.isPaused = true
-            this.pauseTimer = 0
-          } else {
-            this.completeStage()
-          }
-        }
-      }
-
-      // Получить общее количество дронов в волне
-      getWaveDroneCount() {
-        if (!this.currentWaveDrones) return 0
-        return this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
-      }
-
-      // Посчитать сколько дронов уже заспавнено в текущей волне
-      countSpawnedInWave() {
-        // Можно добавить счетчик в WaveManager
-        if (!this.currentWaveSpawnCount) {
-          this.currentWaveSpawnCount = 0
-        }
-        return this.currentWaveSpawnCount
-      }
-
-      // Заспавнить следующего дрона из волны
-      spawnNextDrone() {
-        // Приоритет боссу: если он есть в списке, спавним его первым
-        let typeEntry = this.currentWaveDrones.find(d => d.type === 'boss' && d.count > 0)
-
-        if (!typeEntry) {
-          const availableTypes = this.currentWaveDrones.filter(d => d.count > 0)
-          if (availableTypes.length === 0) return
-          typeEntry = availableTypes[Math.floor(Math.random() * availableTypes.length)]
-        }
-
-        typeEntry.count--
-        this.currentWaveSpawnCount++
-
-        this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', ')
-
-        this.spawnDroneByType(typeEntry.type)
-      }
-
-      // Спавн дрона по типу
-      spawnDroneByType(type) {
-        switch (type) {
-          case DroneType.NORMAL:
-            return spawnNormalDrone()
-          case DroneType.GRENADIER:
-            return spawnGrenadier()
-          case DroneType.KAMIKAZE:
-            return spawnKamikaze()
-          case 'boss':
-            return spawnBoss()
-        }
-      }
-
-      // Тестовые функции для клавиш
-      testWave(stageIndex, waveIndex) {
-        this.isActive = true
-        this.currentStageIndex = stageIndex
-        this.currentWaveIndex = waveIndex
-        this.isPaused = false
-        this.spawnTimer = 0
-      }
-
-      testStage(stageIndex) {
-        this.startStage(stageIndex)
-      }
-    }
-
-    // Создаем экземпляр менеджера
-    const waveManager = new WaveManager()
-
-    // Спавн группы одинаковых дронов
-    function spawnGroup(type, count, interval = 500) {
-      let spawned = 0
-
-      const intervalId = setInterval(() => {
-        if (spawned >= count) {
-          clearInterval(intervalId)
-          return
-        }
-
-        switch (type) {
-          case DroneType.NORMAL:
-            spawnNormalDrone()
-            break
-          case DroneType.GRENADIER:
-            spawnGrenadier()
-            break
-          case DroneType.KAMIKAZE:
-            spawnKamikaze()
-            break
-        }
-
-        spawned++
-      }, interval)
-    }
-
-    // Спавн смешанной группы
-    function spawnMixedGroup(droneTypes, interval = 500) {
-      const total = droneTypes.reduce((sum, d) => sum + d.count, 0)
-      let spawned = 0
-
-      const intervalId = setInterval(() => {
-        if (spawned >= total) {
-          clearInterval(intervalId)
-          return
-        }
-
-        // Выбираем случайный тип из оставшихся
-        const available = droneTypes.filter(d => d.count > 0)
-        if (available.length === 0) {
-          clearInterval(intervalId)
-          return
-        }
-
-        const type = available[Math.floor(Math.random() * available.length)]
-        type.count--
-
-        switch (type.type) {
-          case DroneType.NORMAL:
-            spawnNormalDrone()
-            break
-          case DroneType.GRENADIER:
-            spawnGrenadier()
-            break
-          case DroneType.KAMIKAZE:
-            spawnKamikaze()
-            break
-        }
-
-        spawned++
-      }, interval)
-    }
-
-    // Спавн волны с нарастающей сложностью
-    function spawnProgressiveWave(baseCount, increments, interval = 500) {
-      let wave = 0
-
-      function spawnNext() {
-        if (wave >= increments.length) return
-
-        const drones = [
-          { type: DroneType.NORMAL, count: baseCount + increments[wave].add }
-        ]
-
-        spawnMixedGroup(drones, interval)
-
-        wave++
-        setTimeout(spawnNext, 3000 + wave * 1000)
-      }
-
-      spawnNext()
-    }
-
-    // Класс для облаков
-    class Cloud {
-      constructor() {
-        this.width = 2528 // ширина облаков (в 2 раза шире экрана как вы сказали)
-        this.height = 317
-        this.x = -1264 // случайная позиция
-        this.y = 0 // только в верхней трети экрана
-        this.speed = 0.01 + Math.random() * 0.1 // очень медленная скорость
-        this.opacity = 0.3 + Math.random() * 0.3 // прозрачность
-      }
-
-      update() {
-        this.x += this.speed
-        // Зацикливание: когда облако уходит за правый край, появляется слева
-        if (this.x > canvas.width) {
-          this.x = -this.width
-        }
-      }
-
-      draw(ctx) {
-        if (!cloudsImg.complete) return
-
-        ctx.globalAlpha = this.opacity
-        ctx.drawImage(
-          cloudsImg,
-          this.x,
-          this.y,
-          this.width,
-          this.height
-        )
-        ctx.globalAlpha = 1.0
-      }
-    }
-
-    let clouds = []
-
-    // Инициализация облаков (сократили до 2 слоев для экономии GPU)
-    function initClouds(count = 2) {
-      clouds = []
-      for (let i = 0; i < count; i++) {
-        clouds.push(new Cloud())
-      }
-    }
-
-    // ... (Input listeners and utility functions remain the same)
-    document.addEventListener("keydown", e => {
-      if (e.code === "KeyP") {
-        if (currentState === GameState.GAME) {
-          currentState = GameState.PAUSED
-        } else if (currentState === GameState.PAUSED) {
-          currentState = GameState.GAME
-        }
-      }
-
-      if (currentState === GameState.PAUSED) {
-        return
-      }
-
-      if (e.code === "Space") {
-        shooting = true
-
-        const dir = getShootDirection()
-
-        if (dir && !currentWeapon.auto) {
-          shoot(dir.dx, dir.dy)
-        }
-      }
-
-      keys[e.key] = true
-    })
-
-    document.addEventListener("keyup", e => {
-      if (currentState === GameState.PAUSED) {
-        if (e.code === "Space") {
-          shooting = false
-        }
-        return
-      }
-
-      if (e.code === "Space") {
-        shooting = false
-      }
-      keys[e.key] = false
-    })
-
-    const fadeEl = document.getElementById("fade")
-
-    async function fadeOutMenu() {
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      document.body.classList.add("hide-cursor")
-      await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
-      fadeEl.style.opacity = "1"
-      fadeEl.style.transition = "opacity 3s"
-    }
-
-    async function startGameSequence() {
-      await new Promise(r => setTimeout(r, 5000))
-      const ui = document.getElementById("ui")
-      fadeEl.style.opacity = "0"
-      ui.style.display = "none"
-      effectsLayer.style.display = "block"
-
-      // Отключаем все визуальные эффекты
-      EffectsManager.disableForGame()
-
-      currentState = GameState.GAME
-      await new Promise(r => setTimeout(r, 1000))
-    }
-
-    async function showCommanderIntro() {
-      await new Promise(r => setTimeout(r, 500))
-
-//       const msg = `
-//     Значит так, товарищ солдат. Соответственно… соответственно.
-// — Слушай боевую задачу.
-// В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
-// Будешь оказывать содействие в организации снабжения и связи.
-// Ротация будет каждые… очень скоро.
-// В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
-// Кто без команды пойдёт назад — будет принят за наступающие силы противника.
-//     `
-      const msg = `Alright, listen up, soldier.
-Here’s the situation… yeah… here’s the situation.
-Your mission: at H-hour, you move out to reinforce a fortified position.
-Units from the 69th are already dug in — area’s considered secure.
-You’ll assist with supply lines and comms.
-Rotations will be… happening soon enough.
-In case of injury, you’ll be… taken care of and evacuated to the rear.
-Anyone falling back without orders will be treated as hostile.`
-      await showCommanderMessage(8000, msg)
-    }
-
-    async function animatePlayerIntro() {
-      player.x = -player.width
-      player.y = canvas.height - groundHeight - player.height
-      player.direction = 1 // идем вправо
-      const targetX = canvas.width * 0.5
-      const speed = 3
-
-      return new Promise(resolve => {
-        const interval = setInterval(() => {
-          // “имитация” движения, как при нажатии клавиш
-          player.vx = speed
-          player.isMoving = true
-          player.update()  // обновляем позицию и кадры
-
-          if (player.x >= targetX) {
-            player.x = targetX
-            player.vx = 0
-            player.isMoving = false
-            player.update()
-            clearInterval(interval)
-            resolve()
-          }
-        }, 100)
-      })
-    }
-
-    function splitTextIntoPages(text, maxChars = 140) {
-      const words = text.split(" ")
-      const pages = []
-
-      let current = ""
-
-      for (const word of words) {
-        if ((current + word).length > maxChars) {
-          pages.push(current.trim())
-          current = ""
-        }
-
-        current += word + " "
-      }
-
-      if (current.length) pages.push(current.trim())
-
-      return pages
-    }
-
-    async function typeText(element, text, speed = 25) {
-      element.textContent = ""
-      let skip = false
-
-      function skipHandler(e) {
-        if (e.code === "Enter") skip = true
-      }
-
-      window.addEventListener("keydown", skipHandler)
-      for (let i = 0; i < text.length; i++) {
-        element.textContent += text[i]
-
-        if (i % 3 === 0 && text[i] !== " ") {
-          try {
-            playPooled(GAME_SOUNDS.typeWriter, 0.15)
-          } catch (e) {
-            console.error("Audio pool error:", e)
-          }
-        }
-
-        if (skip) {
-          element.textContent = text
-          break
-        }
-
-        await new Promise(r => setTimeout(r, speed))
-      }
-
-      window.removeEventListener("keydown", skipHandler)
-    }
-
-    function waitForContinue() {
-      return new Promise(resolve => {
-        function handler(e) {
-          if (e.code === "Enter") {
-            window.removeEventListener("keydown", handler)
-            resolve()
-          }
-        }
-
-        window.addEventListener("keydown", handler)
-      })
-    }
-
-    function buildCollisionGrid() {
-      collisionGrid = {}
-
-      gameObjects.forEach(obj => {
-        if (!obj.alive) return
-
-        const gridX = Math.floor(obj.x / GRID_SIZE)
-        const gridY = Math.floor(obj.y / GRID_SIZE)
-        const key = `${gridX},${gridY}`
-
-        if (!collisionGrid[key]) {
-          collisionGrid[key] = []
-        }
-        collisionGrid[key].push(obj)
-      })
-    }
-
-    function optimizeCollisions() {
-      buildCollisionGrid()
-
-      const bullets = gameObjects.filter(o => o instanceof Bullet)
-      const drones = gameObjects.filter(o => o instanceof BaseDrone)
-
-      bullets.forEach(b => {
-        const gridX = Math.floor(b.x / GRID_SIZE)
-        const gridY = Math.floor(b.y / GRID_SIZE)
-        const key = `${gridX},${gridY}`
-
-        // Проверяем только объекты в той же ячейке сетки
-        const nearbyObjects = collisionGrid[key] || []
-
-        nearbyObjects.forEach(obj => {
-          if (obj instanceof BaseDrone && isColliding(b, obj)) {
-            b.alive = false
-            obj.alive = false
-            updateScore()
-          }
-        })
-      })
-    }
-
-    function freeze(ms) {
-      hitFreeze = ms
-    }
-
-    function spawn(obj) {
-      gameObjects.push(obj)
-    }
-
-    function isFirePressed() {
-      return keys[" "] || keys["Space"]
-    }
-
-    // DEBUG горячие клавиши
-    document.addEventListener("keydown", e => {
-      if (e.key === "i") {
-        setWeapon('rifle')
-      }
-
-      if (e.key === "s") {
-        setWeapon('shotgun')
-      }
-
-      if (e.key === "m") {
-        setWeapon('machinegun')
-      }
-
-      if (e.code === "Space") {
-        e.preventDefault()
-      }
-
-      if (e.code === "KeyR") {
-        if (isReloading) return
-        startReload()
-      }
-
-      keys[e.key] = true
-    })
-
-    let currentWeapon
-    let ammoInMagazine
-    let magazines
-
-    function setWeapon(type) {
-      currentWeapon = structuredClone(WEAPONS[type])
-
-      ammoInMagazine = currentWeapon.magazineSize
-      magazines = currentWeapon.magazines
-
-      // можно сбросить перезарядку
-      isReloading = false
-    }
-
-    let lastShotTime = 0
-
-    function shoot(dirX, dirY) {
-      if (dirX === 0 && dirY === 0) return
-      if (isReloading) return
-      if (ammoInMagazine <= 0) return
-
-      if (Date.now() - lastShotTime < currentWeapon.fireRate) return
-
-      lastShotTime = Date.now()
-
-      ammoInMagazine--
-      const currentWeaponName = currentWeapon.name
-      if (WEAPON_SOUNDS[currentWeaponName]) {
-        playPooled(WEAPON_SOUNDS[currentWeaponName].shoot, 0.4)
-      }
-
-      for (let i = 0; i < currentWeapon.bulletsPerShot; i++) {
-
-        let angle = Math.atan2(dirY, dirX)
-
-        if (currentWeapon.spread > 0) {
-
-          const spreadRad =
-            (Math.random() * currentWeapon.spread -
-              currentWeapon.spread / 2) * Math.PI / 180
-
-          angle += spreadRad
-        }
-
-        const dx = Math.cos(angle)
-        const dy = Math.sin(angle)
-
-        const speed = currentWeapon.bulletSpeed
-
-        const x = player.x + player.width / 2
-        const y = player.y + player.height / 2
-
-        spawn(new Bullet(x, y, dx * speed, dy * speed))
-      }
-
-      if (ammoInMagazine <= 0 && magazines > 0) {
-        startReload()
-      }
-    }
-
-    let shooting = false
-
-    const muteBtn = document.getElementById("muteBtn")
-
-    muteBtn.onclick = () => {
-      toggleMusic(); // если музыка выключена, остановим все треки
-
-      !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
-    }
-
-    let currentMusic = null
-
-    let isMusicOn = localStorage.getItem("musicOn");
-    if (!isMusicOn === null) {
-      isMusicOn = true; // по умолчанию музыка включена
-    } else {
-      isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
-    }
-
-    function playTrack(track) {
-      if (isMusicOn) {
-        track.play();
-      }
-    }
-
-    function pauseTrack(track) {
-      track.pause();
-      track.currentTime = 0;
-    }
-
-    function toggleMusic() {
-      isMusicOn = !isMusicOn;
-      localStorage.setItem("musicOn", isMusicOn);
-
-      if (!isMusicOn) {
-        // выключаем всю музыку
-        gameMusic.pause();
-        gameOverMusic.pause();
-        menuMusic.pause();
-        Object.values(waveMusic).forEach(track => pauseTrack(track));
-      } else {
-        menuMusic.play()
-      }
-    }
-
-    function playWaveMusic(wave) {
-      if (currentMusic) {
-        currentMusic.pause()
-        currentMusic.currentTime = 0
-      }
-
-      const music = waveMusic[wave]
-
-      if (music && isMusicOn) {
-        music.play()
-        currentMusic = music
-      }
-    }
-
-    function getShootDirection() {
-      let dx = 0
-      let dy = -1   // по умолчанию вверх
-
-      if (keys["ArrowRight"]) {
-        dx = 0.7
-        dy = -0.7
-      }
-
-      if (keys["ArrowLeft"]) {
-        dx = -0.7
-        dy = -0.7
-      }
-
-      return { dx, dy }
-    }
-
-    function startReload() {
-      if (isReloading) return
-      if (magazines <= 0) return
-      if (ammoInMagazine === currentWeapon.magazineSize) return
-
-      isReloading = true
-      const currentWeaponName = currentWeapon.name
-
-      if (WEAPON_SOUNDS[currentWeaponName]) {
-        playPooled(WEAPON_SOUNDS[currentWeaponName].reload, 0.5)
-      }
-
-      setTimeout(() => {
-
-        ammoInMagazine = currentWeapon.magazineSize
-        magazines--
-
-        isReloading = false
-
-      }, currentWeapon.reloadTime)
-
-    }
-
-    function isColliding(a, b) {
-      if (!a || !b || !a.alive || !b.alive) return false
-
-      const w1 = a.width || a.size || 0
-      const h1 = a.height || a.size || 0
-      const w2 = b.width || b.size || 0
-      const h2 = b.height || b.size || 0
-
-      return a.x < b.x + w2 &&
-        a.x + w1 > b.x &&
-        a.y < b.y + h2 &&
-        a.y + h1 > b.y
-    }
-
-    function showScoreGain(points) {
-      const scoreEl = document.getElementById("score")
-      const pop = document.getElementById("score-pop")
-
-      pop.innerText = "+" + points
-
-      pop.classList.remove("score-pop-show")
-      void pop.offsetWidth
-      pop.classList.add("score-pop-show")
-
-      scoreEl.classList.add("score-pop")
-
-      setTimeout(() => {
-        scoreEl.classList.remove("score-pop")
-      }, 150)
-    }
-
-    function countEnemyBullets() {
-      return globalEnemyBulletsCount
-    }
-
-    async function animateCommanderBox() {
-      const box = UI.notification.balloon
-
-      box.style.display = "block"
-
-      // маленькая задержка чтобы браузер применил display
-      await new Promise(r => setTimeout(r, 20))
-
-      box.style.right = "40px"
-
-      // ждём завершения анимации
-      await new Promise(r => setTimeout(r, 600))
-    }
-
-    async function hideCommanderBox() {
-      const box = UI.notification.balloon
-
-      box.style.right = "-500px"
-
-      await new Promise(r => setTimeout(r, 600))
-
-      box.style.display = "none"
-    }
-
-    async function showCommanderMessage(duration = 10000, message = null) {
-      const prevState = currentState
-      currentState = GameState.DIALOG
-
-      const radioStart = GAME_SOUNDS.radioOn
-      const radioEnd = GAME_SOUNDS.radioOff
-
-      const balloon = UI.notification.balloon
-      const p = balloon.querySelector("p");
-      const hint = document.getElementById("continueHint")
-
-      await animateCommanderBox()
-
-      radioStart.currentTime = 0
-      await radioStart.play()
-
-      await new Promise(r => setTimeout(r, 300))
-
-      const pages = splitTextIntoPages(message)
-      for (let i = 0; i < pages.length; i++) {
-
-        const page = pages[i] + "..."
-
-        await typeText(p, page)
-
-        hint.style.display = "block"
-
-        await waitForContinue()
-
-        hint.style.display = "none"
-      }
-
-      radioEnd.currentTime = 0
-      await radioEnd.play()
-
-      await hideCommanderBox()
-
-      if (currentState === GameState.DIALOG) {
-        currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
-      }
-    }
-
-    function fadeScreen(duration = 800) {
-      const f = document.getElementById("fade")
-      return new Promise(resolve => {
-        f.style.transition = `opacity ${duration / 2}ms`
-        f.style.opacity = 1
-        setTimeout(() => {
-          f.style.opacity = 0
-          setTimeout(resolve, duration / 2)
-        }, duration / 2)
-      })
-    }
-
-    async function crossfadeMusic(from, to, duration = 1000) {
-      if (to) {
-        to.volume = 0
-        if (isMusicOn) {
-          to.play()
-        }
-      }
-      const steps = 20
-      const stepTime = duration / steps
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps
-        if (from) from.volume = 0.2 * (1 - t)
-        if (to) to.volume = 0.2 * t
-        await new Promise(r => setTimeout(r, stepTime))
-      }
-      if (from) from.pause()
-    }
-
     class BaseDrone {
       constructor(x, y, options = {}) {
         this.x = x
@@ -2451,7 +1095,7 @@ Anyone falling back without orders will be treated as hostile.`
         this.category = 'bullet'
       }
 
-      update(delta) {
+      update() {
         this.x += this.vx
         this.y += this.vy
 
@@ -2481,7 +1125,7 @@ Anyone falling back without orders will be treated as hostile.`
         this.alive = true
         this.category = 'enemyBullet'
       }
-      update(delta) {
+      update() {
         this.y += this.speed
         if (this.y > canvas.height + 100) this.alive = false
       }
@@ -2673,7 +1317,7 @@ Anyone falling back without orders will be treated as hostile.`
         this.category = 'enemyBullet' // Грены тоже пули врага
       }
 
-      update(delta) {
+      update() {
         if (!this.onGround) {
           this.y += this.vy
 
@@ -2711,30 +1355,6 @@ Anyone falling back without orders will be treated as hostile.`
         }
       }
     }
-
-    function explodeGrenade(g) {
-      spawnGroundExplosion(g.x, g.y)
-
-      const explosionRadius = 80
-
-      const gx = g.x + g.width / 2
-      const gy = g.y + g.height / 2
-
-      const px = player.x + player.width / 2
-      const py = player.y + player.height / 2
-
-      const dx = px - gx
-      const dy = py - gy
-
-      const dist = Math.sqrt(dx * dx + dy * dy)
-
-      if (dist < explosionRadius) {
-        if (!DEBUG.godMode && player.alive) {
-          player.die()
-        }
-      }
-    }
-
     class GroundExplosion {
       constructor(x, y) {
         this.x = x;
@@ -2773,41 +1393,464 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
 
-    // Функции спавна
-    function spawnNormalDrone() {
-      const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
 
-      const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
-      spawn(drone)
-      return drone
+    // Класс для настройки волны
+    class WaveConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.drones = options.drones || [] // массив {type: DroneType, count: number}
+        this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
+        this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
+        this.message = options.message || null // сообщение перед волной
+        this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
+        this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
+      }
     }
 
-    function spawnGrenadier() {
-      const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
-
-      const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
-      spawn(drone)
-      return drone
+    // Класс для большой волны (этапа)
+    class StageConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.waves = options.waves || [] // массив WaveConfig
+        this.startMessage = options.startMessage || null // сообщение перед этапом
+        this.endMessage = options.endMessage || null // сообщение после этапа
+        this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
+        this.bossWave = options.bossWave || false // это босс волна?
+      }
     }
 
-    function spawnKamikaze() {
-      const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
+    class WaveManager {
+      constructor() {
+        this.stages = [] // все этапы
+        this.currentStageIndex = 0
+        this.currentWaveIndex = 0
+        this.isActive = false
+        this.isPaused = false
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.stageComplete = false
+        this.infiniteMode = false
+        this.maxDrones = 15
+        this.maxBullets = 30
 
-      const drone = new KamikazeDrone()
-      spawn(drone)
-      return drone
+        // Инициализация этапов
+        this.initStages()
+
+        this.currentWaveDrones = []
+      }
+
+      initStages() {
+        // Этап 1: Начало
+        this.stages.push(new StageConfig('Начало', {
+          startMessage: 'Charlie’s hot, Alpha’s somewhere… probably. Move out.',
+          waves: [
+            new WaveConfig('Разведка', {
+              drones: [{ type: DroneType.NORMAL, count: 5 }],
+              pauseAfter: 2000,
+              spawnInterval: 800
+            }),
+            new WaveConfig('Усиление', {
+              drones: [{ type: DroneType.NORMAL, count: 7 }],
+              pauseAfter: 2500,
+              spawnInterval: 700
+            }),
+            new WaveConfig('Гранатометчики', {
+              drones: [
+                { type: DroneType.NORMAL, count: 4 },
+                { type: DroneType.GRENADIER, count: 3 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 900
+            })
+          ],
+          endMessage: '…You’re still up? Huh. That’s… not according to plan.',
+          pauseAfter: 4000
+        }))
+
+        // Этап 2: Нарастание
+        this.stages.push(new StageConfig('Нарастание', {
+          startMessage: `Squad, roger that—actually, wait, I didn’t say anything yet.
+Anyway, get moving.`,
+          waves: [
+            new WaveConfig('Волна 1', {
+              drones: [
+                { type: DroneType.NORMAL, count: 8 },
+                { type: DroneType.GRENADIER, count: 2 }
+              ],
+              pauseAfter: 2500,
+              spawnInterval: 600
+            }),
+            new WaveConfig('Волна 2', {
+              drones: [
+                { type: DroneType.NORMAL, count: 10 },
+                { type: DroneType.GRENADIER, count: 3 },
+                { type: DroneType.KAMIKAZE, count: 2 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 550
+            }),
+            new WaveConfig('Волна 3', {
+              drones: [
+                { type: DroneType.NORMAL, count: 12 },
+                { type: DroneType.GRENADIER, count: 4 },
+                { type: DroneType.KAMIKAZE, count: 3 }
+              ],
+              pauseAfter: 3500,
+              spawnInterval: 500
+            })
+          ],
+          endMessage: `Well I’ll be damned.
+You actually made it, soldier.`,
+          pauseAfter: 5000
+        }))
+
+        // Этап 3: Тяжелый
+        this.stages.push(new StageConfig('Тяжелый', {
+          startMessage: `This is Command… I think.
+Contact expected. Try not to die immediately.`,
+          waves: [
+            new WaveConfig('Волна 1', {
+              drones: [
+                { type: DroneType.NORMAL, count: 15 },
+                { type: DroneType.GRENADIER, count: 5 },
+                { type: DroneType.KAMIKAZE, count: 3 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 450
+            }),
+            new WaveConfig('Волна 2', {
+              drones: [
+                { type: DroneType.NORMAL, count: 18 },
+                { type: DroneType.GRENADIER, count: 6 },
+                { type: DroneType.KAMIKAZE, count: 4 }
+              ],
+              pauseAfter: 3500,
+              spawnInterval: 400
+            }),
+            new WaveConfig('Волна 3', {
+              drones: [
+                { type: DroneType.NORMAL, count: 20 },
+                { type: DroneType.GRENADIER, count: 7 },
+                { type: DroneType.KAMIKAZE, count: 5 }
+              ],
+              pauseAfter: 4000,
+              spawnInterval: 350
+            })
+          ],
+          endMessage: `You’re alive.
+I’m marking that as a… success.`,
+          pauseAfter: 6000
+        }))
+
+        // Этап 4: Босс
+        this.stages.push(new StageConfig('Босс', {
+          startMessage: `That’s not standard issue…
+Who signed off on that thing?`,
+          bossWave: true,
+          waves: [
+            new WaveConfig('Босс и свита', {
+              drones: [
+                { type: 'boss', count: 1 },
+                { type: DroneType.NORMAL, count: 2 },
+                { type: DroneType.GRENADIER, count: 1 }
+              ],
+              pauseAfter: 0,
+              spawnInterval: 1200
+            })
+          ],
+          endMessage: `Well… that worked.
+Command approves. Probably.`,
+          pauseAfter: 8000
+        }))
+
+        // Этап 5: Бесконечный режим
+        this.stages.push(new StageConfig('Бесконечность', {
+          startMessage: `Stay alive, Charlie.`,
+          waves: this.generateInfiniteWaves(),
+          infiniteMode: true
+        }))
+      }
+
+      generateInfiniteWaves() {
+        const waves = []
+        for (let i = 0; i < 100; i++) {
+          const difficulty = 1 + i * 0.2
+          waves.push(new WaveConfig(`Волна ${i + 1}`, {
+            drones: [
+              { type: DroneType.NORMAL, count: Math.floor(10 * difficulty) },
+              { type: DroneType.GRENADIER, count: Math.floor(3 * difficulty) },
+              { type: DroneType.KAMIKAZE, count: Math.floor(2 * difficulty) }
+            ],
+            pauseAfter: 3000,
+            spawnInterval: Math.max(200, 500 - i * 10)
+          }))
+        }
+        return waves
+      }
+
+      startStage(index) {
+        if (index >= this.stages.length) {
+          if (this.infiniteMode) {
+            this.startInfiniteMode()
+          }
+          return
+        }
+
+        const stage = this.stages[index]
+
+        // ВАЖНО: сбрасываем все счетчики перед стартом этапа
+        this.currentStageIndex = index
+        this.currentWaveIndex = 0
+        this.isActive = true
+        this.stageComplete = false
+        this.isPaused = false
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+        this.currentWaveDrones = []
+
+        this.isActive = false // ВАЖНО
+
+        if (stage.startMessage) {
+          // Показываем сообщение, затем запускаем волну
+          showCommanderMessage(5000, stage.startMessage).then(() => {
+            this.isActive = true
+            this.startCurrentWave()
+          })
+        } else {
+          // Нет сообщения — сразу запускаем
+          this.isActive = true
+          this.startCurrentWave()
+        }
+      }
+
+      // Запустить текущую волну
+      startCurrentWave() {
+        const stage = this.stages[this.currentStageIndex]
+
+        if (this.currentWaveIndex >= stage.waves.length) {
+          this.completeStage()
+          return
+        }
+
+        const wave = stage.waves[this.currentWaveIndex]
+
+        // ПРИНУДИТЕЛЬНОЕ ГЛУБОКОЕ КОПИРОВАНИЕ
+        this.currentWaveDrones = JSON.parse(JSON.stringify(wave.drones))
+
+        // Сохраняем общее количество дронов в волне как константу
+        this.totalWaveDrones = this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
+
+        this.isPaused = false
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+      }
+
+      // Завершить этап
+      completeStage() {
+        const stage = this.stages[this.currentStageIndex]
+
+        this.isActive = false
+        this.stageComplete = true
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+        this.currentWaveDrones = []
+
+        const nextStage = () => {
+          this.currentStageIndex++
+          this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
+          if (this.currentStageIndex < this.stages.length) {
+            this.startStage(this.currentStageIndex)
+          } else {
+            this.startInfiniteMode()
+          }
+        }
+
+        if (stage.endMessage) {
+          showCommanderMessage(5000, stage.endMessage).then(() => {
+            if (stage.bossWave) {
+              this.startInfiniteMode()
+            } else {
+              nextStage()
+            }
+          })
+        } else {
+          nextStage()
+        }
+      }
+
+      // Запустить бесконечный режим
+      startInfiniteMode() {
+        this.infiniteMode = true
+        this.currentStageIndex = this.stages.length - 1
+        this.currentWaveIndex = 0
+        this.isActive = true
+
+        const stage = this.stages[this.currentStageIndex]
+        if (stage.startMessage) {
+          showCommanderMessage(5000, stage.startMessage).then(() => {
+            this.startCurrentWave()
+          })
+        }
+      }
+
+      // Обновление (вызывать в gameLoop)
+      update(delta) {
+        if (!this.isActive) return
+
+        // Проверяем индекс этапа
+        if (this.currentStageIndex >= this.stages.length) {
+          this.isActive = false
+          return
+        }
+
+        const stage = this.stages[this.currentStageIndex]
+        if (!stage) {
+          this.isActive = false
+          return
+        }
+
+        // ===== ФАЗА ПАУЗЫ МЕЖДУ ВОЛНАМИ =====
+        if (this.isPaused) {
+          this.pauseTimer += delta
+          const prevWave = stage.waves[this.currentWaveIndex - 1]
+
+          if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
+            this.isPaused = false
+            this.spawnTimer = 0
+            this.startCurrentWave()
+          }
+          return
+        }
+
+        // Проверяем индекс волны
+        if (this.currentWaveIndex >= stage.waves.length) {
+          this.completeStage()
+          return
+        }
+
+        const wave = stage.waves[this.currentWaveIndex]
+        const totalDrones = this.totalWaveDrones || 0
+
+        // ===== ФАЗА 1: СПАВН — пока не заспавнены все дроны =====
+        if (this.currentWaveSpawnCount < totalDrones) {
+          this.spawnTimer += delta
+          if (this.spawnTimer >= wave.spawnInterval) {
+            this.spawnTimer = 0
+            this.spawnNextDrone()
+          }
+          return
+        }
+
+        // ===== ФАЗА 2: ОЖИДАНИЕ — все заспавнены, ждём гибели =====
+        // Проверяем каждый кадр (не через spawnTimer), чтобы не пропустить момент
+        const alive = countDrones()
+
+        if (alive === 0) {
+          this.currentWaveIndex++
+
+          if (this.currentWaveIndex < stage.waves.length) {
+            this.isPaused = true
+            this.pauseTimer = 0
+          } else {
+            this.completeStage()
+          }
+        }
+      }
+
+      // Получить общее количество дронов в волне
+      // getWaveDroneCount() {
+      //   if (!this.currentWaveDrones) return 0
+      //   return this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
+      // }
+
+      // Посчитать сколько дронов уже заспавнено в текущей волне
+      // countSpawnedInWave() {
+      //   // Можно добавить счетчик в WaveManager
+      //   if (!this.currentWaveSpawnCount) {
+      //     this.currentWaveSpawnCount = 0
+      //   }
+      //   return this.currentWaveSpawnCount
+      // }
+
+      // Заспавнить следующего дрона из волны
+      spawnNextDrone() {
+        // Приоритет боссу: если он есть в списке, спавним его первым
+        let typeEntry = this.currentWaveDrones.find(d => d.type === 'boss' && d.count > 0)
+
+        if (!typeEntry) {
+          const availableTypes = this.currentWaveDrones.filter(d => d.count > 0)
+          if (availableTypes.length === 0) return
+          typeEntry = availableTypes[Math.floor(Math.random() * availableTypes.length)]
+        }
+
+        typeEntry.count--
+        this.currentWaveSpawnCount++
+
+        this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', ')
+
+        this.spawnDroneByType(typeEntry.type)
+      }
+
+      // Спавн дрона по типу
+      spawnDroneByType(type) {
+        switch (type) {
+          case DroneType.NORMAL:
+            return spawnNormalDrone()
+          case DroneType.GRENADIER:
+            return spawnGrenadier()
+          case DroneType.KAMIKAZE:
+            return spawnKamikaze()
+          case 'boss':
+            return spawnBoss()
+        }
+      }
     }
 
-    // Обновленная функция countDrones для подсчета всех типов
+    // ======================
+    // HELPERS
+    // ======================
+    function isColliding(a, b) {
+      if (!a || !b || !a.alive || !b.alive) return false
+
+      const w1 = a.width || a.size || 0
+      const h1 = a.height || a.size || 0
+      const w2 = b.width || b.size || 0
+      const h2 = b.height || b.size || 0
+
+      return a.x < b.x + w2 &&
+        a.x + w1 > b.x &&
+        a.y < b.y + h2 &&
+        a.y + h1 > b.y
+    }
+
+    function showScoreGain(points) {
+      const scoreEl = document.getElementById("score")
+      const pop = document.getElementById("score-pop")
+
+      pop.innerText = "+" + points
+
+      pop.classList.remove("score-pop-show")
+      void pop.offsetWidth
+      pop.classList.add("score-pop-show")
+
+      scoreEl.classList.add("score-pop")
+
+      setTimeout(() => {
+        scoreEl.classList.remove("score-pop")
+      }, 150)
+    }
+
+    function countEnemyBullets() {
+      return globalEnemyBulletsCount
+    }
+
     function countDrones() {
       // Исключаем босса из общего лимита, если хотим чтобы миньоны спавнились всегда
       return globalActiveDronesCount
     }
 
-    // Обновленная функция calculateDroneScore
     function calculateDroneScore(drone) {
       const rawScore = drone.scoreValue *
         (1 + Math.min(survivalTime / 60, 5)) *
@@ -2816,11 +1859,112 @@ Anyone falling back without orders will be treated as hostile.`
       return Math.floor(rawScore)
     }
 
-    function spawnBoss() {
-      const boss = new BossDrone()
-      spawn(boss)
-      boss.active = true
-      return boss
+    function getShootDirection() {
+      let dx = 0
+      let dy = -1   // по умолчанию вверх
+
+      if (keys["ArrowRight"]) {
+        dx = 0.7
+        dy = -0.7
+      }
+
+      if (keys["ArrowLeft"]) {
+        dx = -0.7
+        dy = -0.7
+      }
+
+      return { dx, dy }
+    }
+    function splitTextIntoPages(text, maxChars = 140) {
+      const words = text.split(" ")
+      const pages = []
+
+      let current = ""
+
+      for (const word of words) {
+        if ((current + word).length > maxChars) {
+          pages.push(current.trim())
+          current = ""
+        }
+
+        current += word + " "
+      }
+
+      if (current.length) pages.push(current.trim())
+
+      return pages
+    }
+
+    async function typeText(element, text, speed = 25) {
+      element.textContent = ""
+      let skip = false
+
+      function skipHandler(e) {
+        if (e.code === "Enter") skip = true
+      }
+
+      window.addEventListener("keydown", skipHandler)
+      for (let i = 0; i < text.length; i++) {
+        element.textContent += text[i]
+
+        if (i % 3 === 0 && text[i] !== " ") {
+          try {
+            playPooled(GAME_SOUNDS.typeWriter, 0.15)
+          } catch (e) {
+            console.error("Audio pool error:", e)
+          }
+        }
+
+        if (skip) {
+          element.textContent = text
+          break
+        }
+
+        await new Promise(r => setTimeout(r, speed))
+      }
+
+      window.removeEventListener("keydown", skipHandler)
+    }
+
+    function spawn(obj) {
+      gameObjects.push(obj)
+    }
+
+    function isFirePressed() {
+      return keys[" "] || keys["Space"]
+    }
+
+    function spawnExplosion(x, y) {
+      spawn(new Explosion(x, y))
+      playPooled(droneExplosionSound, 0.2)
+    }
+
+    function spawnGroundExplosion(x, y) {
+      spawn(new GroundExplosion(x, y))
+      playPooled(groundExplosionSound, 0.3)
+      // screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
+    }
+
+    // ======================
+    // GAME FLOW
+    // ======================
+    async function startGame() {
+      try {
+        await fadeOutMenu()
+        initGame()
+        await startGameSequence()
+        await animatePlayerIntro()
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        await showCommanderIntro()
+        // await startWaveIntro()
+        await waveManager.startStage(0)
+
+        playerName = document.getElementById("nameInput").value.toUpperCase()
+        if (playerName.length < 3) playerName = "AAA"
+      } catch (err) {
+        console.error("CRITICAL STARTUP ERROR:", err)
+        alert("Game failed to start: " + err.message)
+      }
     }
 
     async function restartGame() {
@@ -2847,133 +1991,6 @@ Anyone falling back without orders will be treated as hostile.`
       document.body.classList.add("hide-cursor")
       player = new Player()
       gameObjects = []
-    }
-
-    // ... (Sound, Scoring, Leaderboard functions remain the same)
-    function playSound(freq, duration) {
-      let audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-      let osc = audioCtx.createOscillator()
-      let gain = audioCtx.createGain()
-      osc.connect(gain)
-      gain.connect(audioCtx.destination)
-      osc.frequency.value = freq
-      osc.start()
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration)
-      osc.stop(audioCtx.currentTime + duration)
-    }
-
-    function saveScore() {
-      leaderboard.push({ name: playerName, score: score, time: Math.floor(survivalTime) })
-      leaderboard.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score
-        return b.time - a.time
-      })
-      leaderboard = leaderboard.slice(0, 10)
-    }
-
-    async function saveScoreOnline() {
-      const { data, error } = await db
-        .from("leaderboard")
-        .insert([{ name: playerName, score: score }])
-      if (error) { console.error(error) }
-    }
-
-    async function loadLeaderboard() {
-      const { data } = await db
-        .from("leaderboard")
-        .select("*")
-        .order("score", { ascending: false })
-        .limit(5)
-      leaderboard = data
-      renderLeaderboard()
-    }
-
-    function renderLeaderboard() {
-      let html = "<h3>Top Survivors</h3>"
-      leaderboard.forEach((p, i) => {
-        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
-      })
-      document.getElementById("leaderboard").innerHTML = html
-    }
-
-    let screenShake = {
-      intensity: 0,
-      duration: 0,
-      offsetX: 0,
-      offsetY: 0,
-
-      update() {
-        // Всегда возвращаем ноль - никакой тряски
-        this.offsetX = 0
-        this.offsetY = 0
-        return { x: 0, y: 0 }
-      },
-
-      shake(intensity = 10, duration = 15) {
-        // Ничего не делаем - тряска отключена
-      }
-    }
-
-    function spawnExplosion(x, y) {
-      spawn(new Explosion(x, y))
-      playPooled(droneExplosionSound, 0.2)
-    }
-
-    function spawnGroundExplosion(x, y) {
-      spawn(new GroundExplosion(x, y))
-      playPooled(groundExplosionSound, 0.3)
-      // screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
-    }
-
-    function updateScore() {
-      console.log('score updated and is: ', score)
-      scoreContainer.innerText = score
-    }
-
-    function initGame() {
-      // игрок
-      player = new Player()
-
-      // оружие
-      currentWeapon = structuredClone(WEAPONS.pistol)
-      ammoInMagazine = currentWeapon.magazineSize
-      magazines = currentWeapon.magazines
-
-      isReloading = false
-      lastShotTime = 0
-
-      // игра
-      score = 0
-      survivalTime = 0
-      dropTimer = 0
-      shootCooldown = 0
-
-      // облака
-      // initClouds(1)
-      initCitySmoke()
-      initTankSmoke()
-      initFire()
-
-      // музыка
-    }
-
-    async function startGame() {
-      try {
-        await fadeOutMenu()
-        initGame()
-        await startGameSequence()
-        await animatePlayerIntro()
-        await new Promise(resolve => setTimeout(resolve, 3000))
-        await showCommanderIntro()
-        // await startWaveIntro()
-        await waveManager.startStage(0)
-
-        playerName = document.getElementById("nameInput").value.toUpperCase()
-        if (playerName.length < 3) playerName = "AAA"
-      } catch (err) {
-        console.error("CRITICAL STARTUP ERROR:", err)
-        alert("Game failed to start: " + err.message)
-      }
     }
 
     async function endGame() {
@@ -3006,6 +2023,266 @@ Anyone falling back without orders will be treated as hostile.`
       ui.style.display = "flex"
       gameInfo.style.display = "block"
       renderLeaderboard()
+    }
+
+    async function fadeOutMenu() {
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      document.body.classList.add("hide-cursor")
+      await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
+      fadeEl.style.opacity = "1"
+      fadeEl.style.transition = "opacity 3s"
+    }
+
+    async function startGameSequence() {
+      await new Promise(r => setTimeout(r, 5000))
+      const ui = document.getElementById("ui")
+      fadeEl.style.opacity = "0"
+      ui.style.display = "none"
+      effectsLayer.style.display = "block"
+
+      // Отключаем все визуальные эффекты
+      EffectsManager.disableForGame()
+
+      currentState = GameState.GAME
+      await new Promise(r => setTimeout(r, 1000))
+    }
+
+    async function showCommanderIntro() {
+      await new Promise(r => setTimeout(r, 500))
+
+//       const msg = `
+//     Значит так, товарищ солдат. Соответственно… соответственно.
+// — Слушай боевую задачу.
+// В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
+// Будешь оказывать содействие в организации снабжения и связи.
+// Ротация будет каждые… очень скоро.
+// В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
+// Кто без команды пойдёт назад — будет принят за наступающие силы противника.
+//     `
+      const msg = `Alright, listen up, soldier.
+Here’s the situation… yeah… here’s the situation.
+Your mission: at H-hour, you move out to reinforce a fortified position.
+Units from the 69th are already dug in — area’s considered secure.
+You’ll assist with supply lines and comms.
+Rotations will be… happening soon enough.
+In case of injury, you’ll be… taken care of and evacuated to the rear.
+Anyone falling back without orders will be treated as hostile.`
+      await showCommanderMessage(8000, msg)
+    }
+
+    async function animatePlayerIntro() {
+      player.x = -player.width
+      player.y = canvas.height - groundHeight - player.height
+      player.direction = 1 // идем вправо
+      const targetX = canvas.width * 0.5
+      const speed = 3
+
+      return new Promise(resolve => {
+        const interval = setInterval(() => {
+          // “имитация” движения, как при нажатии клавиш
+          player.vx = speed
+          player.isMoving = true
+          player.update()  // обновляем позицию и кадры
+
+          if (player.x >= targetX) {
+            player.x = targetX
+            player.vx = 0
+            player.isMoving = false
+            player.update()
+            clearInterval(interval)
+            resolve()
+          }
+        }, 100)
+      })
+    }
+    async function showCommanderMessage(duration = 10000, message = null) {
+      const prevState = currentState
+      currentState = GameState.DIALOG
+
+      const radioStart = GAME_SOUNDS.radioOn
+      const radioEnd = GAME_SOUNDS.radioOff
+
+      const balloon = UI.notification.balloon
+      const p = balloon.querySelector("p");
+      const hint = document.getElementById("continueHint")
+
+      await animateCommanderBox()
+
+      radioStart.currentTime = 0
+      await radioStart.play()
+
+      await new Promise(r => setTimeout(r, 300))
+
+      const pages = splitTextIntoPages(message)
+      for (let i = 0; i < pages.length; i++) {
+
+        const page = pages[i] + "..."
+
+        await typeText(p, page)
+
+        hint.style.display = "block"
+
+        await waitForContinue()
+
+        hint.style.display = "none"
+      }
+
+      radioEnd.currentTime = 0
+      await radioEnd.play()
+
+      await hideCommanderBox()
+
+      if (currentState === GameState.DIALOG) {
+        currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
+      }
+    }
+
+    function fadeScreen(duration = 800) {
+      const f = document.getElementById("fade")
+      return new Promise(resolve => {
+        f.style.transition = `opacity ${duration / 2}ms`
+        f.style.opacity = '1'
+        setTimeout(() => {
+          f.style.opacity = '0'
+          setTimeout(resolve, duration / 2)
+        }, duration / 2)
+      })
+    }
+
+    async function crossfadeMusic(from, to, duration = 1000) {
+      if (to) {
+        to.volume = 0
+        if (isMusicOn) {
+          to.play()
+        }
+      }
+      const steps = 20
+      const stepTime = duration / steps
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps
+        if (from) from.volume = 0.2 * (1 - t)
+        if (to) to.volume = 0.2 * t
+        await new Promise(r => setTimeout(r, stepTime))
+      }
+      if (from) from.pause()
+    }
+
+    function waitForContinue() {
+      return new Promise(resolve => {
+        function handler(e) {
+          if (e.code === "Enter") {
+            window.removeEventListener("keydown", handler)
+            resolve()
+          }
+        }
+
+        window.addEventListener("keydown", handler)
+      })
+    }
+
+    function toggleMusic() {
+      isMusicOn = !isMusicOn;
+      localStorage.setItem("musicOn", isMusicOn);
+
+      if (!isMusicOn) {
+        // выключаем всю музыку
+        gameMusic.pause();
+        gameOverMusic.pause();
+        menuMusic.pause();
+        Object.values(waveMusic).forEach(track => pauseTrack(track));
+      } else {
+        menuMusic.play()
+      }
+    }
+
+    function saveScore() {
+      leaderboard.push({ name: playerName, score: score, time: Math.floor(survivalTime) })
+      leaderboard.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score
+        return b.time - a.time
+      })
+      leaderboard = leaderboard.slice(0, 10)
+    }
+
+    async function saveScoreOnline() {
+      const { data, error } = await db
+        .from("leaderboard")
+        .insert([{ name: playerName, score: score }])
+      if (error) { console.error(error) }
+    }
+
+    async function loadLeaderboard() {
+      const { data } = await db
+        .from("leaderboard")
+        .select("*")
+        .order("score", { ascending: false })
+        .limit(5)
+      leaderboard = data
+      renderLeaderboard()
+    }
+
+    // ======================
+    // MAIN LOOP
+    // ======================
+    function gameLoop(t) {
+      if (!gameLoopRunning) {
+        setTimeout(() => requestAnimationFrame(gameLoop), 100)
+        return
+      }
+
+      frameCounter++
+      if (t - lastFrameTime > 1000) {
+        fps = frameCounter - (lastFpsFrameCount || 0)
+        lastFpsFrameCount = frameCounter
+        lastFrameTime = t
+      }
+
+      const rawDelta = Math.min(t - last, 100)
+      const delta = rawDelta * timeScale
+      last = t
+
+      switch (currentState) {
+        case GameState.MENU:
+          if (frameCounter % 3 === 0) {
+            updateMenu(delta)
+            drawMenu()
+          }
+          break
+
+        case GameState.GAME:
+          updateAmbient(delta)
+          updateGameplay(delta)
+          drawGame()
+          break
+
+        case GameState.DIALOG:
+          updateDialog(delta)
+          drawGame()
+          break
+
+        case GameState.PAUSED:
+          if (frameCounter % 6 === 0) {
+            updatePaused(delta)
+            drawPaused()
+          }
+          break
+
+        case GameState.GAME_OVER:
+          if (frameCounter % 3 === 0) {
+            updateGameOver(delta)
+            drawGameOver()
+          }
+          break
+      }
+
+      if (gameLoopInstances > 1) {
+        console.error("MULTIPLE GAME LOOPS DETECTED! Stopping instance.")
+        gameLoopInstances--
+        return
+      }
+
+      requestAnimationFrame(gameLoop)
     }
 
     function updateDialog(delta) {
@@ -3145,159 +2422,546 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
 
-    function update(delta) {
-      const startTime = performance.now()
-
-      if (hitFreeze > 0) {
-        hitFreeze -= delta
-        return
-      }
-
-      if (!player.alive) {
-        player.deathTimer -= delta
-        if (player.deathTimer <= 0) {
-          timeScale = 1
-          endGame()
-        }
-        return
-      }
-
-      player.update()
-
-      // Обновление анимированных спрайтов
+    function updateAmbient() {
       if (tankSmoke?.alive) tankSmoke.update()
       if (citySmoke?.alive) citySmoke.update()
       if (cityFire?.alive) cityFire.update()
 
-      // Обновление облаков
       for (const cloud of clouds) {
         cloud.update()
       }
+    }
 
-      // ===== ВАЖНО: КУЛДАУН ВРАГОВ =====
-      if (globalEnemyFireCooldown > 0) {
-        globalEnemyFireCooldown -= delta
-      }
-
-      waveManager.update(delta)
-
-      // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
-      shootCooldown -= delta
-
-      if (player.alive && shooting && currentWeapon?.auto) {
-        const dir = getShootDirection()
-        shoot(dir.dx, dir.dy)
-      }
-
-      // ===== ОПТИМИЗИРОВАННЫЙ ЦИКЛ ОБНОВЛЕНИЯ И КОЛЛИЗИЙ =====
-      const stillAlive = []
-      const activeDrones = []
-      const activeBullets = []
-      const activeEnemyBullets = []
-
-      // Сброс счетчиков перед проходом
-      globalActiveDronesCount = 0
-      globalEnemyBulletsCount = 0
-      globalVFXCount = 0
-
-      // 1. Одиночный проход: обновление, фильтрация и категоризация
-      for (let i = 0; i < gameObjects.length; i++) {
-        const obj = gameObjects[i]
-
-        if (obj.alive) {
-          obj.update(delta)
-
-          if (obj.alive) {
-            stillAlive.push(obj)
-
-            // Категоризация для коллизий (Оптимизация: используем категорию вместо instanceof)
-            if (obj.category === 'drone') {
-              activeDrones.push(obj)
-              globalActiveDronesCount++
-            }
-            else if (obj.category === 'bullet') activeBullets.push(obj)
-            else if (obj.category === 'enemyBullet') {
-              activeEnemyBullets.push(obj)
-              globalEnemyBulletsCount++
-            }
-            else if (obj.category === 'vfx') {
-              globalVFXCount++
-            }
-          }
-        }
-      }
-
-      // Обновляем глобальный список
-      gameObjects = stillAlive
-
-      // Подробный лог раз в 3 сек
-      perfLogTimer += delta
-      if (perfLogTimer > 3000) {
-        perfLogTimer = 0
-        const counts = { bullet: 0, enemyBullet: 0, drone: 0, vfx: 0, none: 0 }
-        gameObjects.forEach(o => {
-          const c = o.category || 'none'
-          counts[c] = (counts[c] || 0) + 1
-        })
-      }
-
-      // 2. Коллизии пуль игрока и дронов
-      // Запускаем каждый второй кадр для дополнительной оптимизации
-      if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
-        for (const b of activeBullets) {
-          if (!b.alive) continue
-
-          for (const d of activeDrones) {
-            if (!d.alive) continue
-
-            if (isColliding(b, d)) {
-              b.alive = false
-              if (d.takeDamage(1)) {
-                d.onDeath()
-                const gained = calculateDroneScore(d)
-                score += gained
-                showScoreGain(gained)
-              }
-              break // Пуля исчезла
-            }
-          }
-        }
-      }
-
-      // 3. Проверка пуль врагов (земля и игрок)
-      if (activeEnemyBullets.length > 0) {
-        for (const obj of activeEnemyBullets) {
-          if (!obj.alive) continue
-
-          // Земля
-          if (obj.y > canvas.height - groundHeight) {
-            spawnGroundExplosion(obj.x, obj.y)
-            obj.alive = false
-            continue
-          }
-
-          // Игрок
-          if (isColliding(obj, player)) {
-            if (player.alive) {
-              player.die()
-            }
-            obj.alive = false
-          }
-        }
-      }
-
-      // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
-      survivalTime += delta / 1000
-
-      // ===== ВАЖНО: UI ОБНОВЛЕНИЕ =====
+    function updateHud(delta) {
       uiTimer += delta
-
-      // ===== ВАЖНО: ЗВУК ДРОНОВ =====
-      const endTime = performance.now()
-      const frameTime = endTime - startTime
-      if (frameTime > 16) {
+      if (uiTimer > 100) {
+        scoreEl.innerText = score
+        uiTimer = 0
       }
     }
+
+    /* Weapons config */
+    const WEAPONS = {
+      pistol: {
+        name: "Pistol",
+        magazineSize: 15,
+        magazines: 8,
+        fireRate: 400, // ms
+        reloadTime: 1000,
+        auto: false,
+        bulletsPerShot: 1,
+        bulletSpeed: 11,
+        spread: 0,
+      },
+
+      rifle: {
+        name: "Assault Rifle",
+        magazineSize: 30,
+        magazines: 6,
+        fireRate: 200,
+        reloadTime: 2000,
+        auto: true,
+        bulletsPerShot: 1,
+        bulletSpeed: 13,
+        spread: 0,
+      },
+
+      shotgun: {
+        name: "Shotgun",
+        magazineSize: 12,
+        magazines: 5,
+        fireRate: 600,
+        reloadTime: 2600,
+        auto: false,
+        bulletsPerShot: 6,
+        bulletSpeed: 10,
+        spread: 30,
+      },
+
+      machinegun: {
+        name: "Machine Gun",
+        magazineSize: 120,
+        magazines: 2,
+        fireRate: 100,
+        reloadTime: 5000,
+        auto: true,
+        bulletsPerShot: 1,
+        bulletSpeed: 15,
+        spread: 5,
+      }
+    }
+
+    const WEAPON_SOUNDS = {
+      'Pistol': {
+        shoot: new Audio("pistol_shot.mp3"),
+        reload: new Audio("pistol_reload.mp3")
+      },
+      'Assault Rifle': {
+        shoot: new Audio("rifle_shot.mp3"),
+        reload: new Audio("rifle_reload.mp3")
+      },
+      'Shotgun': {
+        shoot: new Audio("shotgun_shot.mp3"),
+        reload: new Audio("shotgun_reload.mp3")
+      },
+      'Machine Gun': {
+        shoot: new Audio("machinegun_shot.mp3"),
+        reload: new Audio("machinegun_reload.mp3")
+      }
+    }
+
+    const PLAYER_SOUNDS = {
+      death: new Audio("death.mp3"),
+      footSteps: new Audio("foot_steps.mp3"),
+    }
+
+    const GAME_SOUNDS = {
+      ambient: new Audio("ambient.mp3"),
+      typeWriter: new Audio("typeWriter.mp3"),
+      radioOn: new Audio("radio_chatter.mp3"),
+      radioOff: new Audio("radio_off.mp3"),
+    }
+
+    const UI = {
+      notification: {
+        balloon: document.getElementById("commander-balloon"),
+      },
+      game: {
+        container: document.getElementById("game-container"),
+      }
+    }
+
+    const POOLED_SOUNDS = {}
+    function playPooled(audioAsset, volume = 0.4) {
+      if (!isMusicOn) return
+      if (!audioAsset) return
+
+      const src = audioAsset.src || audioAsset.getAttribute('src')
+      if (!src) return
+
+      if (!POOLED_SOUNDS[src]) {
+        POOLED_SOUNDS[src] = new SoundPool(audioAsset)
+      }
+      POOLED_SOUNDS[src].play(volume)
+    }
+
+
+
+    smokeSprite.onload = () => {
+      SMOKE_FRAME_WIDTH = smokeSprite.width / 2
+      SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
+    }
+
+    // Инициализация дыма от города
+    function initCitySmoke() {
+      if (citySmokeSprite.complete) {
+        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
+          columns: 2,
+          totalFrames: 98,
+          frameDelay: 8,
+          scale: 1.5,
+          opacity: 0.6,
+          loop: true
+        })
+      } else {
+        citySmokeSprite.onload = () => {
+          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+            columns: 2,
+            totalFrames: 98,
+            frameDelay: 8,
+            scale: 1.5,
+            opacity: 0.6,
+            loop: true
+          })
+        }
+      }
+    }
+
+    // Инициализация дыма от танка
+    function initTankSmoke() {
+      if (smokeSprite.complete) {
+        tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
+          columns: 2,
+          totalFrames: 58,
+          frameDelay: 8,
+          scale: 1.2,
+          opacity: 0.4,
+          loop: true
+        })
+      } else {
+        smokeSprite.onload = () => {
+          tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
+            columns: 2,
+            totalFrames: 58,
+            frameDelay: 8,
+            scale: 1.2,
+            opacity: 0.4,
+            loop: true
+          })
+        }
+      }
+    }
+
+    // Инициализация огня
+    function initFire() {
+      if (fireSprite.complete) {
+        cityFire = new AnimatedSprite(100, 600, fireSprite, {
+          columns: 2,
+          totalFrames: 8,
+          frameDelay: 8,
+          scale: 1,
+          opacity: 0.9,
+          width: 144,
+          height: 144,
+          loop: true
+        })
+      } else {
+        fireSprite.onload = () => {
+          cityFire = new AnimatedSprite(100, 600, fireSprite, {
+            columns: 2,
+            totalFrames: 8,
+            frameDelay: 8,
+            scale: 1,
+            opacity: 0.9,
+            width: 144,
+            height: 144,
+            loop: true
+          })
+        }
+      }
+    }
+
+    effectsLayer.style.display = "none"
+
+    const tank = {
+      x: canvas.width * 0.85,
+      y: canvas.height - groundHeight - 150,
+      w: 280,
+      h: 180
+    }
+
+    const destroyedCity = {
+      x: 100,
+      y: canvas.height - groundHeight - 120,
+      w: 180,
+      h: 80
+    }
+
+    let waveMusic = {
+      1: new Audio("wave1.mp3"),
+      2: new Audio("wave2.mp3"),
+      3: new Audio("wave3.mp3"),
+      boss: new Audio("boss.mp3")
+    }
+
+    for (const key in waveMusic) {
+      waveMusic[key].loop = false
+      waveMusic[key].volume = 0.1
+    }
+
+
+
+    const EffectsManager = {
+      // Отключить все визуальные эффекты для игры
+      disableForGame() {
+        const container = document.getElementById('game-container')
+        const ui = document.getElementById('ui')
+
+        // Убираем CRT класс и добавляем no-crt
+        container.classList.remove('crt')
+        container.classList.add('no-crt')
+
+        // Отключаем анимацию UI
+        ui.style.animation = 'none'
+      },
+
+      // Включить эффекты для меню
+      enableForMenu() {
+        const container = document.getElementById('game-container')
+        const ui = document.getElementById('ui')
+
+        // Возвращаем CRT класс и убираем no-crt
+        container.classList.add('crt')
+        container.classList.remove('no-crt')
+
+        // Возвращаем анимацию UI
+        ui.style.animation = 'glitch1 1s infinite'
+      }
+    }
+
+    function showHitboxRect(x, y, width, height, color) {
+      ctx.strokeStyle = color || 'red'
+      ctx.lineWidth = 2
+      ctx.strokeRect(x, y, width, height)
+    }
+
+    // Создаем экземпляр менеджера
+    const waveManager = new WaveManager()
+
+    let clouds = []
+
+
+    function setWeapon(type) {
+      currentWeapon = structuredClone(WEAPONS[type])
+
+      ammoInMagazine = currentWeapon.magazineSize
+      magazines = currentWeapon.magazines
+
+      // можно сбросить перезарядку
+      isReloading = false
+    }
+
+    function shoot(dirX, dirY) {
+      if (dirX === 0 && dirY === 0) return
+      if (isReloading) return
+      if (ammoInMagazine <= 0) return
+
+      if (Date.now() - lastShotTime < currentWeapon.fireRate) return
+
+      lastShotTime = Date.now()
+
+      ammoInMagazine--
+      const currentWeaponName = currentWeapon.name
+      if (WEAPON_SOUNDS[currentWeaponName]) {
+        playPooled(WEAPON_SOUNDS[currentWeaponName].shoot, 0.4)
+      }
+
+      for (let i = 0; i < currentWeapon.bulletsPerShot; i++) {
+
+        let angle = Math.atan2(dirY, dirX)
+
+        if (currentWeapon.spread > 0) {
+
+          const spreadRad =
+            (Math.random() * currentWeapon.spread -
+              currentWeapon.spread / 2) * Math.PI / 180
+
+          angle += spreadRad
+        }
+
+        const dx = Math.cos(angle)
+        const dy = Math.sin(angle)
+
+        const speed = currentWeapon.bulletSpeed
+
+        const x = player.x + player.width / 2
+        const y = player.y + player.height / 2
+
+        spawn(new Bullet(x, y, dx * speed, dy * speed))
+      }
+
+      if (ammoInMagazine <= 0 && magazines > 0) {
+        startReload()
+      }
+    }
+
+    let shooting = false
+
+    const muteBtn = document.getElementById("muteBtn")
+
+    muteBtn.onclick = () => {
+      toggleMusic(); // если музыка выключена, остановим все треки
+
+      !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
+    }
+
+    // let currentMusic = null
+
+    let isMusicOn = localStorage.getItem("musicOn");
+    if (!isMusicOn === null) {
+      isMusicOn = true; // по умолчанию музыка включена
+    } else {
+      isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
+    }
+
+
+    function pauseTrack(track) {
+      track.pause();
+      track.currentTime = 0;
+    }
+
+
+
+
+
+
+    function startReload() {
+      if (isReloading) return
+      if (magazines <= 0) return
+      if (ammoInMagazine === currentWeapon.magazineSize) return
+
+      isReloading = true
+      const currentWeaponName = currentWeapon.name
+
+      if (WEAPON_SOUNDS[currentWeaponName]) {
+        playPooled(WEAPON_SOUNDS[currentWeaponName].reload, 0.5)
+      }
+
+      setTimeout(() => {
+
+        ammoInMagazine = currentWeapon.magazineSize
+        magazines--
+
+        isReloading = false
+
+      }, currentWeapon.reloadTime)
+
+    }
+
+
+    async function animateCommanderBox() {
+      const box = UI.notification.balloon
+
+      box.style.display = "block"
+
+      // маленькая задержка чтобы браузер применил display
+      await new Promise(r => setTimeout(r, 20))
+
+      box.style.right = "40px"
+
+      // ждём завершения анимации
+      await new Promise(r => setTimeout(r, 600))
+    }
+
+    async function hideCommanderBox() {
+      const box = UI.notification.balloon
+
+      box.style.right = "-500px"
+
+      await new Promise(r => setTimeout(r, 600))
+
+      box.style.display = "none"
+    }
+
+
+
+
+
+    function explodeGrenade(g) {
+      spawnGroundExplosion(g.x, g.y)
+
+      const explosionRadius = 80
+
+      const gx = g.x + g.width / 2
+      const gy = g.y + g.height / 2
+
+      const px = player.x + player.width / 2
+      const py = player.y + player.height / 2
+
+      const dx = px - gx
+      const dy = py - gy
+
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (dist < explosionRadius) {
+        if (!DEBUG.godMode && player.alive) {
+          player.die()
+        }
+      }
+    }
+
+
+    // Функции спавна
+    function spawnNormalDrone() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
+      spawn(drone)
+      return drone
+    }
+
+    function spawnGrenadier() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
+      spawn(drone)
+      return drone
+    }
+
+    function spawnKamikaze() {
+      const maxDrones = waveManager.maxDrones
+      if (countDrones() >= maxDrones) return
+
+      const drone = new KamikazeDrone()
+      spawn(drone)
+      return drone
+    }
+
+
+
+    function spawnBoss() {
+      const boss = new BossDrone()
+      spawn(boss)
+      boss.active = true
+      return boss
+    }
+
+
+
+
+
+
+
+    function renderLeaderboard() {
+      let html = "<h3>Top Survivors</h3>"
+      leaderboard.forEach((p, i) => {
+        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
+      })
+      document.getElementById("leaderboard").innerHTML = html
+    }
+
+    let screenShake = {
+      intensity: 0,
+      duration: 0,
+      offsetX: 0,
+      offsetY: 0,
+
+      update() {
+        // Всегда возвращаем ноль - никакой тряски
+        this.offsetX = 0
+        this.offsetY = 0
+        return { x: 0, y: 0 }
+      },
+
+      shake(intensity = 10, duration = 15) {
+        // Ничего не делаем - тряска отключена
+      }
+    }
+
+
+
+
+    function initGame() {
+      // игрок
+      player = new Player()
+
+      // оружие
+      currentWeapon = structuredClone(WEAPONS.pistol)
+      ammoInMagazine = currentWeapon.magazineSize
+      magazines = currentWeapon.magazines
+
+      isReloading = false
+      lastShotTime = 0
+
+      // игра
+      score = 0
+      survivalTime = 0
+      dropTimer = 0
+      shootCooldown = 0
+
+      initCitySmoke()
+      initTankSmoke()
+      initFire()
+
+      // музыка
+    }
+
+
+
+
+
 
     function draw() {
       // Очистка канваса
@@ -3416,67 +3080,7 @@ Anyone falling back without orders will be treated as hostile.`
       ctx.globalAlpha = 1.0
     }
 
-    let last = 0
 
-    function gameLoop(t) {
-      if (!gameLoopRunning) {
-        setTimeout(() => requestAnimationFrame(gameLoop), 100)
-        return
-      }
-
-      frameCounter++
-      if (t - lastFrameTime > 1000) {
-        fps = frameCounter - (lastFpsFrameCount || 0)
-        lastFpsFrameCount = frameCounter
-        lastFrameTime = t
-      }
-
-      const rawDelta = Math.min(t - last, 100)
-      const delta = rawDelta * timeScale
-      last = t
-
-      switch (currentState) {
-        case GameState.MENU:
-          if (frameCounter % 3 === 0) {
-            updateMenu(delta)
-            drawMenu()
-          }
-          break
-
-        case GameState.GAME:
-          updateAmbient(delta)
-          updateGameplay(delta)
-          drawGame()
-          break
-
-        case GameState.DIALOG:
-          updateDialog(delta)
-          drawGame()
-          break
-
-        case GameState.PAUSED:
-          if (frameCounter % 6 === 0) {
-            updatePaused(delta)
-            drawPaused()
-          }
-          break
-
-        case GameState.GAME_OVER:
-          if (frameCounter % 3 === 0) {
-            updateGameOver(delta)
-            drawGameOver()
-          }
-          break
-      }
-
-      if (gameLoopInstances > 1) {
-        console.error("MULTIPLE GAME LOOPS DETECTED! Stopping instance.")
-        gameLoopInstances--
-        return
-      }
-
-      requestAnimationFrame(gameLoop)
-    }
 
     function drawPaused() {
       draw()
@@ -3504,13 +3108,8 @@ Anyone falling back without orders will be treated as hostile.`
 
     }
 
-    function updateGame(delta) {
-      update(delta)
-    }
-
     function drawGame() {
       draw()
-
     }
 
     function updateGameOver(delta) {
@@ -3526,7 +3125,79 @@ Anyone falling back without orders will be treated as hostile.`
       requestAnimationFrame(gameLoop)
     }
 
-    document.getElementById("startBtn").onclick = startGame
+    startBtn.onclick = startGame
+
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        shooting = true
+
+        const dir = getShootDirection()
+
+        if (dir && !currentWeapon.auto) {
+          shoot(dir.dx, dir.dy)
+        }
+      }
+
+      if (e.code === "KeyP") {
+        if (currentState === GameState.GAME) {
+          currentState = GameState.PAUSED
+        } else if (currentState === GameState.PAUSED) {
+          currentState = GameState.GAME
+        }
+      }
+
+      if (currentState === GameState.PAUSED) {
+        return
+      }
+
+      if (e.key === "i") {
+        setWeapon('rifle')
+      }
+
+      if (e.key === "s") {
+        setWeapon('shotgun')
+      }
+
+      if (e.key === "m") {
+        setWeapon('machinegun')
+      }
+
+      if (e.code === "Space") {
+        e.preventDefault()
+      }
+
+      if (e.code === "KeyR") {
+        if (isReloading) return
+        startReload()
+      }
+
+      keys[e.key] = true
+    })
+
+    document.addEventListener("keyup", e => {
+      if (currentState === GameState.PAUSED) {
+        if (e.code === "Space") {
+          shooting = false
+        }
+        return
+      }
+
+      if (e.code === "Space") {
+        shooting = false
+      }
+      keys[e.key] = false
+    })
+
+    document.body.addEventListener("click", () => {
+      if (isMusicOn) {
+        menuMusic.play()
+      }
+    }, { once: true })
+
+
+    window.addEventListener("load", () => {
+      document.getElementById("loading-screen").style.display = "none"
+    })
 
     loadLeaderboard()
 
@@ -3535,15 +3206,6 @@ Anyone falling back without orders will be treated as hostile.`
       menuMusic.play()
     }
 
-    document.body.addEventListener("click", () => {
-      if (isMusicOn) {
-        menuMusic.play()
-      }
-    }, { once: true })
-
-    const bar = document.getElementById("loading-bar")
-
-    let progress = 0
 
     const interval = setInterval(() => {
       progress += 10
@@ -3554,25 +3216,259 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }, 100)
 
-    window.addEventListener("load", () => {
-      document.getElementById("loading-screen").style.display = "none"
-    })
 
     // Добавьте в конец файла для отладки
-    const perfMonitor = {
-      frames: 0,
-      lastTime: performance.now(),
+    // const perfMonitor = {
+    //   frames: 0,
+    //   lastTime: performance.now(),
+    //
+    //   update() {
+    //     this.frames++
+    //     const now = performance.now()
+    //     if (now - this.lastTime >= 1000) {
+    //       console.log(`FPS: ${this.frames}, Objects: ${gameObjects.length}`)
+    //       this.frames = 0
+    //       this.lastTime = now
+    //     }
+    //   }
+    // }
+    // function buildCollisionGrid() {
+    //   collisionGrid = {}
+    //
+    //   gameObjects.forEach(obj => {
+    //     if (!obj.alive) return
+    //
+    //     const gridX = Math.floor(obj.x / GRID_SIZE)
+    //     const gridY = Math.floor(obj.y / GRID_SIZE)
+    //     const key = `${gridX},${gridY}`
+    //
+    //     if (!collisionGrid[key]) {
+    //       collisionGrid[key] = []
+    //     }
+    //     collisionGrid[key].push(obj)
+    //   })
+    // }
 
-      update() {
-        this.frames++
-        const now = performance.now()
-        if (now - this.lastTime >= 1000) {
-          console.log(`FPS: ${this.frames}, Objects: ${gameObjects.length}`)
-          this.frames = 0
-          this.lastTime = now
-        }
-      }
-    }
+    // function optimizeCollisions() {
+    //   buildCollisionGrid()
+    //
+    //   const bullets = gameObjects.filter(o => o instanceof Bullet)
+    //   // const drones = gameObjects.filter(o => o instanceof BaseDrone)
+    //
+    //   bullets.forEach(b => {
+    //     const gridX = Math.floor(b.x / GRID_SIZE)
+    //     const gridY = Math.floor(b.y / GRID_SIZE)
+    //     const key = `${gridX},${gridY}`
+    //
+    //     // Проверяем только объекты в той же ячейке сетки
+    //     const nearbyObjects = collisionGrid[key] || []
+    //
+    //     nearbyObjects.forEach(obj => {
+    //       if (obj instanceof BaseDrone && isColliding(b, obj)) {
+    //         b.alive = false
+    //         obj.alive = false
+    //         updateScore()
+    //       }
+    //     })
+    //   })
+    // }
+
+    // function freeze(ms) {
+    //   hitFreeze = ms
+    // }
+
+    // function update(delta) {
+    //   const startTime = performance.now()
+    //
+    //   if (hitFreeze > 0) {
+    //     hitFreeze -= delta
+    //     return
+    //   }
+    //
+    //   if (!player.alive) {
+    //     player.deathTimer -= delta
+    //     if (player.deathTimer <= 0) {
+    //       timeScale = 1
+    //       endGame()
+    //     }
+    //     return
+    //   }
+    //
+    //   player.update()
+    //
+    //   // Обновление анимированных спрайтов
+    //   if (tankSmoke?.alive) tankSmoke.update()
+    //   if (citySmoke?.alive) citySmoke.update()
+    //   if (cityFire?.alive) cityFire.update()
+    //
+    //   // Обновление облаков
+    //   for (const cloud of clouds) {
+    //     cloud.update()
+    //   }
+    //
+    //   // ===== ВАЖНО: КУЛДАУН ВРАГОВ =====
+    //   if (globalEnemyFireCooldown > 0) {
+    //     globalEnemyFireCooldown -= delta
+    //   }
+    //
+    //   waveManager.update(delta)
+    //
+    //   // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
+    //   shootCooldown -= delta
+    //
+    //   if (player.alive && shooting && currentWeapon?.auto) {
+    //     const dir = getShootDirection()
+    //     shoot(dir.dx, dir.dy)
+    //   }
+    //
+    //   // ===== ОПТИМИЗИРОВАННЫЙ ЦИКЛ ОБНОВЛЕНИЯ И КОЛЛИЗИЙ =====
+    //   const stillAlive = []
+    //   const activeDrones = []
+    //   const activeBullets = []
+    //   const activeEnemyBullets = []
+    //
+    //   // Сброс счетчиков перед проходом
+    //   globalActiveDronesCount = 0
+    //   globalEnemyBulletsCount = 0
+    //   globalVFXCount = 0
+    //
+    //   // 1. Одиночный проход: обновление, фильтрация и категоризация
+    //   for (let i = 0; i < gameObjects.length; i++) {
+    //     const obj = gameObjects[i]
+    //
+    //     if (obj.alive) {
+    //       obj.update(delta)
+    //
+    //       if (obj.alive) {
+    //         stillAlive.push(obj)
+    //
+    //         // Категоризация для коллизий (Оптимизация: используем категорию вместо instanceof)
+    //         if (obj.category === 'drone') {
+    //           activeDrones.push(obj)
+    //           globalActiveDronesCount++
+    //         }
+    //         else if (obj.category === 'bullet') activeBullets.push(obj)
+    //         else if (obj.category === 'enemyBullet') {
+    //           activeEnemyBullets.push(obj)
+    //           globalEnemyBulletsCount++
+    //         }
+    //         else if (obj.category === 'vfx') {
+    //           globalVFXCount++
+    //         }
+    //       }
+    //     }
+    //   }
+    //
+    //   // Обновляем глобальный список
+    //   gameObjects = stillAlive
+    //
+    //   // Подробный лог раз в 3 сек
+    //   perfLogTimer += delta
+    //   if (perfLogTimer > 3000) {
+    //     perfLogTimer = 0
+    //     const counts = { bullet: 0, enemyBullet: 0, drone: 0, vfx: 0, none: 0 }
+    //     gameObjects.forEach(o => {
+    //       const c = o.category || 'none'
+    //       counts[c] = (counts[c] || 0) + 1
+    //     })
+    //   }
+    //
+    //   // 2. Коллизии пуль игрока и дронов
+    //   // Запускаем каждый второй кадр для дополнительной оптимизации
+    //   if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
+    //     for (const b of activeBullets) {
+    //       if (!b.alive) continue
+    //
+    //       for (const d of activeDrones) {
+    //         if (!d.alive) continue
+    //
+    //         if (isColliding(b, d)) {
+    //           b.alive = false
+    //           if (d.takeDamage(1)) {
+    //             d.onDeath()
+    //             const gained = calculateDroneScore(d)
+    //             score += gained
+    //             showScoreGain(gained)
+    //           }
+    //           break // Пуля исчезла
+    //         }
+    //       }
+    //     }
+    //   }
+    //
+    //   // 3. Проверка пуль врагов (земля и игрок)
+    //   if (activeEnemyBullets.length > 0) {
+    //     for (const obj of activeEnemyBullets) {
+    //       if (!obj.alive) continue
+    //
+    //       // Земля
+    //       if (obj.y > canvas.height - groundHeight) {
+    //         spawnGroundExplosion(obj.x, obj.y)
+    //         obj.alive = false
+    //         continue
+    //       }
+    //
+    //       // Игрок
+    //       if (isColliding(obj, player)) {
+    //         if (player.alive) {
+    //           player.die()
+    //         }
+    //         obj.alive = false
+    //       }
+    //     }
+    //   }
+    //
+    //   // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
+    //   survivalTime += delta / 1000
+    //
+    //   // ===== ВАЖНО: UI ОБНОВЛЕНИЕ =====
+    //   uiTimer += delta
+    //
+    //   // ===== ВАЖНО: ЗВУК ДРОНОВ =====
+    //   const endTime = performance.now()
+    //   const frameTime = endTime - startTime
+    //   if (frameTime > 16) {
+    //   }
+    // }
+
+
+    // function updateScore() {
+    //   console.log('score updated and is: ', score)
+    //   scoreContainer.innerText = score
+    // }
+
+    // ... (Sound, Scoring, Leaderboard functions remain the same)
+    // function playSound(freq, duration) {
+    //   let audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+    //   let osc = audioCtx.createOscillator()
+    //   let gain = audioCtx.createGain()
+    //   osc.connect(gain)
+    //   gain.connect(audioCtx.destination)
+    //   osc.frequency.value = freq
+    //   osc.start()
+    //   gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration)
+    //   osc.stop(audioCtx.currentTime + duration)
+    // }
+
+    // function playWaveMusic(wave) {
+    //   if (currentMusic) {
+    //     currentMusic.pause()
+    //     currentMusic.currentTime = 0
+    //   }
+    //
+    //   const music = waveMusic[wave]
+    //
+    //   if (music && isMusicOn) {
+    //     music.play()
+    //     currentMusic = music
+    //   }
+    // }
+    // function playTrack(track) {
+    //   if (isMusicOn) {
+    //     track.play();
+    //   }
+    // }
+
   </script>
 </body>
 </html>
