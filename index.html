@@ -397,14 +397,6 @@
       showHitboxes: false,
     }
 
-
-    // Типы дронов
-    const DroneType = {
-      NORMAL: 'normal',
-      GRENADIER: 'grenadier',
-      KAMIKAZE: 'kamikaze'
-    }
-
     /* Global Variables */
     let citySmoke = null
     let tankSmoke = null
@@ -466,6 +458,7 @@
     /* Effects elements */
     const fadeEl = document.getElementById("fade")
     const startBtn = document.getElementById("startBtn")
+    const leaderboardEl = document.getElementById("leaderboard")
 
     /* Canvas */
     const canvas = document.getElementById("game")
@@ -491,6 +484,7 @@
     }
 
     currentState = GameState.MENU
+
     // ======================
     // ASSETS
     // ======================
@@ -532,28 +526,8 @@
     gameVersion.innerText = GAME_VERSION
 
     // ======================
-    // CLASSES
+    // RENDERING
     // ======================
-    // Пул звуков для предотвращения утечек памяти при cloneNode
-    class SoundPool {
-      constructor(audioElement, size = 15) {
-        this.pool = []
-        this.ptr = 0
-        for (let i = 0; i < size; i++) {
-          const s = audioElement.cloneNode()
-          s.volume = 0.4
-          this.pool.push(s)
-        }
-      }
-      play(volume = 0.4) {
-        const s = this.pool[this.ptr]
-        s.volume = volume
-        s.currentTime = 0
-        s.play().catch(() => { }) // Игнорируем ошибки автоплея
-        this.ptr = (this.ptr + 1) % this.pool.length
-      }
-    }
-
     class AnimatedSprite {
       constructor(x, y, image, options = {}) {
         this.x = x
@@ -646,6 +620,588 @@
       //   this.alive = true
       // }
     }
+
+    smokeSprite.onload = () => {
+      SMOKE_FRAME_WIDTH = smokeSprite.width / 2
+      SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
+    }
+
+    function initCitySmoke() {
+      if (citySmokeSprite.complete) {
+        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
+          columns: 2,
+          totalFrames: 98,
+          frameDelay: 8,
+          scale: 1.5,
+          opacity: 0.6,
+          loop: true
+        })
+      } else {
+        citySmokeSprite.onload = () => {
+          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+            columns: 2,
+            totalFrames: 98,
+            frameDelay: 8,
+            scale: 1.5,
+            opacity: 0.6,
+            loop: true
+          })
+        }
+      }
+    }
+
+    function initTankSmoke() {
+      if (smokeSprite.complete) {
+        tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
+          columns: 2,
+          totalFrames: 58,
+          frameDelay: 8,
+          scale: 1.2,
+          opacity: 0.4,
+          loop: true
+        })
+      } else {
+        smokeSprite.onload = () => {
+          tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
+            columns: 2,
+            totalFrames: 58,
+            frameDelay: 8,
+            scale: 1.2,
+            opacity: 0.4,
+            loop: true
+          })
+        }
+      }
+    }
+
+    function initFire() {
+      if (fireSprite.complete) {
+        cityFire = new AnimatedSprite(100, 600, fireSprite, {
+          columns: 2,
+          totalFrames: 8,
+          frameDelay: 8,
+          scale: 1,
+          opacity: 0.9,
+          width: 144,
+          height: 144,
+          loop: true
+        })
+      } else {
+        fireSprite.onload = () => {
+          cityFire = new AnimatedSprite(100, 600, fireSprite, {
+            columns: 2,
+            totalFrames: 8,
+            frameDelay: 8,
+            scale: 1,
+            opacity: 0.9,
+            width: 144,
+            height: 144,
+            loop: true
+          })
+        }
+      }
+    }
+
+    effectsLayer.style.display = "none"
+
+    const tank = {
+      x: canvas.width * 0.85,
+      y: canvas.height - groundHeight - 150,
+      w: 280,
+      h: 180
+    }
+
+    const destroyedCity = {
+      x: 100,
+      y: canvas.height - groundHeight - 120,
+      w: 180,
+      h: 80
+    }
+
+    function renderLeaderboard() {
+      let html = "<h3>Top Survivors</h3>"
+      leaderboard.forEach((p, i) => {
+        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
+      })
+
+      leaderboardEl.innerHTML = html
+    }
+
+    // ======================
+    // CONFIG / MODELS
+    // ======================
+    class WaveConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.drones = options.drones || [] // массив {type: DroneType, count: number}
+        this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
+        this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
+        this.message = options.message || null // сообщение перед волной
+        this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
+        this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
+      }
+    }
+
+    class StageConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.waves = options.waves || [] // массив WaveConfig
+        this.startMessage = options.startMessage || null // сообщение перед этапом
+        this.endMessage = options.endMessage || null // сообщение после этапа
+        this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
+        this.bossWave = options.bossWave || false // это босс волна?
+      }
+    }
+
+    const DroneType = {
+      NORMAL: 'normal',
+      GRENADIER: 'grenadier',
+      KAMIKAZE: 'kamikaze'
+    }
+
+    // ======================
+    // SYSTEMS / MANAGERS
+    // ======================
+    const EffectsManager = {
+      // Отключить все визуальные эффекты для игры
+      disableForGame() {
+        const container = document.getElementById('game-container')
+        const ui = document.getElementById('ui')
+
+        // Убираем CRT класс и добавляем no-crt
+        container.classList.remove('crt')
+        container.classList.add('no-crt')
+
+        // Отключаем анимацию UI
+        ui.style.animation = 'none'
+      },
+
+      // Включить эффекты для меню
+      enableForMenu() {
+        const container = document.getElementById('game-container')
+        const ui = document.getElementById('ui')
+
+        // Возвращаем CRT класс и убираем no-crt
+        container.classList.add('crt')
+        container.classList.remove('no-crt')
+
+        // Возвращаем анимацию UI
+        ui.style.animation = 'glitch1 1s infinite'
+      }
+    }
+
+    class SoundPool {
+      constructor(audioElement, size = 15) {
+        this.pool = []
+        this.ptr = 0
+        for (let i = 0; i < size; i++) {
+          const s = audioElement.cloneNode()
+          s.volume = 0.4
+          this.pool.push(s)
+        }
+      }
+      play(volume = 0.4) {
+        const s = this.pool[this.ptr]
+        s.volume = volume
+        s.currentTime = 0
+        s.play().catch(() => { }) // Игнорируем ошибки автоплея
+        this.ptr = (this.ptr + 1) % this.pool.length
+      }
+    }
+
+    class WaveManager {
+      constructor() {
+        this.stages = [] // все этапы
+        this.currentStageIndex = 0
+        this.currentWaveIndex = 0
+        this.isActive = false
+        this.isPaused = false
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.stageComplete = false
+        this.infiniteMode = false
+        this.maxDrones = 15
+        this.maxBullets = 30
+
+        // Инициализация этапов
+        this.initStages()
+
+        this.currentWaveDrones = []
+      }
+
+      initStages() {
+        // Этап 1: Начало
+        this.stages.push(new StageConfig('Начало', {
+          startMessage: 'Charlie’s hot, Alpha’s somewhere… probably. Move out.',
+          waves: [
+            new WaveConfig('Разведка', {
+              drones: [{ type: DroneType.NORMAL, count: 5 }],
+              pauseAfter: 2000,
+              spawnInterval: 800
+            }),
+            new WaveConfig('Усиление', {
+              drones: [{ type: DroneType.NORMAL, count: 7 }],
+              pauseAfter: 2500,
+              spawnInterval: 700
+            }),
+            new WaveConfig('Гранатометчики', {
+              drones: [
+                { type: DroneType.NORMAL, count: 4 },
+                { type: DroneType.GRENADIER, count: 3 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 900
+            })
+          ],
+          endMessage: '…You’re still up? Huh. That’s… not according to plan.',
+          pauseAfter: 4000
+        }))
+
+        // Этап 2: Нарастание
+        this.stages.push(new StageConfig('Нарастание', {
+          startMessage: `Squad, roger that—actually, wait, I didn’t say anything yet.
+Anyway, get moving.`,
+          waves: [
+            new WaveConfig('Волна 1', {
+              drones: [
+                { type: DroneType.NORMAL, count: 8 },
+                { type: DroneType.GRENADIER, count: 2 }
+              ],
+              pauseAfter: 2500,
+              spawnInterval: 600
+            }),
+            new WaveConfig('Волна 2', {
+              drones: [
+                { type: DroneType.NORMAL, count: 10 },
+                { type: DroneType.GRENADIER, count: 3 },
+                { type: DroneType.KAMIKAZE, count: 2 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 550
+            }),
+            new WaveConfig('Волна 3', {
+              drones: [
+                { type: DroneType.NORMAL, count: 12 },
+                { type: DroneType.GRENADIER, count: 4 },
+                { type: DroneType.KAMIKAZE, count: 3 }
+              ],
+              pauseAfter: 3500,
+              spawnInterval: 500
+            })
+          ],
+          endMessage: `Well I’ll be damned.
+You actually made it, soldier.`,
+          pauseAfter: 5000
+        }))
+
+        // Этап 3: Тяжелый
+        this.stages.push(new StageConfig('Тяжелый', {
+          startMessage: `This is Command… I think.
+Contact expected. Try not to die immediately.`,
+          waves: [
+            new WaveConfig('Волна 1', {
+              drones: [
+                { type: DroneType.NORMAL, count: 15 },
+                { type: DroneType.GRENADIER, count: 5 },
+                { type: DroneType.KAMIKAZE, count: 3 }
+              ],
+              pauseAfter: 3000,
+              spawnInterval: 450
+            }),
+            new WaveConfig('Волна 2', {
+              drones: [
+                { type: DroneType.NORMAL, count: 18 },
+                { type: DroneType.GRENADIER, count: 6 },
+                { type: DroneType.KAMIKAZE, count: 4 }
+              ],
+              pauseAfter: 3500,
+              spawnInterval: 400
+            }),
+            new WaveConfig('Волна 3', {
+              drones: [
+                { type: DroneType.NORMAL, count: 20 },
+                { type: DroneType.GRENADIER, count: 7 },
+                { type: DroneType.KAMIKAZE, count: 5 }
+              ],
+              pauseAfter: 4000,
+              spawnInterval: 350
+            })
+          ],
+          endMessage: `You’re alive.
+I’m marking that as a… success.`,
+          pauseAfter: 6000
+        }))
+
+        // Этап 4: Босс
+        this.stages.push(new StageConfig('Босс', {
+          startMessage: `That’s not standard issue…
+Who signed off on that thing?`,
+          bossWave: true,
+          waves: [
+            new WaveConfig('Босс и свита', {
+              drones: [
+                { type: 'boss', count: 1 },
+                { type: DroneType.NORMAL, count: 2 },
+                { type: DroneType.GRENADIER, count: 1 }
+              ],
+              pauseAfter: 0,
+              spawnInterval: 1200
+            })
+          ],
+          endMessage: `Well… that worked.
+Command approves. Probably.`,
+          pauseAfter: 8000
+        }))
+
+        // Этап 5: Бесконечный режим
+        this.stages.push(new StageConfig('Бесконечность', {
+          startMessage: `Stay alive, Charlie.`,
+          waves: this.generateInfiniteWaves(),
+          infiniteMode: true
+        }))
+      }
+
+      generateInfiniteWaves() {
+        const waves = []
+        for (let i = 0; i < 100; i++) {
+          const difficulty = 1 + i * 0.2
+          waves.push(new WaveConfig(`Волна ${i + 1}`, {
+            drones: [
+              { type: DroneType.NORMAL, count: Math.floor(10 * difficulty) },
+              { type: DroneType.GRENADIER, count: Math.floor(3 * difficulty) },
+              { type: DroneType.KAMIKAZE, count: Math.floor(2 * difficulty) }
+            ],
+            pauseAfter: 3000,
+            spawnInterval: Math.max(200, 500 - i * 10)
+          }))
+        }
+        return waves
+      }
+
+      startStage(index) {
+        if (index >= this.stages.length) {
+          if (this.infiniteMode) {
+            this.startInfiniteMode()
+          }
+          return
+        }
+
+        const stage = this.stages[index]
+
+        // ВАЖНО: сбрасываем все счетчики перед стартом этапа
+        this.currentStageIndex = index
+        this.currentWaveIndex = 0
+        this.isActive = true
+        this.stageComplete = false
+        this.isPaused = false
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+        this.currentWaveDrones = []
+
+        this.isActive = false // ВАЖНО
+
+        if (stage.startMessage) {
+          // Показываем сообщение, затем запускаем волну
+          showCommanderMessage(5000, stage.startMessage).then(() => {
+            this.isActive = true
+            this.startCurrentWave()
+          })
+        } else {
+          // Нет сообщения — сразу запускаем
+          this.isActive = true
+          this.startCurrentWave()
+        }
+      }
+
+      // Запустить текущую волну
+      startCurrentWave() {
+        const stage = this.stages[this.currentStageIndex]
+
+        if (this.currentWaveIndex >= stage.waves.length) {
+          this.completeStage()
+          return
+        }
+
+        const wave = stage.waves[this.currentWaveIndex]
+
+        // ПРИНУДИТЕЛЬНОЕ ГЛУБОКОЕ КОПИРОВАНИЕ
+        this.currentWaveDrones = JSON.parse(JSON.stringify(wave.drones))
+
+        // Сохраняем общее количество дронов в волне как константу
+        this.totalWaveDrones = this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
+
+        this.isPaused = false
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+      }
+
+      // Завершить этап
+      completeStage() {
+        const stage = this.stages[this.currentStageIndex]
+
+        this.isActive = false
+        this.stageComplete = true
+        this.pauseTimer = 0
+        this.spawnTimer = 0
+        this.currentWaveSpawnCount = 0
+        this.currentWaveDrones = []
+
+        const nextStage = () => {
+          this.currentStageIndex++
+          this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
+          if (this.currentStageIndex < this.stages.length) {
+            this.startStage(this.currentStageIndex)
+          } else {
+            this.startInfiniteMode()
+          }
+        }
+
+        if (stage.endMessage) {
+          showCommanderMessage(5000, stage.endMessage).then(() => {
+            if (stage.bossWave) {
+              this.startInfiniteMode()
+            } else {
+              nextStage()
+            }
+          })
+        } else {
+          nextStage()
+        }
+      }
+
+      // Запустить бесконечный режим
+      startInfiniteMode() {
+        this.infiniteMode = true
+        this.currentStageIndex = this.stages.length - 1
+        this.currentWaveIndex = 0
+        this.isActive = true
+
+        const stage = this.stages[this.currentStageIndex]
+        if (stage.startMessage) {
+          showCommanderMessage(5000, stage.startMessage).then(() => {
+            this.startCurrentWave()
+          })
+        }
+      }
+
+      // Обновление (вызывать в gameLoop)
+      update(delta) {
+        if (!this.isActive) return
+
+        // Проверяем индекс этапа
+        if (this.currentStageIndex >= this.stages.length) {
+          this.isActive = false
+          return
+        }
+
+        const stage = this.stages[this.currentStageIndex]
+        if (!stage) {
+          this.isActive = false
+          return
+        }
+
+        // ===== ФАЗА ПАУЗЫ МЕЖДУ ВОЛНАМИ =====
+        if (this.isPaused) {
+          this.pauseTimer += delta
+          const prevWave = stage.waves[this.currentWaveIndex - 1]
+
+          if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
+            this.isPaused = false
+            this.spawnTimer = 0
+            this.startCurrentWave()
+          }
+          return
+        }
+
+        // Проверяем индекс волны
+        if (this.currentWaveIndex >= stage.waves.length) {
+          this.completeStage()
+          return
+        }
+
+        const wave = stage.waves[this.currentWaveIndex]
+        const totalDrones = this.totalWaveDrones || 0
+
+        // ===== ФАЗА 1: СПАВН — пока не заспавнены все дроны =====
+        if (this.currentWaveSpawnCount < totalDrones) {
+          this.spawnTimer += delta
+          if (this.spawnTimer >= wave.spawnInterval) {
+            this.spawnTimer = 0
+            this.spawnNextDrone()
+          }
+          return
+        }
+
+        // ===== ФАЗА 2: ОЖИДАНИЕ — все заспавнены, ждём гибели =====
+        // Проверяем каждый кадр (не через spawnTimer), чтобы не пропустить момент
+        const alive = countDrones()
+
+        if (alive === 0) {
+          this.currentWaveIndex++
+
+          if (this.currentWaveIndex < stage.waves.length) {
+            this.isPaused = true
+            this.pauseTimer = 0
+          } else {
+            this.completeStage()
+          }
+        }
+      }
+
+      // Получить общее количество дронов в волне
+      // getWaveDroneCount() {
+      //   if (!this.currentWaveDrones) return 0
+      //   return this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
+      // }
+
+      // Посчитать сколько дронов уже заспавнено в текущей волне
+      // countSpawnedInWave() {
+      //   // Можно добавить счетчик в WaveManager
+      //   if (!this.currentWaveSpawnCount) {
+      //     this.currentWaveSpawnCount = 0
+      //   }
+      //   return this.currentWaveSpawnCount
+      // }
+
+      // Заспавнить следующего дрона из волны
+      spawnNextDrone() {
+        // Приоритет боссу: если он есть в списке, спавним его первым
+        let typeEntry = this.currentWaveDrones.find(d => d.type === 'boss' && d.count > 0)
+
+        if (!typeEntry) {
+          const availableTypes = this.currentWaveDrones.filter(d => d.count > 0)
+          if (availableTypes.length === 0) return
+          typeEntry = availableTypes[Math.floor(Math.random() * availableTypes.length)]
+        }
+
+        typeEntry.count--
+        this.currentWaveSpawnCount++
+
+        this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', ')
+
+        this.spawnDroneByType(typeEntry.type)
+      }
+
+      // Спавн дрона по типу
+      spawnDroneByType(type) {
+        switch (type) {
+          case DroneType.NORMAL:
+            return spawnNormalDrone()
+          case DroneType.GRENADIER:
+            return spawnGrenadier()
+          case DroneType.KAMIKAZE:
+            return spawnKamikaze()
+          case 'boss':
+            return spawnBoss()
+        }
+      }
+    }
+
+    // ======================
+    // ENTITIES
+    // ======================
+
     class BaseDrone {
       constructor(x, y, options = {}) {
         this.x = x
@@ -1393,421 +1949,6 @@
       }
     }
 
-
-    // Класс для настройки волны
-    class WaveConfig {
-      constructor(name, options = {}) {
-        this.name = name
-        this.drones = options.drones || [] // массив {type: DroneType, count: number}
-        this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
-        this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
-        this.message = options.message || null // сообщение перед волной
-        this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
-        this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
-      }
-    }
-
-    // Класс для большой волны (этапа)
-    class StageConfig {
-      constructor(name, options = {}) {
-        this.name = name
-        this.waves = options.waves || [] // массив WaveConfig
-        this.startMessage = options.startMessage || null // сообщение перед этапом
-        this.endMessage = options.endMessage || null // сообщение после этапа
-        this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
-        this.bossWave = options.bossWave || false // это босс волна?
-      }
-    }
-
-    class WaveManager {
-      constructor() {
-        this.stages = [] // все этапы
-        this.currentStageIndex = 0
-        this.currentWaveIndex = 0
-        this.isActive = false
-        this.isPaused = false
-        this.pauseTimer = 0
-        this.spawnTimer = 0
-        this.stageComplete = false
-        this.infiniteMode = false
-        this.maxDrones = 15
-        this.maxBullets = 30
-
-        // Инициализация этапов
-        this.initStages()
-
-        this.currentWaveDrones = []
-      }
-
-      initStages() {
-        // Этап 1: Начало
-        this.stages.push(new StageConfig('Начало', {
-          startMessage: 'Charlie’s hot, Alpha’s somewhere… probably. Move out.',
-          waves: [
-            new WaveConfig('Разведка', {
-              drones: [{ type: DroneType.NORMAL, count: 5 }],
-              pauseAfter: 2000,
-              spawnInterval: 800
-            }),
-            new WaveConfig('Усиление', {
-              drones: [{ type: DroneType.NORMAL, count: 7 }],
-              pauseAfter: 2500,
-              spawnInterval: 700
-            }),
-            new WaveConfig('Гранатометчики', {
-              drones: [
-                { type: DroneType.NORMAL, count: 4 },
-                { type: DroneType.GRENADIER, count: 3 }
-              ],
-              pauseAfter: 3000,
-              spawnInterval: 900
-            })
-          ],
-          endMessage: '…You’re still up? Huh. That’s… not according to plan.',
-          pauseAfter: 4000
-        }))
-
-        // Этап 2: Нарастание
-        this.stages.push(new StageConfig('Нарастание', {
-          startMessage: `Squad, roger that—actually, wait, I didn’t say anything yet.
-Anyway, get moving.`,
-          waves: [
-            new WaveConfig('Волна 1', {
-              drones: [
-                { type: DroneType.NORMAL, count: 8 },
-                { type: DroneType.GRENADIER, count: 2 }
-              ],
-              pauseAfter: 2500,
-              spawnInterval: 600
-            }),
-            new WaveConfig('Волна 2', {
-              drones: [
-                { type: DroneType.NORMAL, count: 10 },
-                { type: DroneType.GRENADIER, count: 3 },
-                { type: DroneType.KAMIKAZE, count: 2 }
-              ],
-              pauseAfter: 3000,
-              spawnInterval: 550
-            }),
-            new WaveConfig('Волна 3', {
-              drones: [
-                { type: DroneType.NORMAL, count: 12 },
-                { type: DroneType.GRENADIER, count: 4 },
-                { type: DroneType.KAMIKAZE, count: 3 }
-              ],
-              pauseAfter: 3500,
-              spawnInterval: 500
-            })
-          ],
-          endMessage: `Well I’ll be damned.
-You actually made it, soldier.`,
-          pauseAfter: 5000
-        }))
-
-        // Этап 3: Тяжелый
-        this.stages.push(new StageConfig('Тяжелый', {
-          startMessage: `This is Command… I think.
-Contact expected. Try not to die immediately.`,
-          waves: [
-            new WaveConfig('Волна 1', {
-              drones: [
-                { type: DroneType.NORMAL, count: 15 },
-                { type: DroneType.GRENADIER, count: 5 },
-                { type: DroneType.KAMIKAZE, count: 3 }
-              ],
-              pauseAfter: 3000,
-              spawnInterval: 450
-            }),
-            new WaveConfig('Волна 2', {
-              drones: [
-                { type: DroneType.NORMAL, count: 18 },
-                { type: DroneType.GRENADIER, count: 6 },
-                { type: DroneType.KAMIKAZE, count: 4 }
-              ],
-              pauseAfter: 3500,
-              spawnInterval: 400
-            }),
-            new WaveConfig('Волна 3', {
-              drones: [
-                { type: DroneType.NORMAL, count: 20 },
-                { type: DroneType.GRENADIER, count: 7 },
-                { type: DroneType.KAMIKAZE, count: 5 }
-              ],
-              pauseAfter: 4000,
-              spawnInterval: 350
-            })
-          ],
-          endMessage: `You’re alive.
-I’m marking that as a… success.`,
-          pauseAfter: 6000
-        }))
-
-        // Этап 4: Босс
-        this.stages.push(new StageConfig('Босс', {
-          startMessage: `That’s not standard issue…
-Who signed off on that thing?`,
-          bossWave: true,
-          waves: [
-            new WaveConfig('Босс и свита', {
-              drones: [
-                { type: 'boss', count: 1 },
-                { type: DroneType.NORMAL, count: 2 },
-                { type: DroneType.GRENADIER, count: 1 }
-              ],
-              pauseAfter: 0,
-              spawnInterval: 1200
-            })
-          ],
-          endMessage: `Well… that worked.
-Command approves. Probably.`,
-          pauseAfter: 8000
-        }))
-
-        // Этап 5: Бесконечный режим
-        this.stages.push(new StageConfig('Бесконечность', {
-          startMessage: `Stay alive, Charlie.`,
-          waves: this.generateInfiniteWaves(),
-          infiniteMode: true
-        }))
-      }
-
-      generateInfiniteWaves() {
-        const waves = []
-        for (let i = 0; i < 100; i++) {
-          const difficulty = 1 + i * 0.2
-          waves.push(new WaveConfig(`Волна ${i + 1}`, {
-            drones: [
-              { type: DroneType.NORMAL, count: Math.floor(10 * difficulty) },
-              { type: DroneType.GRENADIER, count: Math.floor(3 * difficulty) },
-              { type: DroneType.KAMIKAZE, count: Math.floor(2 * difficulty) }
-            ],
-            pauseAfter: 3000,
-            spawnInterval: Math.max(200, 500 - i * 10)
-          }))
-        }
-        return waves
-      }
-
-      startStage(index) {
-        if (index >= this.stages.length) {
-          if (this.infiniteMode) {
-            this.startInfiniteMode()
-          }
-          return
-        }
-
-        const stage = this.stages[index]
-
-        // ВАЖНО: сбрасываем все счетчики перед стартом этапа
-        this.currentStageIndex = index
-        this.currentWaveIndex = 0
-        this.isActive = true
-        this.stageComplete = false
-        this.isPaused = false
-        this.pauseTimer = 0
-        this.spawnTimer = 0
-        this.currentWaveSpawnCount = 0
-        this.currentWaveDrones = []
-
-        this.isActive = false // ВАЖНО
-
-        if (stage.startMessage) {
-          // Показываем сообщение, затем запускаем волну
-          showCommanderMessage(5000, stage.startMessage).then(() => {
-            this.isActive = true
-            this.startCurrentWave()
-          })
-        } else {
-          // Нет сообщения — сразу запускаем
-          this.isActive = true
-          this.startCurrentWave()
-        }
-      }
-
-      // Запустить текущую волну
-      startCurrentWave() {
-        const stage = this.stages[this.currentStageIndex]
-
-        if (this.currentWaveIndex >= stage.waves.length) {
-          this.completeStage()
-          return
-        }
-
-        const wave = stage.waves[this.currentWaveIndex]
-
-        // ПРИНУДИТЕЛЬНОЕ ГЛУБОКОЕ КОПИРОВАНИЕ
-        this.currentWaveDrones = JSON.parse(JSON.stringify(wave.drones))
-
-        // Сохраняем общее количество дронов в волне как константу
-        this.totalWaveDrones = this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
-
-        this.isPaused = false
-        this.spawnTimer = 0
-        this.currentWaveSpawnCount = 0
-      }
-
-      // Завершить этап
-      completeStage() {
-        const stage = this.stages[this.currentStageIndex]
-
-        this.isActive = false
-        this.stageComplete = true
-        this.pauseTimer = 0
-        this.spawnTimer = 0
-        this.currentWaveSpawnCount = 0
-        this.currentWaveDrones = []
-
-        const nextStage = () => {
-          this.currentStageIndex++
-          this.currentWaveIndex = 0 // ВАЖНО: сбрасываем индекс волны!
-          if (this.currentStageIndex < this.stages.length) {
-            this.startStage(this.currentStageIndex)
-          } else {
-            this.startInfiniteMode()
-          }
-        }
-
-        if (stage.endMessage) {
-          showCommanderMessage(5000, stage.endMessage).then(() => {
-            if (stage.bossWave) {
-              this.startInfiniteMode()
-            } else {
-              nextStage()
-            }
-          })
-        } else {
-          nextStage()
-        }
-      }
-
-      // Запустить бесконечный режим
-      startInfiniteMode() {
-        this.infiniteMode = true
-        this.currentStageIndex = this.stages.length - 1
-        this.currentWaveIndex = 0
-        this.isActive = true
-
-        const stage = this.stages[this.currentStageIndex]
-        if (stage.startMessage) {
-          showCommanderMessage(5000, stage.startMessage).then(() => {
-            this.startCurrentWave()
-          })
-        }
-      }
-
-      // Обновление (вызывать в gameLoop)
-      update(delta) {
-        if (!this.isActive) return
-
-        // Проверяем индекс этапа
-        if (this.currentStageIndex >= this.stages.length) {
-          this.isActive = false
-          return
-        }
-
-        const stage = this.stages[this.currentStageIndex]
-        if (!stage) {
-          this.isActive = false
-          return
-        }
-
-        // ===== ФАЗА ПАУЗЫ МЕЖДУ ВОЛНАМИ =====
-        if (this.isPaused) {
-          this.pauseTimer += delta
-          const prevWave = stage.waves[this.currentWaveIndex - 1]
-
-          if (prevWave && this.pauseTimer >= prevWave.pauseAfter) {
-            this.isPaused = false
-            this.spawnTimer = 0
-            this.startCurrentWave()
-          }
-          return
-        }
-
-        // Проверяем индекс волны
-        if (this.currentWaveIndex >= stage.waves.length) {
-          this.completeStage()
-          return
-        }
-
-        const wave = stage.waves[this.currentWaveIndex]
-        const totalDrones = this.totalWaveDrones || 0
-
-        // ===== ФАЗА 1: СПАВН — пока не заспавнены все дроны =====
-        if (this.currentWaveSpawnCount < totalDrones) {
-          this.spawnTimer += delta
-          if (this.spawnTimer >= wave.spawnInterval) {
-            this.spawnTimer = 0
-            this.spawnNextDrone()
-          }
-          return
-        }
-
-        // ===== ФАЗА 2: ОЖИДАНИЕ — все заспавнены, ждём гибели =====
-        // Проверяем каждый кадр (не через spawnTimer), чтобы не пропустить момент
-        const alive = countDrones()
-
-        if (alive === 0) {
-          this.currentWaveIndex++
-
-          if (this.currentWaveIndex < stage.waves.length) {
-            this.isPaused = true
-            this.pauseTimer = 0
-          } else {
-            this.completeStage()
-          }
-        }
-      }
-
-      // Получить общее количество дронов в волне
-      // getWaveDroneCount() {
-      //   if (!this.currentWaveDrones) return 0
-      //   return this.currentWaveDrones.reduce((sum, d) => sum + d.count, 0)
-      // }
-
-      // Посчитать сколько дронов уже заспавнено в текущей волне
-      // countSpawnedInWave() {
-      //   // Можно добавить счетчик в WaveManager
-      //   if (!this.currentWaveSpawnCount) {
-      //     this.currentWaveSpawnCount = 0
-      //   }
-      //   return this.currentWaveSpawnCount
-      // }
-
-      // Заспавнить следующего дрона из волны
-      spawnNextDrone() {
-        // Приоритет боссу: если он есть в списке, спавним его первым
-        let typeEntry = this.currentWaveDrones.find(d => d.type === 'boss' && d.count > 0)
-
-        if (!typeEntry) {
-          const availableTypes = this.currentWaveDrones.filter(d => d.count > 0)
-          if (availableTypes.length === 0) return
-          typeEntry = availableTypes[Math.floor(Math.random() * availableTypes.length)]
-        }
-
-        typeEntry.count--
-        this.currentWaveSpawnCount++
-
-        this.currentWaveDrones.map(d => `${d.type}:${d.count}`).join(', ')
-
-        this.spawnDroneByType(typeEntry.type)
-      }
-
-      // Спавн дрона по типу
-      spawnDroneByType(type) {
-        switch (type) {
-          case DroneType.NORMAL:
-            return spawnNormalDrone()
-          case DroneType.GRENADIER:
-            return spawnGrenadier()
-          case DroneType.KAMIKAZE:
-            return spawnKamikaze()
-          case 'boss':
-            return spawnBoss()
-        }
-      }
-    }
-
     // ======================
     // HELPERS
     // ======================
@@ -1875,6 +2016,7 @@ Command approves. Probably.`,
 
       return { dx, dy }
     }
+
     function splitTextIntoPages(text, maxChars = 140) {
       const words = text.split(" ")
       const pages = []
@@ -2096,6 +2238,7 @@ Anyone falling back without orders will be treated as hostile.`
         }, 100)
       })
     }
+
     async function showCommanderMessage(duration = 10000, message = null) {
       const prevState = currentState
       currentState = GameState.DIALOG
@@ -2547,106 +2690,6 @@ Anyone falling back without orders will be treated as hostile.`
 
 
 
-    smokeSprite.onload = () => {
-      SMOKE_FRAME_WIDTH = smokeSprite.width / 2
-      SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
-    }
-
-    // Инициализация дыма от города
-    function initCitySmoke() {
-      if (citySmokeSprite.complete) {
-        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
-          columns: 2,
-          totalFrames: 98,
-          frameDelay: 8,
-          scale: 1.5,
-          opacity: 0.6,
-          loop: true
-        })
-      } else {
-        citySmokeSprite.onload = () => {
-          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
-            columns: 2,
-            totalFrames: 98,
-            frameDelay: 8,
-            scale: 1.5,
-            opacity: 0.6,
-            loop: true
-          })
-        }
-      }
-    }
-
-    // Инициализация дыма от танка
-    function initTankSmoke() {
-      if (smokeSprite.complete) {
-        tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
-          columns: 2,
-          totalFrames: 58,
-          frameDelay: 8,
-          scale: 1.2,
-          opacity: 0.4,
-          loop: true
-        })
-      } else {
-        smokeSprite.onload = () => {
-          tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
-            columns: 2,
-            totalFrames: 58,
-            frameDelay: 8,
-            scale: 1.2,
-            opacity: 0.4,
-            loop: true
-          })
-        }
-      }
-    }
-
-    // Инициализация огня
-    function initFire() {
-      if (fireSprite.complete) {
-        cityFire = new AnimatedSprite(100, 600, fireSprite, {
-          columns: 2,
-          totalFrames: 8,
-          frameDelay: 8,
-          scale: 1,
-          opacity: 0.9,
-          width: 144,
-          height: 144,
-          loop: true
-        })
-      } else {
-        fireSprite.onload = () => {
-          cityFire = new AnimatedSprite(100, 600, fireSprite, {
-            columns: 2,
-            totalFrames: 8,
-            frameDelay: 8,
-            scale: 1,
-            opacity: 0.9,
-            width: 144,
-            height: 144,
-            loop: true
-          })
-        }
-      }
-    }
-
-    effectsLayer.style.display = "none"
-
-    const tank = {
-      x: canvas.width * 0.85,
-      y: canvas.height - groundHeight - 150,
-      w: 280,
-      h: 180
-    }
-
-    const destroyedCity = {
-      x: 100,
-      y: canvas.height - groundHeight - 120,
-      w: 180,
-      h: 80
-    }
-
     let waveMusic = {
       1: new Audio("wave1.mp3"),
       2: new Audio("wave2.mp3"),
@@ -2657,36 +2700,6 @@ Anyone falling back without orders will be treated as hostile.`
     for (const key in waveMusic) {
       waveMusic[key].loop = false
       waveMusic[key].volume = 0.1
-    }
-
-
-
-    const EffectsManager = {
-      // Отключить все визуальные эффекты для игры
-      disableForGame() {
-        const container = document.getElementById('game-container')
-        const ui = document.getElementById('ui')
-
-        // Убираем CRT класс и добавляем no-crt
-        container.classList.remove('crt')
-        container.classList.add('no-crt')
-
-        // Отключаем анимацию UI
-        ui.style.animation = 'none'
-      },
-
-      // Включить эффекты для меню
-      enableForMenu() {
-        const container = document.getElementById('game-container')
-        const ui = document.getElementById('ui')
-
-        // Возвращаем CRT класс и убираем no-crt
-        container.classList.add('crt')
-        container.classList.remove('no-crt')
-
-        // Возвращаем анимацию UI
-        ui.style.animation = 'glitch1 1s infinite'
-      }
     }
 
     function showHitboxRect(x, y, width, height, color) {
@@ -2774,16 +2787,10 @@ Anyone falling back without orders will be treated as hostile.`
       isMusicOn = isMusicOn === "true"; // преобразуем строку в boolean
     }
 
-
     function pauseTrack(track) {
       track.pause();
       track.currentTime = 0;
     }
-
-
-
-
-
 
     function startReload() {
       if (isReloading) return
@@ -2807,7 +2814,6 @@ Anyone falling back without orders will be treated as hostile.`
       }, currentWeapon.reloadTime)
 
     }
-
 
     async function animateCommanderBox() {
       const box = UI.notification.balloon
@@ -2833,10 +2839,6 @@ Anyone falling back without orders will be treated as hostile.`
       box.style.display = "none"
     }
 
-
-
-
-
     function explodeGrenade(g) {
       spawnGroundExplosion(g.x, g.y)
 
@@ -2860,8 +2862,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
 
-
-    // Функции спавна
     function spawnNormalDrone() {
       const maxDrones = waveManager.maxDrones
       if (countDrones() >= maxDrones) return
@@ -2889,8 +2889,6 @@ Anyone falling back without orders will be treated as hostile.`
       return drone
     }
 
-
-
     function spawnBoss() {
       const boss = new BossDrone()
       spawn(boss)
@@ -2899,18 +2897,6 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
 
-
-
-
-
-
-    function renderLeaderboard() {
-      let html = "<h3>Top Survivors</h3>"
-      leaderboard.forEach((p, i) => {
-        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
-      })
-      document.getElementById("leaderboard").innerHTML = html
-    }
 
     let screenShake = {
       intensity: 0,
@@ -2929,9 +2915,6 @@ Anyone falling back without orders will be treated as hostile.`
         // Ничего не делаем - тряска отключена
       }
     }
-
-
-
 
     function initGame() {
       // игрок
@@ -2957,11 +2940,6 @@ Anyone falling back without orders will be treated as hostile.`
 
       // музыка
     }
-
-
-
-
-
 
     function draw() {
       // Очистка канваса
@@ -3080,8 +3058,6 @@ Anyone falling back without orders will be treated as hostile.`
       ctx.globalAlpha = 1.0
     }
 
-
-
     function drawPaused() {
       draw()
 
@@ -3098,7 +3074,6 @@ Anyone falling back without orders will be treated as hostile.`
       ctx.fillText("Press P to continue", canvas.width / 2, canvas.height / 2 + 60)
       ctx.restore()
     }
-
 
     function updateMenu(delta) {
 
@@ -3194,7 +3169,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }, { once: true })
 
-
     window.addEventListener("load", () => {
       document.getElementById("loading-screen").style.display = "none"
     })
@@ -3205,7 +3179,6 @@ Anyone falling back without orders will be treated as hostile.`
     if (isMusicOn) {
       menuMusic.play()
     }
-
 
     const interval = setInterval(() => {
       progress += 10
