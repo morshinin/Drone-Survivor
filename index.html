@@ -301,14 +301,6 @@
 
   <div id="fade"></div>
 
-  <audio id="menuMusic" src="menu.mp3"></audio>
-  <audio id="gameMusic" src="game.mp3" loop></audio>
-  <audio id="droneSound" src="drone_sound.mp3" loop></audio>
-  <audio id="shootSound" src="pistol_shot.mp3"></audio>
-  <audio id="gameOverMusic" src="gameover.mp3"></audio>
-  <audio id="droneExplosionSound" src="drone_explosion.mp3"></audio>
-  <audio id="groundExplosionSound" src="ground_explosion.mp3"></audio>
-
   <div id="loading-screen">
     <div class="loading-box">
       <p>Loading...</p>
@@ -469,13 +461,6 @@
     const canvas = document.getElementById("game")
     const ctx = canvas.getContext("2d")
 
-    /* Sound */
-    const menuMusic = document.getElementById("menuMusic")
-    const gameMusic = document.getElementById("gameMusic")
-    const droneSound = document.getElementById("droneSound")
-    const droneExplosionSound = document.getElementById("droneExplosionSound")
-    const groundExplosionSound = document.getElementById("groundExplosionSound")
-    const gameOverMusic = document.getElementById("gameOverMusic")
     const UI = {
       notification: {
         balloon: document.getElementById("commander-balloon"),
@@ -838,25 +823,6 @@
 
         // Возвращаем анимацию UI
         ui.style.animation = 'glitch1 1s infinite'
-      }
-    }
-
-    class SoundPool {
-      constructor(audioElement, size = 15) {
-        this.pool = []
-        this.ptr = 0
-        for (let i = 0; i < size; i++) {
-          const s = audioElement.cloneNode()
-          s.volume = 0.4
-          this.pool.push(s)
-        }
-      }
-      play(volume = 0.4) {
-        const s = this.pool[this.ptr]
-        s.volume = volume
-        s.currentTime = 0
-        s.play().catch(() => { }) // Игнорируем ошибки автоплея
-        this.ptr = (this.ptr + 1) % this.pool.length
       }
     }
 
@@ -1249,6 +1215,179 @@ Command approves. Probably.`,
       }
     }
 
+    class AudioManager {
+      constructor() {
+        this.musicEnabled = true
+        this.sfxEnabled = true
+        this.musicVolume = 0.2
+        this.sfxVolume = 0.4
+
+        this.music = {}
+        this.sfx = {}
+        this.currentMusic = null
+
+        this.loadSettings()
+      }
+
+      registerMusic(name, src, { loop = false, volume = this.musicVolume } = {}) {
+        const audio = new Audio(src)
+        audio.loop = loop
+        audio.volume = volume
+        this.music[name] = audio
+        return audio
+      }
+
+      registerSfx(name, src, { volume = this.sfxVolume } = {}) {
+        const audio = new Audio(src)
+        audio.volume = volume
+        this.sfx[name] = audio
+        return audio
+      }
+
+      playMusic(name, { restart = true } = {}) {
+        if (!this.musicEnabled) return
+
+        const track = this.music[name]
+        if (!track) return
+
+        if (this.currentMusic && this.currentMusic !== track) {
+          this.stopCurrentMusic()
+        }
+
+        this.currentMusic = track
+
+        if (restart) {
+          track.currentTime = 0
+        }
+
+        track.volume = this.musicVolume
+        track.play().catch(() => {})
+      }
+
+      stopCurrentMusic() {
+        if (!this.currentMusic) return
+        this.currentMusic.pause()
+        this.currentMusic.currentTime = 0
+        this.currentMusic = null
+      }
+
+      pauseCurrentMusic() {
+        if (!this.currentMusic) return
+        this.currentMusic.pause()
+      }
+
+      resumeCurrentMusic() {
+        if (!this.currentMusic) return
+        if (!this.musicEnabled) return
+        this.currentMusic.play().catch(() => {})
+      }
+
+      playSfx(name, volume = null) {
+        if (!this.sfxEnabled) return
+
+        const base = this.sfx[name]
+        if (!base) return
+
+        const sound = base.cloneNode()
+        sound.volume = volume ?? this.sfxVolume
+        sound.play().catch(() => {})
+      }
+
+      setMusicEnabled(value) {
+        this.musicEnabled = Boolean(value)
+        this.saveSettings()
+
+        if (!this.musicEnabled) {
+          this.stopCurrentMusic()
+        }
+      }
+
+      setSfxEnabled(value) {
+        this.sfxEnabled = Boolean(value)
+        this.saveSettings()
+      }
+
+      setMusicVolume(value) {
+        this.musicVolume = Math.max(0, Math.min(1, value))
+        this.saveSettings()
+
+        if (this.currentMusic) {
+          this.currentMusic.volume = this.musicVolume
+        }
+      }
+
+      setSfxVolume(value) {
+        this.sfxVolume = Math.max(0, Math.min(1, value))
+        this.saveSettings()
+      }
+
+      stopAll() {
+        this.stopCurrentMusic()
+      }
+
+      loadSettings() {
+        const saved = localStorage.getItem('audioSettings')
+        if (!saved) return
+
+        try {
+          const data = JSON.parse(saved)
+
+          if (typeof data.musicEnabled === 'boolean') {
+            this.musicEnabled = data.musicEnabled
+          }
+
+          if (typeof data.sfxEnabled === 'boolean') {
+            this.sfxEnabled = data.sfxEnabled
+          }
+
+          if (typeof data.musicVolume === 'number') {
+            this.musicVolume = data.musicVolume
+          }
+
+          if (typeof data.sfxVolume === 'number') {
+            this.sfxVolume = data.sfxVolume
+          }
+        } catch (error) {
+          console.warn('Failed to load audio settings', error)
+        }
+      }
+
+      saveSettings() {
+        localStorage.setItem('audioSettings', JSON.stringify({
+          musicEnabled: this.musicEnabled,
+          sfxEnabled: this.sfxEnabled,
+          musicVolume: this.musicVolume,
+          sfxVolume: this.sfxVolume,
+        }))
+      }
+    }
+
+    const audio = new AudioManager()
+
+    audio.registerMusic("menu", "menu.mp3", { loop: true })
+    audio.registerMusic("game", "game.mp3", { loop: true })
+    audio.registerMusic("ambient", "ambient.mp3")
+    audio.registerMusic("wave1", "wave1.mp3")
+    audio.registerMusic("wave2", "wave2.mp3")
+    audio.registerMusic("wave3", "wave3.mp3")
+    audio.registerMusic("boss", "boss.mp3")
+    audio.registerMusic("gameover", "gameover.mp3")
+
+    audio.registerSfx("pistol_shot", "pistol_shot.mp3")
+    audio.registerSfx("pistol_reload", "pistol_reload.mp3")
+    audio.registerSfx("rifle_shot", "rifle_shot.mp3")
+    audio.registerSfx("rifle_reload", "rifle_reload.mp3")
+    audio.registerSfx("shotgun_shot", "shotgun_shot.mp3")
+    audio.registerSfx("shotgun_reload", "shotgun_reload.mp3")
+    audio.registerSfx("machinegun_shot", "machinegun_shot.mp3")
+    audio.registerSfx("machinegun_reload", "machinegun_reload.mp3")
+
+    audio.registerSfx("drone_explosion", "drone_explosion.mp3")
+    audio.registerSfx("ground_explosion", "ground_explosion.mp3")
+    audio.registerSfx("death", "death.mp3")
+    audio.registerSfx("radio_on", "radio_chatter.mp3")
+    audio.registerSfx("radio_off", "radio_off.mp3")
+    audio.registerSfx("typewriter", "typeWriter.mp3")
     // ======================
     // ENTITIES
     // ======================
@@ -1405,11 +1544,8 @@ Command approves. Probably.`,
       update(delta) {
         super.update(delta)
 
-        // Стрельба
         this.fireTimer += delta
 
-        // Убрали тяжелый фильтр и сортировку для оптимизации CPU.
-        // Ограничение стрельбы теперь полагается на globalEnemyFireCooldown и индивидуальные таймеры.
         if (this.fireTimer >= this.fireCooldown &&
           globalEnemyFireCooldown <= 0) {
           this.shoot()
@@ -1594,17 +1730,14 @@ Command approves. Probably.`,
         player.alive = false
 
         timeScale = 0.25
-        screenShake.shake(20, 500)
 
         spawnExplosion(
           player.x + player.width / 2,
           player.y + player.height / 2
         )
 
-        droneSound.pause();
-        gameMusic.pause()
-        Object.values(waveMusic).forEach(track => pauseTrack(track));
-        playPooled(PLAYER_SOUNDS['death'], 0.4)
+        audio.stopAll()
+        audio.playSfx('death')
       }
 
       update() {
@@ -2258,11 +2391,8 @@ Command approves. Probably.`,
         element.textContent += text[i]
 
         if (i % 3 === 0 && text[i] !== " ") {
-          try {
-            playPooled(GAME_SOUNDS.typeWriter, 0.15)
-          } catch (e) {
-            console.error("Audio pool error:", e)
-          }
+          audio.playSfx('typewriter')
+
         }
 
         if (skip) {
@@ -2286,13 +2416,12 @@ Command approves. Probably.`,
 
     function spawnExplosion(x, y) {
       spawn(new Explosion(x, y))
-      playPooled(droneExplosionSound, 0.2)
+      audio.playSfx('drone_explosion')
     }
 
     function spawnGroundExplosion(x, y) {
       spawn(new GroundExplosion(x, y))
-      playPooled(groundExplosionSound, 0.3)
-      // screenShake.shake(6, 20) // сила = 12 пикселей, длительность = 20 кадров
+      audio.playSfx('ground_explosion')
     }
 
     function createWeapon(type) {
@@ -2326,9 +2455,19 @@ Command approves. Probably.`,
       const shots = currentWeapon.shoot(player, dirX, dirY)
       if (shots.length === 0) return
 
-      const currentWeaponName = currentWeapon.name
-      if (WEAPON_SOUNDS[currentWeaponName]) {
-        playPooled(WEAPON_SOUNDS[currentWeaponName].shoot, 0.4)
+      switch (currentWeapon.name) {
+        case "Pistol":
+          audio.playSfx("pistol_shot", 0.4)
+          break
+        case "Assault Rifle":
+          audio.playSfx("rifle_shot", 0.4)
+          break
+        case "Shotgun":
+          audio.playSfx("shotgun_shot", 0.4)
+          break
+        case "Machine Gun":
+          audio.playSfx("machinegun_shot", 0.4)
+          break
       }
 
       for (const s of shots) {
@@ -2336,18 +2475,23 @@ Command approves. Probably.`,
       }
     }
 
-    function pauseTrack(track) {
-      track.pause();
-      track.currentTime = 0;
-    }
-
     function startReload() {
       if (!currentWeapon) return
       if (!currentWeapon.reload()) return
 
-      const currentWeaponName = currentWeapon.name
-      if (WEAPON_SOUNDS[currentWeaponName]) {
-        playPooled(WEAPON_SOUNDS[currentWeaponName].reload, 0.4)
+      switch (currentWeapon.name) {
+        case "Pistol":
+          audio.playSfx("pistol_reload", 0.5)
+          break
+        case "Assault Rifle":
+          audio.playSfx("rifle_reload", 0.5)
+          break
+        case "Shotgun":
+          audio.playSfx("shotgun_reload", 0.5)
+          break
+        case "Machine Gun":
+          audio.playSfx("machinegun_reload", 0.5)
+          break
       }
     }
 
@@ -2432,19 +2576,6 @@ Command approves. Probably.`,
       return boss
     }
 
-    function playPooled(audioAsset, volume = 0.4) {
-      if (!isMusicOn) return
-      if (!audioAsset) return
-
-      const src = audioAsset.src || audioAsset.getAttribute('src')
-      if (!src) return
-
-      if (!POOLED_SOUNDS[src]) {
-        POOLED_SOUNDS[src] = new SoundPool(audioAsset)
-      }
-      POOLED_SOUNDS[src].play(volume)
-    }
-
     function showHitboxRect(x, y, width, height, color) {
       ctx.strokeStyle = color || 'red'
       ctx.lineWidth = 2
@@ -2462,7 +2593,6 @@ Command approves. Probably.`,
         await animatePlayerIntro()
         await new Promise(resolve => setTimeout(resolve, 3000))
         await showCommanderIntro()
-        // await startWaveIntro()
         await waveManager.startStage(0)
 
         playerName = document.getElementById("nameInput").value.toUpperCase()
@@ -2486,13 +2616,6 @@ Command approves. Probably.`,
       effectsLayer.style.display = "block"
 
       await fadeScreen()
-      gameOverMusic.pause()
-      await crossfadeMusic(gameOverMusic, gameMusic)
-
-      droneSound.currentTime = 0
-      droneSound.playbackRate = 0.8
-      droneSound.volume = 0.001
-      droneSound.play()
 
       document.body.classList.add("hide-cursor")
       player = new Player()
@@ -2506,14 +2629,9 @@ Command approves. Probably.`,
       EffectsManager.enableForMenu()
 
       document.body.classList.remove("hide-cursor")
-      document.getElementById("gameMusic").pause()
 
-      Object.values(waveMusic).forEach(track => {
-        track.pause();
-        track.currentTime = 0;
-      });
-
-      gameOverMusic.play()
+      audio.stopAll()
+      audio.playMusic('gameover')
 
       await saveScoreOnline()
       await loadLeaderboard()
@@ -2535,7 +2653,8 @@ Command approves. Probably.`,
       await new Promise(resolve => setTimeout(resolve, 500))
 
       document.body.classList.add("hide-cursor")
-      await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
+      audio.playMusic('ambient')
+      // await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
       fadeEl.style.opacity = "1"
       fadeEl.style.transition = "opacity 3s"
     }
@@ -2607,17 +2726,13 @@ Anyone falling back without orders will be treated as hostile.`
       const prevState = currentState
       currentState = GameState.DIALOG
 
-      const radioStart = GAME_SOUNDS.radioOn
-      const radioEnd = GAME_SOUNDS.radioOff
-
       const balloon = UI.notification.balloon
       const p = balloon.querySelector("p");
       const hint = document.getElementById("continueHint")
 
       await animateCommanderBox()
 
-      radioStart.currentTime = 0
-      await radioStart.play()
+      await audio.playSfx('radio_on')
 
       await new Promise(r => setTimeout(r, 300))
 
@@ -2635,8 +2750,7 @@ Anyone falling back without orders will be treated as hostile.`
         hint.style.display = "none"
       }
 
-      radioEnd.currentTime = 0
-      await radioEnd.play()
+      await audio.playSfx('radio_off')
 
       await hideCommanderBox()
 
@@ -2657,24 +2771,6 @@ Anyone falling back without orders will be treated as hostile.`
       })
     }
 
-    async function crossfadeMusic(from, to, duration = 1000) {
-      if (to) {
-        to.volume = 0
-        if (isMusicOn) {
-          to.play()
-        }
-      }
-      const steps = 20
-      const stepTime = duration / steps
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps
-        if (from) from.volume = 0.2 * (1 - t)
-        if (to) to.volume = 0.2 * t
-        await new Promise(r => setTimeout(r, stepTime))
-      }
-      if (from) from.pause()
-    }
-
     function waitForContinue() {
       return new Promise(resolve => {
         function handler(e) {
@@ -2686,21 +2782,6 @@ Anyone falling back without orders will be treated as hostile.`
 
         window.addEventListener("keydown", handler)
       })
-    }
-
-    function toggleMusic() {
-      isMusicOn = !isMusicOn;
-      localStorage.setItem("musicOn", isMusicOn);
-
-      if (!isMusicOn) {
-        // выключаем всю музыку
-        gameMusic.pause();
-        gameOverMusic.pause();
-        menuMusic.pause();
-        Object.values(waveMusic).forEach(track => pauseTrack(track));
-      } else {
-        menuMusic.play()
-      }
     }
 
     function saveScore() {
@@ -3141,12 +3222,6 @@ Anyone falling back without orders will be treated as hostile.`
 
     startBtn.onclick = startGame
 
-    muteBtn.onclick = () => {
-      toggleMusic(); // если музыка выключена, остановим все треки
-
-      !isMusicOn ? muteBtn.classList.add("-muted") : muteBtn.classList.remove("-muted")
-    }
-
     document.addEventListener("keydown", e => {
       if (e.code === "Space") {
         shooting = true
@@ -3210,7 +3285,7 @@ Anyone falling back without orders will be treated as hostile.`
 
     document.body.addEventListener("click", () => {
       if (isMusicOn) {
-        menuMusic.play()
+        audio.playMusic('menu')
       }
     }, { once: true })
 
@@ -3219,11 +3294,6 @@ Anyone falling back without orders will be treated as hostile.`
     })
 
     loadLeaderboard()
-
-    menuMusic.volume = 0.1
-    if (isMusicOn) {
-      menuMusic.play()
-    }
 
     const interval = setInterval(() => {
       progress += 10
@@ -3250,265 +3320,6 @@ Anyone falling back without orders will be treated as hostile.`
     //     }
     //   }
     // }
-    // function buildCollisionGrid() {
-    //   collisionGrid = {}
-    //
-    //   gameObjects.forEach(obj => {
-    //     if (!obj.alive) return
-    //
-    //     const gridX = Math.floor(obj.x / GRID_SIZE)
-    //     const gridY = Math.floor(obj.y / GRID_SIZE)
-    //     const key = `${gridX},${gridY}`
-    //
-    //     if (!collisionGrid[key]) {
-    //       collisionGrid[key] = []
-    //     }
-    //     collisionGrid[key].push(obj)
-    //   })
-    // }
-
-    // function optimizeCollisions() {
-    //   buildCollisionGrid()
-    //
-    //   const bullets = gameObjects.filter(o => o instanceof Bullet)
-    //   // const drones = gameObjects.filter(o => o instanceof BaseDrone)
-    //
-    //   bullets.forEach(b => {
-    //     const gridX = Math.floor(b.x / GRID_SIZE)
-    //     const gridY = Math.floor(b.y / GRID_SIZE)
-    //     const key = `${gridX},${gridY}`
-    //
-    //     // Проверяем только объекты в той же ячейке сетки
-    //     const nearbyObjects = collisionGrid[key] || []
-    //
-    //     nearbyObjects.forEach(obj => {
-    //       if (obj instanceof BaseDrone && isColliding(b, obj)) {
-    //         b.alive = false
-    //         obj.alive = false
-    //         updateScore()
-    //       }
-    //     })
-    //   })
-    // }
-
-    // function freeze(ms) {
-    //   hitFreeze = ms
-    // }
-
-    // function update(delta) {
-    //   const startTime = performance.now()
-    //
-    //   if (hitFreeze > 0) {
-    //     hitFreeze -= delta
-    //     return
-    //   }
-    //
-    //   if (!player.alive) {
-    //     player.deathTimer -= delta
-    //     if (player.deathTimer <= 0) {
-    //       timeScale = 1
-    //       endGame()
-    //     }
-    //     return
-    //   }
-    //
-    //   player.update()
-    //
-    //   // Обновление анимированных спрайтов
-    //   if (tankSmoke?.alive) tankSmoke.update()
-    //   if (citySmoke?.alive) citySmoke.update()
-    //   if (cityFire?.alive) cityFire.update()
-    //
-    //   // Обновление облаков
-    //   for (const cloud of clouds) {
-    //     cloud.update()
-    //   }
-    //
-    //   // ===== ВАЖНО: КУЛДАУН ВРАГОВ =====
-    //   if (globalEnemyFireCooldown > 0) {
-    //     globalEnemyFireCooldown -= delta
-    //   }
-    //
-    //   waveManager.update(delta)
-    //
-    //   // ===== ВАЖНО: СТРЕЛЬБА ИГРОКА =====
-    //   shootCooldown -= delta
-    //
-    //   if (player.alive && shooting && currentWeapon?.auto) {
-    //     const dir = getShootDirection()
-    //     fireCurrentWeapon(dir.dx, dir.dy)
-    //   }
-    //
-    //   // ===== ОПТИМИЗИРОВАННЫЙ ЦИКЛ ОБНОВЛЕНИЯ И КОЛЛИЗИЙ =====
-    //   const stillAlive = []
-    //   const activeDrones = []
-    //   const activeBullets = []
-    //   const activeEnemyBullets = []
-    //
-    //   // Сброс счетчиков перед проходом
-    //   globalActiveDronesCount = 0
-    //   globalEnemyBulletsCount = 0
-    //   globalVFXCount = 0
-    //
-    //   // 1. Одиночный проход: обновление, фильтрация и категоризация
-    //   for (let i = 0; i < gameObjects.length; i++) {
-    //     const obj = gameObjects[i]
-    //
-    //     if (obj.alive) {
-    //       obj.update(delta)
-    //
-    //       if (obj.alive) {
-    //         stillAlive.push(obj)
-    //
-    //         // Категоризация для коллизий (Оптимизация: используем категорию вместо instanceof)
-    //         if (obj.category === 'drone') {
-    //           activeDrones.push(obj)
-    //           globalActiveDronesCount++
-    //         }
-    //         else if (obj.category === 'bullet') activeBullets.push(obj)
-    //         else if (obj.category === 'enemyBullet') {
-    //           activeEnemyBullets.push(obj)
-    //           globalEnemyBulletsCount++
-    //         }
-    //         else if (obj.category === 'vfx') {
-    //           globalVFXCount++
-    //         }
-    //       }
-    //     }
-    //   }
-    //
-    //   // Обновляем глобальный список
-    //   gameObjects = stillAlive
-    //
-    //   // Подробный лог раз в 3 сек
-    //   perfLogTimer += delta
-    //   if (perfLogTimer > 3000) {
-    //     perfLogTimer = 0
-    //     const counts = { bullet: 0, enemyBullet: 0, drone: 0, vfx: 0, none: 0 }
-    //     gameObjects.forEach(o => {
-    //       const c = o.category || 'none'
-    //       counts[c] = (counts[c] || 0) + 1
-    //     })
-    //   }
-    //
-    //   // 2. Коллизии пуль игрока и дронов
-    //   // Запускаем каждый второй кадр для дополнительной оптимизации
-    //   if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
-    //     for (const b of activeBullets) {
-    //       if (!b.alive) continue
-    //
-    //       for (const d of activeDrones) {
-    //         if (!d.alive) continue
-    //
-    //         if (isColliding(b, d)) {
-    //           b.alive = false
-    //           if (d.takeDamage(1)) {
-    //             d.onDeath()
-    //             const gained = calculateDroneScore(d)
-    //             score += gained
-    //             showScoreGain(gained)
-    //           }
-    //           break // Пуля исчезла
-    //         }
-    //       }
-    //     }
-    //   }
-    //
-    //   // 3. Проверка пуль врагов (земля и игрок)
-    //   if (activeEnemyBullets.length > 0) {
-    //     for (const obj of activeEnemyBullets) {
-    //       if (!obj.alive) continue
-    //
-    //       // Земля
-    //       if (obj.y > canvas.height - groundHeight) {
-    //         spawnGroundExplosion(obj.x, obj.y)
-    //         obj.alive = false
-    //         continue
-    //       }
-    //
-    //       // Игрок
-    //       if (isColliding(obj, player)) {
-    //         if (player.alive) {
-    //           player.die()
-    //         }
-    //         obj.alive = false
-    //       }
-    //     }
-    //   }
-    //
-    //   // ===== ВАЖНО: ВРЕМЯ И ПРОГРЕСС =====
-    //   survivalTime += delta / 1000
-    //
-    //   // ===== ВАЖНО: UI ОБНОВЛЕНИЕ =====
-    //   uiTimer += delta
-    //
-    //   // ===== ВАЖНО: ЗВУК ДРОНОВ =====
-    //   const endTime = performance.now()
-    //   const frameTime = endTime - startTime
-    //   if (frameTime > 16) {
-    //   }
-    // }
-
-
-    // function updateScore() {
-    //   console.log('score updated and is: ', score)
-    //   scoreContainer.innerText = score
-    // }
-
-    // ... (Sound, Scoring, Leaderboard functions remain the same)
-    // function playSound(freq, duration) {
-    //   let audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-    //   let osc = audioCtx.createOscillator()
-    //   let gain = audioCtx.createGain()
-    //   osc.connect(gain)
-    //   gain.connect(audioCtx.destination)
-    //   osc.frequency.value = freq
-    //   osc.start()
-    //   gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration)
-    //   osc.stop(audioCtx.currentTime + duration)
-    // }
-
-    // function playWaveMusic(wave) {
-    //   if (currentMusic) {
-    //     currentMusic.pause()
-    //     currentMusic.currentTime = 0
-    //   }
-    //
-    //   const music = waveMusic[wave]
-    //
-    //   if (music && isMusicOn) {
-    //     music.play()
-    //     currentMusic = music
-    //   }
-    // }
-    // function playTrack(track) {
-    //   if (isMusicOn) {
-    //     track.play();
-    //   }
-    // }
-
-    // for (const key in waveMusic) {
-    //   waveMusic[key].loop = false
-    //   waveMusic[key].volume = 0.1
-    // }
-    // let screenShake = {
-    //   intensity: 0,
-    //   duration: 0,
-    //   offsetX: 0,
-    //   offsetY: 0,
-    //
-    //   update() {
-    //     // Всегда возвращаем ноль - никакой тряски
-    //     this.offsetX = 0
-    //     this.offsetY = 0
-    //     return { x: 0, y: 0 }
-    //   },
-    //
-    //   shake(intensity = 10, duration = 15) {
-    //     // Ничего не делаем - тряска отключена
-    //   }
-    // }
-
   </script>
 </body>
 </html>

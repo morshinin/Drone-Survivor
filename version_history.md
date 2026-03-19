@@ -5,17 +5,17 @@
 Shoot mechanic
 Death screen
 Intro sequence
-CRT screen effect
 Commander balloon improve
 New music tracks
-Moving clouds
 Smoke sprites
 Fire sprite
 Text changes
 Optimization
-Remove freeze and screen shake
 Change commander messages
+Removed screen shake
 Pause and dialog states
+Wave manager
+Audio manager
 
 ## 0.17.3
 
