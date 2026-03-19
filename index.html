@@ -404,7 +404,6 @@
     let cityFire = null
 
     let gameObjects = []
-    let isReloading = false
     let uiTimer = 0
     let perfLogTimer = 0
     let keys = {}
@@ -2030,12 +2029,12 @@ Command approves. Probably.`,
         if (this.reloading) return false
         if (this.ammoInMagazine <= 0) return false
         return now - this.lastShotTime >= this.fireRate;
-
       }
 
       consumeShot(now = Date.now()) {
         this.lastShotTime = now
         this.ammoInMagazine--
+
         if (this.ammoInMagazine <= 0 && this.remainingMagazines > 0) {
           this.reload()
         }
@@ -2317,14 +2316,12 @@ Command approves. Probably.`,
       ammoInMagazine = currentWeapon.magazineSize
       magazines = currentWeapon.magazines
 
-      // можно сбросить перезарядку
-      isReloading = false
+      currentWeapon.reloading = false
     }
 
-    function shoot(dirX, dirY) {
+    function fireCurrentWeapon(dirX, dirY) {
       if (!currentWeapon) return
       if (dirX === 0 && dirY === 0) return
-      if (isReloading) return
 
       const shots = currentWeapon.shoot(player, dirX, dirY)
       if (shots.length === 0) return
@@ -2337,11 +2334,6 @@ Command approves. Probably.`,
       for (const s of shots) {
         spawn(new Bullet(s.x, s.y, s.vx, s.vy))
       }
-
-      ammoInMagazine = currentWeapon.ammoInMagazine
-      magazines = currentWeapon.remainingMagazines
-
-      isReloading = currentWeapon.reloading
     }
 
     function pauseTrack(track) {
@@ -2351,23 +2343,12 @@ Command approves. Probably.`,
 
     function startReload() {
       if (!currentWeapon) return
-      if (isReloading) return
+      if (!currentWeapon.reload()) return
 
-      const started = currentWeapon.reload()
-      if (!started) return
-
-      isReloading = true
       const currentWeaponName = currentWeapon.name
-
       if (WEAPON_SOUNDS[currentWeaponName]) {
         playPooled(WEAPON_SOUNDS[currentWeaponName].reload, 0.4)
       }
-
-      setTimeout(() => {
-        ammoInMagazine = currentWeapon.ammoInMagazine
-        magazines = currentWeapon.remainingMagazines
-        isReloading = false
-      }, currentWeapon.reloadTime)
     }
 
     async function animateCommanderBox() {
@@ -2850,7 +2831,7 @@ Anyone falling back without orders will be treated as hostile.`
 
       if (player.alive && shooting && currentWeapon?.auto) {
         const dir = getShootDirection()
-        shoot(dir.dx, dir.dy)
+        fireCurrentWeapon(dir.dx, dir.dy)
       }
 
       const stillAlive = []
@@ -2988,9 +2969,6 @@ Anyone falling back without orders will be treated as hostile.`
       // оружие
       currentWeapon = createWeapon("pistol")
 
-      isReloading = false
-      lastShotTime = 0
-
       // игра
       score = 0
       survivalTime = 0
@@ -3000,8 +2978,6 @@ Anyone falling back without orders will be treated as hostile.`
       initCitySmoke()
       initTankSmoke()
       initFire()
-
-      // музыка
     }
 
     function draw() {
@@ -3077,11 +3053,11 @@ Anyone falling back without orders will be treated as hostile.`
       ctx.fillStyle = "white"
       ctx.font = "20px monospace"
 
-      ctx.fillText(currentWeapon?.name || "Pistol", 20, 200)
-      ctx.fillText(`Ammo: ${ammoInMagazine || 0} / ${currentWeapon?.magazineSize || 15}`, 20, 240)
-      ctx.fillText(`Magazines: ${magazines || 0}`, 20, 270)
+      ctx.fillText(currentWeapon?.name || "No Weapon", 20, 200)
+      ctx.fillText(`Ammo: ${currentWeapon?.ammoInMagazine || 0} / ${currentWeapon?.magazineSize || 0}`, 20, 240)
+      ctx.fillText(`Magazines: ${currentWeapon?.remainingMagazines || 0}`, 20, 270)
 
-      if (isReloading) {
+      if (currentWeapon?.reloading) {
         ctx.fillStyle = "yellow"
         ctx.fillText("RELOADING...", 20, 100)
       }
@@ -3178,7 +3154,7 @@ Anyone falling back without orders will be treated as hostile.`
         const dir = getShootDirection()
 
         if (dir && !currentWeapon.auto) {
-          shoot(dir.dx, dir.dy)
+          fireCurrentWeapon(dir.dx, dir.dy)
         }
       }
 
@@ -3211,7 +3187,7 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       if (e.code === "KeyR") {
-        if (isReloading) return
+        if (currentWeapon?.reloading) return
         startReload()
       }
 
@@ -3360,7 +3336,7 @@ Anyone falling back without orders will be treated as hostile.`
     //
     //   if (player.alive && shooting && currentWeapon?.auto) {
     //     const dir = getShootDirection()
-    //     shoot(dir.dx, dir.dy)
+    //     fireCurrentWeapon(dir.dx, dir.dy)
     //   }
     //
     //   // ===== ОПТИМИЗИРОВАННЫЙ ЦИКЛ ОБНОВЛЕНИЯ И КОЛЛИЗИЙ =====
