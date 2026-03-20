@@ -280,8 +280,18 @@
     <div id="effects-layer">
     </div>
 
-    <div id="score"></div>
-    <div id="score-pop"></div>
+    <div id="hud">
+      <div class="hud_container">
+        <div id="score"></div>
+        <div id="score-pop"></div>
+      </div>
+
+      <div id="hud_container">
+        <div id="weapon"></div>
+        <div id="bullets"></div>
+        <div id="magazines"></div>
+      </div>
+    </div>
   </div>
 
   <div id="fade"></div>
@@ -371,7 +381,6 @@
 
     let gameObjects = []
     let uiTimer = 0
-    let perfLogTimer = 0
     let keys = {}
     let timeScale = 1
     let hitFreeze = 0
@@ -403,40 +412,23 @@
     let fps = 0
     let gameLoopInstances = 0
 
-    let currentWeapon
-    let ammoInMagazine
-    let magazines
-
     let last = 0
     let progress = 0
 
-    let clouds = []
+    let currentWeapon
     let shooting = false
 
     // ======================
     // DOM REFERENCES
     // ======================
     const gameVersion = document.getElementById("game-version")
-    const gameInfo = document.getElementById("game-info")
-    // const scoreEl = document.getElementById("score")
     const effectsLayer = document.getElementById("effects-layer")
-    // const bar = document.getElementById("loading-bar")
     const fadeEl = document.getElementById("fade")
-    const startBtn = document.getElementById("startBtn")
     const leaderboardEl = document.getElementById("leaderboard")
 
     /* Canvas */
     const canvas = document.getElementById("game")
     const ctx = canvas.getContext("2d")
-
-    // const UI = {
-    //   notification: {
-    //     balloon: document.getElementById("commander-balloon"),
-    //   },
-    //   game: {
-    //     container: document.getElementById("game-container"),
-    //   }
-    // }
 
     // ======================
     // GAME STATE
@@ -1312,8 +1304,21 @@ Command approves. Probably.`,
 
         this.hud.score = document.getElementById("score")
         this.hud.scorePop = document.getElementById("score-pop")
+        this.hud.weapon = document.getElementById("weapon")
+        this.hud.bullets = document.getElementById("bullets")
+        this.hud.magazines = document.getElementById("magazines")
         this.hud.nameInput = document.getElementById("nameInput")
         this.hud.startBtn = document.getElementById("startBtn")
+      }
+
+      updateHud({ score, weaponName, ammo, magazineSize, magazines, reloading, waveText }) {
+        if (this.hud.score) this.hud.score.innerText = score ?? 0
+        if (this.hud.weapon) this.hud.weapon.innerText = weaponName || ""
+        if (this.hud.bullets) this.hud.bullets.innerText = `Ammo: ${ammo ?? 0} / ${magazineSize ?? 0}`
+        if (this.hud.magazines) this.hud.magazines.innerText = `Magazines: ${magazines ?? 0}`
+        if (this.el.gameInfo && waveText !== undefined) {
+          this.el.gameInfo.dataset.waveText = waveText
+        }
       }
 
       showHitboxRect(x, y, width, height, color) {
@@ -1331,6 +1336,47 @@ Command approves. Probably.`,
       hideLoadingScreen() {
         if (this.el.loadingScreen) {
           this.el.loadingScreen.style.display = "none"
+        }
+      }
+
+      showDialog() {
+        if (this.el.commanderBalloon) {
+          this.el.commanderBalloon.style.display = "block"
+        }
+      }
+
+      hideDialog() {
+        if (this.el.commanderBalloon) {
+          this.el.commanderBalloon.style.display = "none"
+        }
+      }
+
+      showContinueHint(show) {
+        if (this.el.continueHint) {
+          this.el.continueHint.style.display = show ? "block" : "none"
+        }
+      }
+
+      showGameOver(playerName, score) {
+        if (!this.el.ui) return
+
+        this.el.ui.classList.add("game_over_bg")
+        this.el.ui.style.display = "flex"
+        if (this.el.gameInfo) this.el.gameInfo.style.display = "block"
+
+        this.el.ui.innerHTML = `
+      <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
+      <button class="nes-btn is-success" id="restartBtn">Try Again</button>
+      <div id="leaderboard"></div>
+    `
+
+        this.el.leaderboard = document.getElementById("leaderboard")
+        this.el.restartBtn = document.getElementById("restartBtn")
+      }
+
+      setLeaderboardHTML(html) {
+        if (this.el.leaderboard) {
+          this.el.leaderboard.innerHTML = html
         }
       }
     }
@@ -1366,6 +1412,125 @@ Command approves. Probably.`,
     // ======================
     // ENTITIES
     // ======================
+
+    class Player {
+      constructor() {
+        this.x = 0
+        this.y = 0
+        this.width = 100
+        this.height = 130
+
+        this.speed = 3.8
+        this.direction = 1
+
+        this.frame = 0
+        this.frameTimer = 0
+        this.isMoving = false
+
+        this.vx = 0
+        this.acceleration = 0.45
+        this.friction = 0.88
+
+        this.alive = true
+        this.deathTimer = 2000
+      }
+
+      die() {
+        if (DEBUG.godMode) return
+        player.alive = false
+
+        timeScale = 0.25
+
+        spawnExplosion(
+          player.x + player.width / 2,
+          player.y + player.height / 2
+        )
+
+        audio.stopAll()
+        audio.playSfx('death')
+      }
+
+      update() {
+        if (isFirePressed()) {
+          this.vx *= 0
+        }
+
+        if (keys["ArrowLeft"]) {
+          this.vx -= this.acceleration
+          this.direction = -1
+        }
+
+        if (keys["ArrowRight"]) {
+          this.vx += this.acceleration
+          this.direction = 1
+        }
+
+        if (this.vx > this.speed) this.vx = this.speed
+        if (this.vx < -this.speed) this.vx = -this.speed
+
+        this.vx *= this.friction
+
+        this.x += this.vx
+        this.isMoving = Math.abs(this.vx) > 0.1
+
+        if (this.x < 0) this.x = 0
+        if (this.x + this.width > canvas.width)
+          this.x = canvas.width - this.width
+
+        if (this.isMoving) {
+
+          this.frameTimer++
+
+          if (this.frameTimer > 15) {
+            this.frame++
+            this.frameTimer = 0
+          }
+
+          if (this.frame >= WALK_FRAMES) {
+            this.frame = 0
+          }
+        } else {
+          this.frame = 0
+        }
+      }
+
+      draw() {
+        ctx.save()
+
+        if (this.direction === -1) {
+          ctx.scale(-1, 1)
+
+          ctx.drawImage(
+            playerWalkSprite,
+            this.frame * WALK_FRAME_WIDTH,
+            0,
+            WALK_FRAME_WIDTH,
+            WALK_FRAME_HEIGHT,
+            -this.x - this.width,
+            this.y,
+            this.width,
+            this.height
+          )
+        } else {
+          ctx.drawImage(
+            playerWalkSprite,
+            this.frame * WALK_FRAME_WIDTH,
+            0,
+            WALK_FRAME_WIDTH,
+            WALK_FRAME_HEIGHT,
+            this.x,
+            this.y,
+            this.width,
+            this.height
+          )
+        }
+        ctx.restore()
+
+        if (DEBUG.showHitboxes) {
+          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
+        }
+      }
+    }
 
     class BaseDrone {
       constructor(x, y, options = {}) {
@@ -1678,187 +1843,6 @@ Command approves. Probably.`,
       }
     }
 
-    class Player {
-      constructor() {
-        this.x = 0
-        this.y = 0
-        this.width = 100
-        this.height = 130
-
-        this.speed = 3.8
-        this.direction = 1
-
-        this.frame = 0
-        this.frameTimer = 0
-        this.isMoving = false
-
-        this.vx = 0
-        this.acceleration = 0.45
-        this.friction = 0.88
-
-        this.alive = true
-        this.deathTimer = 2000
-      }
-
-      die() {
-        if (DEBUG.godMode) return
-        player.alive = false
-
-        timeScale = 0.25
-
-        spawnExplosion(
-          player.x + player.width / 2,
-          player.y + player.height / 2
-        )
-
-        audio.stopAll()
-        audio.playSfx('death')
-      }
-
-      update() {
-        if (isFirePressed()) {
-          this.vx *= 0
-        }
-
-        if (keys["ArrowLeft"]) {
-          this.vx -= this.acceleration
-          this.direction = -1
-        }
-
-        if (keys["ArrowRight"]) {
-          this.vx += this.acceleration
-          this.direction = 1
-        }
-
-        if (this.vx > this.speed) this.vx = this.speed
-        if (this.vx < -this.speed) this.vx = -this.speed
-
-        this.vx *= this.friction
-
-        this.x += this.vx
-        this.isMoving = Math.abs(this.vx) > 0.1
-
-        if (this.x < 0) this.x = 0
-        if (this.x + this.width > canvas.width)
-          this.x = canvas.width - this.width
-
-        if (this.isMoving) {
-
-          this.frameTimer++
-
-          if (this.frameTimer > 15) {
-            this.frame++
-            this.frameTimer = 0
-          }
-
-          if (this.frame >= WALK_FRAMES) {
-            this.frame = 0
-          }
-        } else {
-          this.frame = 0
-        }
-      }
-
-      draw() {
-        ctx.save()
-
-        if (this.direction === -1) {
-          ctx.scale(-1, 1)
-
-          ctx.drawImage(
-            playerWalkSprite,
-            this.frame * WALK_FRAME_WIDTH,
-            0,
-            WALK_FRAME_WIDTH,
-            WALK_FRAME_HEIGHT,
-            -this.x - this.width,
-            this.y,
-            this.width,
-            this.height
-          )
-        } else {
-          ctx.drawImage(
-            playerWalkSprite,
-            this.frame * WALK_FRAME_WIDTH,
-            0,
-            WALK_FRAME_WIDTH,
-            WALK_FRAME_HEIGHT,
-            this.x,
-            this.y,
-            this.width,
-            this.height
-          )
-        }
-        ctx.restore()
-
-        if (DEBUG.showHitboxes) {
-          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
-        }
-      }
-    }
-
-    class Bullet {
-      constructor(x, y, dx, dy) {
-        this.x = x
-        this.y = y
-        this.vx = dx
-        this.vy = dy
-        this.size = 6 // Размер пули
-        this.width = 6
-        this.height = 6
-        this.alive = true
-        this.category = 'bullet'
-      }
-
-      update() {
-        this.x += this.vx
-        this.y += this.vy
-
-        // Удаляем если за экраном
-        if (this.x > canvas.width + 50 || this.x < -50 ||
-          this.y > canvas.height + 50 || this.y < -50) {
-          this.alive = false
-        }
-      }
-
-      draw(ctx) {
-        ctx.fillStyle = "yellow"
-        ctx.fillRect(Math.floor(this.x), Math.floor(this.y), Math.floor(this.size), Math.floor(this.size))
-      }
-    }
-
-    class EnemyBullet {
-      constructor(x, y) {
-        this.x = x
-        this.y = y
-        this.speed = 4
-        this.width = 12
-        this.height = 20
-        // Добавляем size для совместимости с isColliding
-        this.size = Math.min(this.width, this.height)
-
-        this.alive = true
-        this.category = 'enemyBullet'
-      }
-      update() {
-        this.y += this.speed
-        if (this.y > canvas.height + 100) this.alive = false
-      }
-      draw() {
-        ctx.drawImage(
-          enemyBulletImg,
-          Math.floor(this.x),
-          Math.floor(this.y),
-          this.width,
-          this.height
-        )
-
-        if (DEBUG.showHitboxes) {
-          UI.showHitboxRect(this.x, this.y, this.width, this.height)
-        }
-      }
-    }
-
     class BossDrone extends BaseDrone {
       constructor() {
         super(canvas.width / 2 - 150, -120, {
@@ -1946,6 +1930,68 @@ Command approves. Probably.`,
 
         if (DEBUG.showHitboxes) {
           UI.showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
+        }
+      }
+    }
+
+    class Bullet {
+      constructor(x, y, dx, dy) {
+        this.x = x
+        this.y = y
+        this.vx = dx
+        this.vy = dy
+        this.size = 6 // Размер пули
+        this.width = 6
+        this.height = 6
+        this.alive = true
+        this.category = 'bullet'
+      }
+
+      update() {
+        this.x += this.vx
+        this.y += this.vy
+
+        // Удаляем если за экраном
+        if (this.x > canvas.width + 50 || this.x < -50 ||
+          this.y > canvas.height + 50 || this.y < -50) {
+          this.alive = false
+        }
+      }
+
+      draw(ctx) {
+        ctx.fillStyle = "yellow"
+        ctx.fillRect(Math.floor(this.x), Math.floor(this.y), Math.floor(this.size), Math.floor(this.size))
+      }
+    }
+
+    class EnemyBullet {
+      constructor(x, y) {
+        this.x = x
+        this.y = y
+        this.speed = 4
+        this.width = 12
+        this.height = 20
+        // Добавляем size для совместимости с isColliding
+        this.size = Math.min(this.width, this.height)
+
+        this.alive = true
+        this.category = 'enemyBullet'
+      }
+      update() {
+        this.y += this.speed
+        if (this.y > canvas.height + 100) this.alive = false
+      }
+      draw() {
+        ctx.drawImage(
+          enemyBulletImg,
+          Math.floor(this.x),
+          Math.floor(this.y),
+          this.width,
+          this.height
+        )
+
+        if (DEBUG.showHitboxes) {
+          UI.showHitboxRect(this.x, this.y, this.width, this.height)
         }
       }
     }
@@ -2282,23 +2328,6 @@ Command approves. Probably.`,
         a.y + h1 > b.y
     }
 
-    function showScoreGain(points) {
-      const scoreEl = document.getElementById("score")
-      const pop = document.getElementById("score-pop")
-
-      pop.innerText = "+" + points
-
-      pop.classList.remove("score-pop-show")
-      void pop.offsetWidth
-      pop.classList.add("score-pop-show")
-
-      scoreEl.classList.add("score-pop")
-
-      setTimeout(() => {
-        scoreEl.classList.remove("score-pop")
-      }, 150)
-    }
-
     function countEnemyBullets() {
       return globalEnemyBulletsCount
     }
@@ -2417,9 +2446,6 @@ Command approves. Probably.`,
     function setWeapon(type) {
       currentWeapon = createWeapon(type)
 
-      ammoInMagazine = currentWeapon.magazineSize
-      magazines = currentWeapon.magazines
-
       currentWeapon.reloading = false
     }
 
@@ -2452,7 +2478,7 @@ Command approves. Probably.`,
 
     function startReload() {
       if (!currentWeapon) return
-      if (!currentWeapon.reload()) return
+      if (!currentWeapon.reloading) return
 
       switch (currentWeapon.name) {
         case "Pistol":
@@ -2551,7 +2577,6 @@ Command approves. Probably.`,
       return boss
     }
 
-
     // ======================
     // GAME FLOW
     // ======================
@@ -2594,9 +2619,7 @@ Command approves. Probably.`,
     async function endGame() {
       currentState = GameState.GAME_OVER
 
-      // Включаем эффекты обратно для меню
       EffectsManager.enableForMenu()
-
       document.body.classList.remove("hide-cursor")
 
       audio.stopAll()
@@ -2606,16 +2629,12 @@ Command approves. Probably.`,
       await loadLeaderboard()
       saveScore()
 
-      const ui = document.getElementById("ui")
-      ui.classList.add("game_over_bg")
-      ui.innerHTML = `
-    <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
-    <button class="nes-btn is-success" onclick="restartGame()">Try Again</button>
-    <div id="leaderboard"></div>
-  `
-      ui.style.display = "flex"
-      gameInfo.style.display = "block"
-      renderLeaderboard()
+      UI.showGameOver(playerName, score)
+      if (UI.el.restartBtn) {
+        UI.el.restartBtn.onclick = restartGame
+      }
+
+      UI.setLeaderboardHTML(loadLeaderboard())
     }
 
     async function fadeOutMenu() {
@@ -2695,9 +2714,10 @@ Anyone falling back without orders will be treated as hostile.`
       const prevState = currentState
       currentState = GameState.DIALOG
 
+      UI.showDialog()
+
       const balloon = UI.el.commanderBalloon
       const p = balloon.querySelector("p")
-      const hint = UI.el.continueHint
 
       await animateCommanderBox()
 
@@ -2707,25 +2727,20 @@ Anyone falling back without orders will be treated as hostile.`
 
       const pages = splitTextIntoPages(message)
       for (let i = 0; i < pages.length; i++) {
-
         const page = pages[i] + "..."
-
         await typeText(p, page)
 
-        hint.style.display = "block"
-
+        UI.showContinueHint(true)
         await waitForContinue()
-
-        hint.style.display = "none"
+        UI.showContinueHint(false)
       }
 
       await audio.playSfx('radio_off')
-
       await hideCommanderBox()
 
-      if (currentState === GameState.DIALOG) {
-        currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
-      }
+      currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
+
+      UI.hideDialog()
     }
 
     function fadeScreen(duration = 800) {
@@ -2853,21 +2868,19 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     function updateGameplay(delta) {
-      const startTime = performance.now()
+      // if (hitFreeze > 0) {
+      //   hitFreeze -= delta
+      //   return
+      // }
 
-      if (hitFreeze > 0) {
-        hitFreeze -= delta
-        return
-      }
-
-      if (!player.alive) {
-        player.deathTimer -= delta
-        if (player.deathTimer <= 0) {
-          timeScale = 1
-          endGame()
-        }
-        return
-      }
+      // if (!player.alive) {
+      //   player.deathTimer -= delta
+      //   if (player.deathTimer <= 0) {
+      //     timeScale = 1
+      //     endGame()
+      //   }
+      //   return
+      // }
 
       player.update()
 
@@ -2876,8 +2889,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       waveManager.update(delta)
-
-      shootCooldown -= delta
 
       if (player.alive && shooting && currentWeapon?.auto) {
         const dir = getShootDirection()
@@ -2918,17 +2929,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       gameObjects = stillAlive
-      //
-      // perfLogTimer += delta
-      // if (perfLogTimer > 3000) {
-      //   perfLogTimer = 0
-      //   const counts = { bullet: 0, enemyBullet: 0, drone: 0, vfx: 0, none: 0 }
-      //   gameObjects.forEach(o => {
-      //     const c = o.category || 'none'
-      //     counts[c] = (counts[c] || 0) + 1
-      //   })
-      //   console.log(`[PERF] Objs:${stillAlive.length} ` + JSON.stringify(counts))
-      // }
 
       if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
         for (const b of activeBullets) {
@@ -2943,7 +2943,6 @@ Anyone falling back without orders will be treated as hostile.`
                 d.onDeath()
                 const gained = calculateDroneScore(d)
                 score += gained
-                showScoreGain(gained)
               }
               break
             }
@@ -2972,14 +2971,6 @@ Anyone falling back without orders will be treated as hostile.`
 
       survivalTime += delta / 1000
       updateHud(delta)
-
-      const endTime = performance.now()
-      const frameTime = endTime - startTime
-      if (frameTime > 16) {
-      }
-
-      ammoInMagazine = currentWeapon?.ammoInMagazine ?? 0
-      magazines = currentWeapon?.remainingMagazines ?? 0
     }
 
     function updateAmbient() {
@@ -2991,7 +2982,15 @@ Anyone falling back without orders will be treated as hostile.`
     function updateHud(delta) {
       uiTimer += delta
       if (uiTimer > 100) {
-        UI.hud.score.innerText = score
+        UI.updateHud({
+          score,
+          weaponName: currentWeapon?.name || "",
+          ammo: currentWeapon?.ammoInMagazine ?? 0,
+          magazineSize: currentWeapon?.magazineSize ?? 0,
+          magazines: currentWeapon?.remainingMagazines ?? 0,
+          reloading: currentWeapon?.reloading ?? false,
+        })
+
         uiTimer = 0
       }
     }
@@ -3236,23 +3235,6 @@ Anyone falling back without orders will be treated as hostile.`
         clearInterval(interval)
       }
     }, 100)
-
-
-    // Добавьте в конец файла для отладки
-    // const perfMonitor = {
-    //   frames: 0,
-    //   lastTime: performance.now(),
-    //
-    //   update() {
-    //     this.frames++
-    //     const now = performance.now()
-    //     if (now - this.lastTime >= 1000) {
-    //       console.log(`FPS: ${this.frames}, Objects: ${gameObjects.length}`)
-    //       this.frames = 0
-    //       this.lastTime = now
-    //     }
-    //   }
-    // }
   </script>
 </body>
 </html>
