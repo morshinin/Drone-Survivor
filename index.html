@@ -246,6 +246,33 @@
       z-index: 1;
     }
 
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      color: white;
+      font-family: "Press Start 2P", monospace;
+      pointer-events: none; /* ВАЖНО: чтобы клики проходили "сквозь" HUD на канвас */
+      text-shadow: 2px 2px 2px rgba(0,0,0,0.7);
+    }
+
+    .weapon-info {
+      position: absolute;
+      top: 180px;
+      left: 10px;
+      font-size: 20px;
+    }
+
+    #hud-reloading {
+      color: yellow;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
     #continueHint {
       opacity: 0;
       margin-top: 10px;
@@ -281,15 +308,13 @@
     </div>
 
     <div id="hud">
-      <div class="hud_container">
-        <div id="score"></div>
-        <div id="score-pop"></div>
-      </div>
-
-      <div id="hud_container">
-        <div id="weapon"></div>
-        <div id="bullets"></div>
-        <div id="magazines"></div>
+      <div id="score"></div>
+      <div id="score-pop"></div>
+      <div class="weapon-info">
+        <div id="hud-weapon-name">Pistol</div>
+        <div id="hud-ammo">15 / 15</div>
+        <div id="hud-magazines">Magazines: 8</div>
+        <div id="hud-reloading" class="hidden">RELOADING...</div>
       </div>
     </div>
   </div>
@@ -1093,20 +1118,40 @@ Command approves. Probably.`,
 
         this.hud.score = document.getElementById("score")
         this.hud.scorePop = document.getElementById("score-pop")
-        this.hud.weapon = document.getElementById("weapon")
-        this.hud.bullets = document.getElementById("bullets")
-        this.hud.magazines = document.getElementById("magazines")
         this.hud.nameInput = document.getElementById("nameInput")
         this.hud.startBtn = document.getElementById("startBtn")
+
+        this.hud.weaponName = document.getElementById("hud-weapon-name")
+        this.hud.ammo = document.getElementById("hud-ammo")
+        this.hud.magazines = document.getElementById("hud-magazines")
+        this.hud.reloading = document.getElementById("hud-reloading")
       }
 
-      updateHud({ score, weaponName, ammo, magazineSize, magazines, reloading, waveText }) {
+      updateScore(score) {
         if (this.hud.score) this.hud.score.innerText = score ?? 0
-        if (this.hud.weapon) this.hud.weapon.innerText = weaponName || ""
-        if (this.hud.bullets) this.hud.bullets.innerText = `Ammo: ${ammo ?? 0} / ${magazineSize ?? 0}`
-        if (this.hud.magazines) this.hud.magazines.innerText = `Magazines: ${magazines ?? 0}`
-        if (this.el.gameInfo && waveText !== undefined) {
-          this.el.gameInfo.dataset.waveText = waveText
+      }
+
+      updateWeapon(weapon) {
+        if (!weapon) return
+        if (this.hud.weaponName) this.hud.weaponName.innerText = weapon.name || ""
+        this.updateAmmo(weapon)
+        this.updateMagazines(weapon)
+        this.showReloading(weapon.reloading)
+      }
+
+      updateAmmo(weapon) {
+        if (!weapon) return
+        if (this.hud.ammo) this.hud.ammo.innerText = `Ammo: ${weapon.ammoInMagazine ?? 0} / ${weapon.magazineSize ?? 0}`
+      }
+
+      updateMagazines(weapon) {
+        if (!weapon) return
+        if (this.hud.magazines) this.hud.magazines.innerText = `Magazines: ${weapon.remainingMagazines ?? 0}`
+      }
+
+      showReloading(isReloading) {
+        if (this.hud.reloading) {
+          this.hud.reloading.classList.toggle("hidden", !isReloading)
         }
       }
 
@@ -2254,17 +2299,24 @@ Command approves. Probably.`,
         }
       }
 
-      reload() {
+      reload(UI) {
         if (this.reloading) return false
         if (this.remainingMagazines <= 0) return false
         if (this.ammoInMagazine === this.magazineSize) return false
 
         this.reloading = true
+        if (UI) UI.showReloading(true)
 
         setTimeout(() => {
           this.ammoInMagazine = this.magazineSize
           this.remainingMagazines--
           this.reloading = false
+
+          if (UI) {
+            UI.updateAmmo(this)
+            UI.updateMagazines(this)
+            UI.showReloading(false)
+          }
         }, this.reloadTime)
 
         return true
@@ -2505,6 +2557,7 @@ Command approves. Probably.`,
 
     function setWeapon(type) {
       currentWeapon = createWeapon(type)
+      UI.updateWeapon(currentWeapon)
 
       currentWeapon.reloading = false
     }
@@ -2515,6 +2568,8 @@ Command approves. Probably.`,
 
       const shots = currentWeapon.shoot(player, dirX, dirY)
       if (shots.length === 0) return
+
+      UI.updateAmmo(currentWeapon)
 
       switch (currentWeapon.name) {
         case "Pistol":
@@ -2539,6 +2594,9 @@ Command approves. Probably.`,
     function startReload() {
       if (!currentWeapon) return
       if (!currentWeapon.reloading) return
+
+      const started = currentWeapon.reload(UI)
+      if (!started) return
 
       switch (currentWeapon.name) {
         case "Pistol":
@@ -2918,7 +2976,6 @@ Anyone falling back without orders will be treated as hostile.`
 
     function updateDialog(delta) {
       updateAmbient(delta)
-      updateHud(delta)
     }
 
     function updatePaused(delta) {
@@ -3002,6 +3059,7 @@ Anyone falling back without orders will be treated as hostile.`
                 d.onDeath()
                 const gained = calculateDroneScore(d)
                 score += gained
+                UI.updateScore(score)
               }
               break
             }
@@ -3029,7 +3087,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       survivalTime += delta / 1000
-      updateHud(delta)
     }
 
     function updateAmbient() {
@@ -3038,21 +3095,21 @@ Anyone falling back without orders will be treated as hostile.`
       if (cityFire?.alive) cityFire.update()
     }
 
-    function updateHud(delta) {
-      uiTimer += delta
-      if (uiTimer > 100) {
-        UI.updateHud({
-          score,
-          weaponName: currentWeapon?.name || "",
-          ammo: currentWeapon?.ammoInMagazine ?? 0,
-          magazineSize: currentWeapon?.magazineSize ?? 0,
-          magazines: currentWeapon?.remainingMagazines ?? 0,
-          reloading: currentWeapon?.reloading ?? false,
-        })
-
-        uiTimer = 0
-      }
-    }
+    // function updateHud(delta) {
+    //   uiTimer += delta
+    //   if (uiTimer > 100) {
+    //     UI.updateHud({
+    //       score,
+    //       weaponName: currentWeapon?.name || "",
+    //       ammo: currentWeapon?.ammoInMagazine ?? 0,
+    //       magazineSize: currentWeapon?.magazineSize ?? 0,
+    //       magazines: currentWeapon?.remainingMagazines ?? 0,
+    //       reloading: currentWeapon?.reloading ?? false,
+    //     })
+    //
+    //     uiTimer = 0
+    //   }
+    // }
 
     // Создаем экземпляр менеджера
     const waveManager = new WaveManager()
@@ -3115,25 +3172,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
 
-    function drawHUD() {
-      ctx.save()
-      ctx.fillStyle = "white"
-      ctx.font = "20px monospace"
-
-      const weapon = player?.weapon
-      if (weapon) {
-        ctx.fillText(weapon.name || "No Weapon", 20, 200)
-        ctx.fillText(`Ammo: ${weapon.ammoInMagazine || 0} / ${weapon.magazineSize || 0}`, 20, 240)
-        ctx.fillText(`Magazines: ${weapon.remainingMagazines || 0}`, 20, 270)
-
-        if (weapon.reloading) {
-          ctx.fillStyle = "yellow"
-          ctx.fillText("RELOADING...", 20, 100)
-        }
-      }
-      ctx.restore()
-    }
-
     function drawDeathOverlay() {
       ctx.save()
       ctx.fillStyle = "rgba(0,0,0,0.7)"
@@ -3154,7 +3192,6 @@ Anyone falling back without orders will be treated as hostile.`
 
       drawBackgroundAndScene()
       drawEntities()
-      drawHUD()
     }
 
     function drawPaused() {
