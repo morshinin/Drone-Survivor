@@ -446,280 +446,107 @@
     // ======================
     // ASSETS
     // ======================
-    const background = new Image()
-    background.src = "game_bg.png"
-    const playerImg = new Image()
-    playerImg.src = "soldier.png"
-    const droneImg = new Image()
-    droneImg.src = "mavic.png"
-    const enemyBulletImg = new Image()
-    enemyBulletImg.src = "drone_bullet.png"
-    const bossImg = new Image()
-    bossImg.src = "boss.png"
-    const missileImg = new Image()
-    missileImg.src = "drone_bullet.png"
-    const tankImg = new Image()
-    tankImg.src = "tank.png"
-    const destroyedCityImg = new Image()
-    destroyedCityImg.src = "destroyed_city.png"
-    const grenadeImg = new Image()
-    grenadeImg.src = "grenade.png"
-    const kamikazeImg = new Image()
-    kamikazeImg.src = "kamikaze.png"
-    const smokeSprite = new Image()
-    smokeSprite.src = "tank_smoke_sprite.png"
-    const citySmokeSprite = new Image()
-    citySmokeSprite.src = "city_smoke.png"
-    const cloudsImg = new Image()
-    cloudsImg.src = "clouds_bg.png"
-    const fireSprite = new Image()
-    fireSprite.src = "fire_sprite.png"
-    const explosionSprite = new Image();
-    explosionSprite.src = "explosion_sprite.png";
-    const groundExplosionSprite = new Image();
-    groundExplosionSprite.src = "ground_explosion_sprite.png";
-    const playerWalkSprite = new Image();
-    playerWalkSprite.src = "soldier_walk_sprite.png";
+    // const background = new Image()
+    // background.src = "game_bg.png"
+    // const playerImg = new Image()
+    // playerImg.src = "soldier.png"
+    // const droneImg = new Image()
+    // droneImg.src = "mavic.png"
+    // const enemyBulletImg = new Image()
+    // enemyBulletImg.src = "drone_bullet.png"
+    // const bossImg = new Image()
+    // bossImg.src = "boss.png"
+    // const missileImg = new Image()
+    // missileImg.src = "drone_bullet.png"
+    // const tankImg = new Image()
+    // tankImg.src = "tank.png"
+    // const destroyedCityImg = new Image()
+    // destroyedCityImg.src = "destroyed_city.png"
+    // const grenadeImg = new Image()
+    // grenadeImg.src = "grenade.png"
+    // const kamikazeImg = new Image()
+    // kamikazeImg.src = "kamikaze.png"
+    // const smokeSprite = new Image()
+    // smokeSprite.src = "tank_smoke_sprite.png"
+    // const citySmokeSprite = new Image()
+    // citySmokeSprite.src = "city_smoke.png"
+    // const cloudsImg = new Image()
+    // cloudsImg.src = "clouds_bg.png"
+    // const fireSprite = new Image()
+    // fireSprite.src = "fire_sprite.png"
+    // const explosionSprite = new Image();
+    // explosionSprite.src = "explosion_sprite.png";
+    // const groundExplosionSprite = new Image();
+    // groundExplosionSprite.src = "ground_explosion_sprite.png";
+    // const playerWalkSprite = new Image();
+    // playerWalkSprite.src = "soldier_walk_sprite.png";
 
     gameVersion.innerText = GAME_VERSION
 
     // ======================
-    // RENDERING
-    // ======================
-    class AnimatedSprite {
-      constructor(x, y, image, options = {}) {
-        this.x = x
-        this.y = y
-        this.image = image
-
-        // Параметры спрайта
-        this.columns = options.columns || 2
-        this.totalFrames = options.totalFrames || 58
-        this.frameDelay = options.frameDelay || 8
-        this.width = options.width || (image.width / this.columns)
-        this.height = options.height || (image.height / (this.totalFrames / this.columns))
-        this.scale = options.scale || 1.0
-        this.opacity = options.opacity || 1.0
-        this.loop = options.loop !== undefined ? options.loop : true
-
-        // Кэшируем вычисления размеров
-        this.sw = this.image.width / this.columns
-        this.sh = this.image.height / Math.ceil(this.totalFrames / this.columns)
-        this.dw = this.width * (this.scale || 1.0)
-        this.dh = this.height * (this.scale || 1.0)
-
-        // Вычисляем количество строк
-        this.rows = Math.ceil(this.totalFrames / this.columns)
-
-        this.timer = 0
-        this.frame = options.startFrame || 0
-        this.alive = true
-      }
-
-      update() {
-        this.timer++
-
-        if (this.timer >= this.frameDelay) {
-          let nextFrame = this.frame + 1
-
-          if (nextFrame >= this.totalFrames) {
-            if (this.loop) {
-              nextFrame = 0
-            } else {
-              this.alive = false
-              return
-            }
-          }
-
-          this.frame = nextFrame
-          this.timer = 0
-        }
-      }
-
-      draw(ctx) {
-        if (!this.image || !this.image.complete || !this.alive) return
-
-        const col = this.frame % this.columns
-        const row = Math.floor(this.frame / this.columns)
-
-        const hasOpacity = this.opacity < 1.0
-        if (hasOpacity) {
-          ctx.save()
-          ctx.globalAlpha = this.opacity
-        }
-
-        ctx.drawImage(
-          this.image,
-          Math.floor(col * this.sw),
-          Math.floor(row * this.sh),
-          Math.floor(this.sw),
-          Math.floor(this.sh),
-          Math.floor(this.x),
-          Math.floor(this.y),
-          Math.floor(this.dw),
-          Math.floor(this.dh)
-        )
-
-        if (hasOpacity) {
-          ctx.restore()
-        } else {
-          // Гарантируем сброс альфы, если не использовали save/restore
-          ctx.globalAlpha = 1.0
-        }
-      }
-
-      // setFrame(frame) {
-      //   this.frame = Math.min(frame, this.totalFrames - 1)
-      // }
-      //
-      // restart() {
-      //   this.frame = 0
-      //   this.timer = 0
-      //   this.alive = true
-      // }
-    }
-
-    smokeSprite.onload = () => {
-      SMOKE_FRAME_WIDTH = smokeSprite.width / 2
-      SMOKE_FRAME_HEIGHT = smokeSprite.height / 29
-    }
-
-    function initCitySmoke() {
-      if (citySmokeSprite.complete) {
-        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
-          columns: 2,
-          totalFrames: 98,
-          frameDelay: 8,
-          scale: 1.5,
-          opacity: 0.6,
-          loop: true
-        })
-      } else {
-        citySmokeSprite.onload = () => {
-          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
-            columns: 2,
-            totalFrames: 98,
-            frameDelay: 8,
-            scale: 1.5,
-            opacity: 0.6,
-            loop: true
-          })
-        }
-      }
-    }
-
-    function initTankSmoke() {
-      if (smokeSprite.complete) {
-        tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
-          columns: 2,
-          totalFrames: 58,
-          frameDelay: 8,
-          scale: 1.2,
-          opacity: 0.4,
-          loop: true
-        })
-      } else {
-        smokeSprite.onload = () => {
-          tankSmoke = new AnimatedSprite(1200, 550, smokeSprite, {
-            columns: 2,
-            totalFrames: 58,
-            frameDelay: 8,
-            scale: 1.2,
-            opacity: 0.4,
-            loop: true
-          })
-        }
-      }
-    }
-
-    function initFire() {
-      if (fireSprite.complete) {
-        cityFire = new AnimatedSprite(100, 600, fireSprite, {
-          columns: 2,
-          totalFrames: 8,
-          frameDelay: 8,
-          scale: 1,
-          opacity: 0.9,
-          width: 144,
-          height: 144,
-          loop: true
-        })
-      } else {
-        fireSprite.onload = () => {
-          cityFire = new AnimatedSprite(100, 600, fireSprite, {
-            columns: 2,
-            totalFrames: 8,
-            frameDelay: 8,
-            scale: 1,
-            opacity: 0.9,
-            width: 144,
-            height: 144,
-            loop: true
-          })
-        }
-      }
-    }
-
-    effectsLayer.style.display = "none"
-
-    const tank = {
-      x: canvas.width * 0.85,
-      y: canvas.height - groundHeight - 150,
-      w: 280,
-      h: 180
-    }
-
-    const destroyedCity = {
-      x: 100,
-      y: canvas.height - groundHeight - 120,
-      w: 180,
-      h: 80
-    }
-
-    function renderLeaderboard() {
-      let html = "<h3>Top Survivors</h3>"
-      leaderboard.forEach((p, i) => {
-        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
-      })
-
-      leaderboardEl.innerHTML = html
-    }
-
-    // ======================
-    // CONFIG / MODELS
-    // ======================
-    class WaveConfig {
-      constructor(name, options = {}) {
-        this.name = name
-        this.drones = options.drones || [] // массив {type: DroneType, count: number}
-        this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
-        this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
-        this.message = options.message || null // сообщение перед волной
-        this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
-        this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
-      }
-    }
-
-    class StageConfig {
-      constructor(name, options = {}) {
-        this.name = name
-        this.waves = options.waves || [] // массив WaveConfig
-        this.startMessage = options.startMessage || null // сообщение перед этапом
-        this.endMessage = options.endMessage || null // сообщение после этапа
-        this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
-        this.bossWave = options.bossWave || false // это босс волна?
-      }
-    }
-
-    const DroneType = {
-      NORMAL: 'normal',
-      GRENADIER: 'grenadier',
-      KAMIKAZE: 'kamikaze'
-    }
-
-    // ======================
     // SYSTEMS / MANAGERS
     // ======================
+    class AssetManager {
+      constructor() {
+        this.assets = new Map()
+        this.promises = []
+        this.loadedCount = 0
+        this.totalCount = 0
+      }
+
+      loadImage(key, src) {
+        this.totalCount++
+        const img = new Image()
+        img.src = src
+        const promise = new Promise((resolve, reject) => {
+          img.onload = () => {
+            this.loadedCount++
+            this.assets.set(key, img)
+            resolve(img)
+          }
+          img.onerror = () => {
+            console.error(`Failed to load asset: ${key} at ${src}`)
+            reject(new Error(`Failed to load ${key}`))
+          }
+        })
+        this.promises.push(promise)
+      }
+
+      async loadAll() {
+        await Promise.all(this.promises)
+      }
+
+      get(key) {
+        const asset = this.assets.get(key)
+        if (!asset) throw new Error(`Asset not found: ${key}`)
+        return asset
+      }
+
+      getProgress() {
+        return this.totalCount > 0 ? this.loadedCount / this.totalCount : 1
+      }
+    }
+
+    const assets = new AssetManager()
+
+    assets.loadImage("background", "game_bg.png")
+    assets.loadImage("player", "soldier.png")
+    assets.loadImage("player_walk", "soldier_walk_sprite.png")
+    assets.loadImage("drone", "mavic.png")
+    assets.loadImage("drone_bullet", "drone_bullet.png")
+    assets.loadImage("boss", "boss.png")
+    assets.loadImage("missile", "drone_bullet.png") // Note: same as drone_bullet
+    assets.loadImage("tank", "tank.png")
+    assets.loadImage("destroyed_city", "destroyed_city.png")
+    assets.loadImage("grenade", "grenade.png")
+    assets.loadImage("kamikaze", "kamikaze.png")
+    assets.loadImage("tank_smoke", "tank_smoke_sprite.png")
+    assets.loadImage("city_smoke", "city_smoke.png")
+    assets.loadImage("clouds", "clouds_bg.png")
+    assets.loadImage("fire", "fire_sprite.png")
+    assets.loadImage("explosion", "explosion_sprite.png")
+    assets.loadImage("ground_explosion", "ground_explosion_sprite.png")
+
     const EffectsManager = {
       // Отключить все визуальные эффекты для игры
       disableForGame() {
@@ -1409,6 +1236,246 @@ Command approves. Probably.`,
     audio.registerSfx("radio_on", "radio_chatter.mp3")
     audio.registerSfx("radio_off", "radio_off.mp3")
     audio.registerSfx("typewriter", "typeWriter.mp3")
+
+    // ======================
+    // RENDERING
+    // ======================
+    class AnimatedSprite {
+      constructor(x, y, image, options = {}) {
+        this.x = x
+        this.y = y
+        this.image = image
+
+        // Параметры спрайта
+        this.columns = options.columns || 2
+        this.totalFrames = options.totalFrames || 58
+        this.frameDelay = options.frameDelay || 8
+        this.width = options.width || (image.width / this.columns)
+        this.height = options.height || (image.height / (this.totalFrames / this.columns))
+        this.scale = options.scale || 1.0
+        this.opacity = options.opacity || 1.0
+        this.loop = options.loop !== undefined ? options.loop : true
+
+        // Кэшируем вычисления размеров
+        this.sw = this.image.width / this.columns
+        this.sh = this.image.height / Math.ceil(this.totalFrames / this.columns)
+        this.dw = this.width * (this.scale || 1.0)
+        this.dh = this.height * (this.scale || 1.0)
+
+        // Вычисляем количество строк
+        this.rows = Math.ceil(this.totalFrames / this.columns)
+
+        this.timer = 0
+        this.frame = options.startFrame || 0
+        this.alive = true
+      }
+
+      update() {
+        this.timer++
+
+        if (this.timer >= this.frameDelay) {
+          let nextFrame = this.frame + 1
+
+          if (nextFrame >= this.totalFrames) {
+            if (this.loop) {
+              nextFrame = 0
+            } else {
+              this.alive = false
+              return
+            }
+          }
+
+          this.frame = nextFrame
+          this.timer = 0
+        }
+      }
+
+      draw(ctx) {
+        if (!this.image || !this.image.complete || !this.alive) return
+
+        const col = this.frame % this.columns
+        const row = Math.floor(this.frame / this.columns)
+
+        const hasOpacity = this.opacity < 1.0
+        if (hasOpacity) {
+          ctx.save()
+          ctx.globalAlpha = this.opacity
+        }
+
+        ctx.drawImage(
+          this.image,
+          Math.floor(col * this.sw),
+          Math.floor(row * this.sh),
+          Math.floor(this.sw),
+          Math.floor(this.sh),
+          Math.floor(this.x),
+          Math.floor(this.y),
+          Math.floor(this.dw),
+          Math.floor(this.dh)
+        )
+
+        if (hasOpacity) {
+          ctx.restore()
+        } else {
+          // Гарантируем сброс альфы, если не использовали save/restore
+          ctx.globalAlpha = 1.0
+        }
+      }
+
+      // setFrame(frame) {
+      //   this.frame = Math.min(frame, this.totalFrames - 1)
+      // }
+      //
+      // restart() {
+      //   this.frame = 0
+      //   this.timer = 0
+      //   this.alive = true
+      // }
+    }
+
+    function initCitySmoke() {
+      const citySmokeSprite = assets.get('city_smoke')
+
+      if (citySmokeSprite.complete) {
+        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
+          columns: 2,
+          totalFrames: 98,
+          frameDelay: 8,
+          scale: 1.5,
+          opacity: 0.6,
+          loop: true
+        })
+      } else {
+        citySmokeSprite.onload = () => {
+          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+            columns: 2,
+            totalFrames: 98,
+            frameDelay: 8,
+            scale: 1.5,
+            opacity: 0.6,
+            loop: true
+          })
+        }
+      }
+    }
+
+    function initTankSmoke() {
+      const tankSmokeSprite = assets.get('tank_smoke')
+
+      SMOKE_FRAME_WIDTH = tankSmokeSprite.width / 2
+      SMOKE_FRAME_HEIGHT = tankSmokeSprite.height / 29
+
+      if (tankSmokeSprite.complete) {
+        tankSmoke = new AnimatedSprite(1200, 550, tankSmokeSprite, {
+          columns: 2,
+          totalFrames: 58,
+          frameDelay: 8,
+          scale: 1.2,
+          opacity: 0.4,
+          loop: true
+        })
+      } else {
+        tankSmokeSprite.onload = () => {
+          tankSmoke = new AnimatedSprite(1200, 550, tankSmokeSprite, {
+            columns: 2,
+            totalFrames: 58,
+            frameDelay: 8,
+            scale: 1.2,
+            opacity: 0.4,
+            loop: true
+          })
+        }
+      }
+    }
+
+    function initFire() {
+      const fireSprite = assets.get('fire')
+
+      if (fireSprite.complete) {
+        cityFire = new AnimatedSprite(100, 600, fireSprite, {
+          columns: 2,
+          totalFrames: 8,
+          frameDelay: 8,
+          scale: 1,
+          opacity: 0.9,
+          width: 144,
+          height: 144,
+          loop: true
+        })
+      } else {
+        fireSprite.onload = () => {
+          cityFire = new AnimatedSprite(100, 600, fireSprite, {
+            columns: 2,
+            totalFrames: 8,
+            frameDelay: 8,
+            scale: 1,
+            opacity: 0.9,
+            width: 144,
+            height: 144,
+            loop: true
+          })
+        }
+      }
+    }
+
+    effectsLayer.style.display = "none"
+
+    const tank = {
+      x: canvas.width * 0.85,
+      y: canvas.height - groundHeight - 150,
+      w: 280,
+      h: 180
+    }
+
+    const destroyedCity = {
+      x: 100,
+      y: canvas.height - groundHeight - 120,
+      w: 180,
+      h: 80
+    }
+
+    function renderLeaderboard() {
+      let html = "<h3>Top Survivors</h3>"
+      leaderboard.forEach((p, i) => {
+        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
+      })
+
+      leaderboardEl.innerHTML = html
+    }
+
+    // ======================
+    // CONFIG / MODELS
+    // ======================
+    class WaveConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.drones = options.drones || [] // массив {type: DroneType, count: number}
+        this.duration = options.duration || 0 // длительность волны в мс (0 = пока все не убиты)
+        this.pauseAfter = options.pauseAfter || 3000 // пауза после волны
+        this.message = options.message || null // сообщение перед волной
+        this.spawnInterval = options.spawnInterval || 1000 // интервал спавна
+        this.maxConcurrent = options.maxConcurrent || 10 // максимум одновременно
+      }
+    }
+
+    class StageConfig {
+      constructor(name, options = {}) {
+        this.name = name
+        this.waves = options.waves || [] // массив WaveConfig
+        this.startMessage = options.startMessage || null // сообщение перед этапом
+        this.endMessage = options.endMessage || null // сообщение после этапа
+        this.pauseAfter = options.pauseAfter || 5000 // пауза после этапа
+        this.bossWave = options.bossWave || false // это босс волна?
+      }
+    }
+
+    const DroneType = {
+      NORMAL: 'normal',
+      GRENADIER: 'grenadier',
+      KAMIKAZE: 'kamikaze'
+    }
+
+
     // ======================
     // ENTITIES
     // ======================
@@ -1423,6 +1490,7 @@ Command approves. Probably.`,
         this.speed = 3.8
         this.direction = 1
 
+        this.walkSprite = assets.get('player_walk')
         this.frame = 0
         this.frameTimer = 0
         this.isMoving = false
@@ -1501,7 +1569,7 @@ Command approves. Probably.`,
           ctx.scale(-1, 1)
 
           ctx.drawImage(
-            playerWalkSprite,
+            this.walkSprite,
             this.frame * WALK_FRAME_WIDTH,
             0,
             WALK_FRAME_WIDTH,
@@ -1513,7 +1581,7 @@ Command approves. Probably.`,
           )
         } else {
           ctx.drawImage(
-            playerWalkSprite,
+            this.walkSprite,
             this.frame * WALK_FRAME_WIDTH,
             0,
             WALK_FRAME_WIDTH,
@@ -1567,7 +1635,7 @@ Command approves. Probably.`,
         this.frameDelay = options.frameDelay || 8
 
         // Изображение
-        this.image = options.image || droneImg
+        this.image = options.image || assets.get('drone')
       }
 
       update(delta) {
@@ -1674,7 +1742,6 @@ Command approves. Probably.`,
           hp: 1,
           scoreValue: 10,
           frameDelay: 8,
-          image: droneImg
         })
 
         this.fireTimer = Math.random() * 1000
@@ -1716,7 +1783,6 @@ Command approves. Probably.`,
           hp: 2,
           scoreValue: 25,
           frameDelay: 10,
-          image: droneImg // Можно заменить на другой спрайт
         })
 
         this.dropTimer = 120 + Math.random() * 120
@@ -1773,7 +1839,7 @@ Command approves. Probably.`,
           scoreValue: 30,
           speed: 4,
           frameDelay: 6,
-          image: kamikazeImg
+          image: assets.get('kamikaze')
         })
 
         // Расчет направления к игроку
@@ -1849,7 +1915,7 @@ Command approves. Probably.`,
           width: 300,
           height: 260,
           hp: 200,
-          image: bossImg,
+          image: assets.get('boss'),
           skipEntryPos: true
         })
         this.maxHp = 400
@@ -1983,7 +2049,7 @@ Command approves. Probably.`,
       }
       draw() {
         ctx.drawImage(
-          enemyBulletImg,
+          assets.get('drone_bullet'),
           Math.floor(this.x),
           Math.floor(this.y),
           this.width,
@@ -2019,7 +2085,12 @@ Command approves. Probably.`,
       }
 
       draw() {
-        ctx.drawImage(missileImg, Math.floor(this.x), Math.floor(this.y), 16, 32)
+        ctx.drawImage(
+          assets.get('drone_bullet'),
+          Math.floor(this.x),
+          Math.floor(this.y),
+          16,
+          32)
       }
     }
 
@@ -2048,7 +2119,7 @@ Command approves. Probably.`,
       draw(ctx) {
         if (this.alive) {
           ctx.drawImage(
-            explosionSprite,
+            assets.get('explosion'),
             Math.floor(this.frame * EXPLOSION_FRAME_WIDTH), 0,
             EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
             Math.floor(this.x - EXPLOSION_FRAME_WIDTH / 2),
@@ -2102,6 +2173,8 @@ Command approves. Probably.`,
       }
 
       draw() {
+        const grenadeImg = assets.get('grenade')
+
         if (this.onGround && this.timer < 60) {
           if (Math.floor(this.timer / 10) % 2 === 0) {
             ctx.drawImage(grenadeImg, this.x, this.y, this.width, this.height)
@@ -2116,6 +2189,7 @@ Command approves. Probably.`,
         }
       }
     }
+
     class GroundExplosion {
       constructor(x, y) {
         this.x = x;
@@ -2141,7 +2215,7 @@ Command approves. Probably.`,
 
       draw(ctx) {
         ctx.drawImage(
-          groundExplosionSprite,
+          assets.get('ground_explosion'),
           Math.floor(this.frame * GROUND_EXPLOSION_FRAME_WIDTH),
           0,
           GROUND_EXPLOSION_FRAME_WIDTH,
@@ -3020,6 +3094,10 @@ Anyone falling back without orders will be treated as hostile.`
       // Очистка канваса
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+      const background = assets.get('background')
+      const tankImg = assets.get('tank')
+      const destroyedCityImg = assets.get('destroyed_city')
+
       // Фон
       if (background.complete) {
         ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
@@ -3221,20 +3299,23 @@ Anyone falling back without orders will be treated as hostile.`
       audio.playMusic('menu')
     }, { once: true })
 
-    window.addEventListener("load", () => {
+    async function preloadAssets() {
+      const interval = setInterval(() => {
+        UI.setLoadingProgress(assets.getProgress() * 100)
+      }, 50)
+
+      await assets.loadAll()
+      clearInterval(interval)
+      UI.setLoadingProgress(100)
+      await new Promise(r => setTimeout(r, 200))
       UI.hideLoadingScreen()
+    }
+
+    window.addEventListener("load", async () => {
+      await preloadAssets()
+      await loadLeaderboard()
     })
 
-    loadLeaderboard()
-
-    const interval = setInterval(() => {
-      progress += 10
-      UI.setLoadingProgress(progress)
-
-      if (progress >= 100) {
-        clearInterval(interval)
-      }
-    }, 100)
   </script>
 </body>
 </html>
