@@ -407,7 +407,6 @@
     let timeScale = 1
 
     let globalActiveDronesCount = 0
-    let globalEnemyBulletsCount = 0
 
     let player
     let playerName = "AAA"
@@ -1269,6 +1268,10 @@ Command approves. Probably.`,
         return this.categories[category] || [];
       }
 
+      getCountByCategory(category) {
+        return this.categories[category] ? this.categories[category].length : 0;
+      }
+
       // Очистка "мёртвых" объектов
       cleanup() {
         const cleanupList = (list) => {
@@ -1671,11 +1674,9 @@ Command approves. Probably.`,
       KAMIKAZE: 'kamikaze'
     }
 
-
     // ======================
     // ENTITIES
     // ======================
-
     class Player {
       constructor() {
         this.x = 0
@@ -1955,7 +1956,7 @@ Command approves. Probably.`,
 
       shoot() {
         this.fireTimer = 0
-        if (countEnemyBullets() < waveManager.maxBullets) {
+        if (entityManager.getCountByCategory('enemyBullet') < waveManager.maxBullets) {
           spawn(new EnemyBullet(
             this.x + this.width / 2,
             this.y + this.height
@@ -2168,7 +2169,7 @@ Command approves. Probably.`,
           this.missileTimer = 0
           // Только одна ракета за раз
           // Оптимизация: используем глобальный счетчик или простой лимит
-          if (globalEnemyBulletsCount < 40) {
+          if (entityManager.getCountByCategory('enemyBullet') < 40) {
             spawn(new Missile(
               this.x + this.width / 2,
               this.y + this.height,
@@ -2620,10 +2621,6 @@ Command approves. Probably.`,
     // ======================
     // HELPERS
     // ======================
-    function countEnemyBullets() {
-      return globalEnemyBulletsCount
-    }
-
     function countDrones() {
       // Исключаем босса из общего лимита, если хотим чтобы миньоны спавнились всегда
       return globalActiveDronesCount
