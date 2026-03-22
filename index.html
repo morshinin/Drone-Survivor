@@ -373,7 +373,6 @@
     // ======================
     // CONSTANTS
     // ======================
-    // const HITBOX_PADDING = 12
     const GAME_VERSION = "0.17.3"
 
     const groundHeight = 40
@@ -404,15 +403,11 @@
     let tankSmoke = null
     let cityFire = null
 
-    let gameObjects = []
-    let uiTimer = 0
     let keys = {}
     let timeScale = 1
-    let hitFreeze = 0
 
     let globalActiveDronesCount = 0
     let globalEnemyBulletsCount = 0
-    let globalVFXCount = 0
 
     let player
     let playerName = "AAA"
@@ -1301,6 +1296,57 @@ Command approves. Probably.`,
 
     const entityManager = new EntityManager();
 
+    class InputManager {
+      constructor() {
+        this.keys = {};
+        this.shooting = false;
+
+        document.addEventListener("keydown", e => this.handleKeyDown(e));
+        document.addEventListener("keyup", e => this.handleKeyUp(e));
+      }
+
+      handleKeyDown(e) {
+        if (e.code === "Space") this.shooting = true;
+        this.keys[e.code] = true; // Используем e.code для независимости от раскладки
+      }
+
+      handleKeyUp(e) {
+        if (e.code === "Space") this.shooting = false;
+        this.keys[e.code] = false;
+      }
+
+      isShooting() {
+        return this.shooting;
+      }
+
+      isDown(keyCode) {
+        return this.keys[keyCode] === true;
+      }
+
+      getMoveDirection() {
+        if (this.isDown("ArrowLeft")) return -1;
+        if (this.isDown("ArrowRight")) return 1;
+        return 0;
+      }
+
+      getShootDirection() {
+        let dx = 0;
+        let dy = -1; // по умолчанию вверх
+
+        if (this.isDown("ArrowRight")) {
+          dx = 0.7;
+          dy = -0.7;
+        }
+        if (this.isDown("ArrowLeft")) {
+          dx = -0.7;
+          dy = -0.7;
+        }
+        return { dx, dy };
+      }
+    }
+
+    const inputManager = new InputManager()
+
     // ======================
     // RENDERING
     // ======================
@@ -1582,19 +1628,17 @@ Command approves. Probably.`,
         audio.playSfx('death')
       }
 
-      update() {
-        if (isFirePressed()) {
-          this.vx *= 0
-        }
+      update(delta, input = null) {
+        if (input) {
+          if (input.isShooting()) {
+            this.vx *= 0
+          }
 
-        if (keys["ArrowLeft"]) {
-          this.vx -= this.acceleration
-          this.direction = -1
-        }
-
-        if (keys["ArrowRight"]) {
-          this.vx += this.acceleration
-          this.direction = 1
+          const moveDirection = input.getMoveDirection()
+          if (moveDirection !== 0) {
+            this.vx += this.acceleration * moveDirection
+            this.direction = moveDirection
+          }
         }
 
         if (this.vx > this.speed) this.vx = this.speed
@@ -2514,22 +2558,22 @@ Command approves. Probably.`,
       return Math.floor(rawScore)
     }
 
-    function getShootDirection() {
-      let dx = 0
-      let dy = -1   // по умолчанию вверх
-
-      if (keys["ArrowRight"]) {
-        dx = 0.7
-        dy = -0.7
-      }
-
-      if (keys["ArrowLeft"]) {
-        dx = -0.7
-        dy = -0.7
-      }
-
-      return { dx, dy }
-    }
+    // function getShootDirection() {
+    //   let dx = 0
+    //   let dy = -1   // по умолчанию вверх
+    //
+    //   if (keys["ArrowRight"]) {
+    //     dx = 0.7
+    //     dy = -0.7
+    //   }
+    //
+    //   if (keys["ArrowLeft"]) {
+    //     dx = -0.7
+    //     dy = -0.7
+    //   }
+    //
+    //   return { dx, dy }
+    // }
 
     function splitTextIntoPages(text, maxChars = 140) {
       const words = text.split(" ")
@@ -2856,7 +2900,7 @@ You’ll assist with supply lines and comms.
 Rotations will be… happening soon enough.
 In case of injury, you’ll be… taken care of and evacuated to the rear.
 Anyone falling back without orders will be treated as hostile.`
-      await showCommanderMessage(8000, msg)
+      await showCommanderMessage(3000, msg)
     }
 
     async function animatePlayerIntro() {
@@ -2970,8 +3014,8 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     function handlePlayerInput() {
-      if (player.alive && shooting && player.weapon?.auto) {
-        const dir = getShootDirection()
+      if (player.alive && inputManager.isShooting() && currentWeapon?.auto) {
+        const dir = inputManager.getShootDirection()
         fireCurrentWeapon(dir.dx, dir.dy)
       }
     }
@@ -2986,7 +3030,7 @@ Anyone falling back without orders will be treated as hostile.`
         return
       }
 
-      player.update()
+      player.update(delta, inputManager)
 
       if (globalEnemyFireCooldown > 0) {
         globalEnemyFireCooldown -= delta
@@ -3250,11 +3294,8 @@ Anyone falling back without orders will be treated as hostile.`
 
     document.addEventListener("keydown", e => {
       if (e.code === "Space") {
-        shooting = true
-
-        const dir = getShootDirection()
-
-        if (dir && !currentWeapon.auto) {
+        if (currentWeapon && !currentWeapon.auto) {
+          const dir = inputManager.getShootDirection()
           fireCurrentWeapon(dir.dx, dir.dy)
         }
       }
@@ -3303,9 +3344,6 @@ Anyone falling back without orders will be treated as hostile.`
         return
       }
 
-      if (e.code === "Space") {
-        shooting = false
-      }
       keys[e.key] = false
     })
 

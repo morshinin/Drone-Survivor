@@ -18,6 +18,7 @@ Wave manager
 Audio manager
 UI manager
 Assets manager
+Entity manager
 
 ## 0.17.3
 
