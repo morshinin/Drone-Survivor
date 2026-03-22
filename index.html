@@ -1235,6 +1235,58 @@ Command approves. Probably.`,
     audio.registerSfx("radio_off", "radio_off.mp3")
     audio.registerSfx("typewriter", "typeWriter.mp3")
 
+    class TextManager {
+      constructor(audio) {
+        this.audio = audio
+      }
+
+      splitIntoPages(text, maxChars = 140) {
+        const words = text.split(" ")
+        const pages = []
+        let current = ""
+
+        for (const word of words) {
+          if ((current + word).length > maxChars) {
+            pages.push(current.trim())
+            current = ""
+          }
+          current += word + " "
+        }
+
+        if (current.length) pages.push(current.trim())
+        return pages
+      }
+
+      async typeToElement(element, text, speed = 25) {
+        element.textContent = ""
+        let skip = false
+
+        const skipHandler = (e) => {
+          if (e.code === "Enter") skip = true
+        }
+
+        window.addEventListener("keydown", skipHandler)
+        for (let i = 0; i < text.length; i++) {
+          element.textContent += text[i]
+
+          if (i % 3 === 0 && text[i] !== " ") {
+            this.audio.playSfx('typewriter')
+          }
+
+          if (skip) {
+            element.textContent = text
+            break
+          }
+
+          await new Promise(r => setTimeout(r, speed))
+        }
+
+        window.removeEventListener("keydown", skipHandler)
+      }
+    }
+
+    const textManager = new TextManager(audio)
+
     class EntityManager {
       constructor() {
         this.entities = [];
@@ -2690,54 +2742,6 @@ Command approves. Probably.`,
     // ======================
     // HELPERS
     // ======================
-    function splitTextIntoPages(text, maxChars = 140) {
-      const words = text.split(" ")
-      const pages = []
-
-      let current = ""
-
-      for (const word of words) {
-        if ((current + word).length > maxChars) {
-          pages.push(current.trim())
-          current = ""
-        }
-
-        current += word + " "
-      }
-
-      if (current.length) pages.push(current.trim())
-
-      return pages
-    }
-
-    async function typeText(element, text, speed = 25) {
-      element.textContent = ""
-      let skip = false
-
-      function skipHandler(e) {
-        if (e.code === "Enter") skip = true
-      }
-
-      window.addEventListener("keydown", skipHandler)
-      for (let i = 0; i < text.length; i++) {
-        element.textContent += text[i]
-
-        if (i % 3 === 0 && text[i] !== " ") {
-          audio.playSfx('typewriter')
-
-        }
-
-        if (skip) {
-          element.textContent = text
-          break
-        }
-
-        await new Promise(r => setTimeout(r, speed))
-      }
-
-      window.removeEventListener("keydown", skipHandler)
-    }
-
     function spawn(obj) {
       entityManager.add(obj)
     }
@@ -3032,10 +3036,10 @@ Anyone falling back without orders will be treated as hostile.`
 
       await new Promise(r => setTimeout(r, 300))
 
-      const pages = splitTextIntoPages(message)
+      const pages = textManager.splitIntoPages(message)
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] + "..."
-        await typeText(p, page)
+        await textManager.typeToElement(p, page)
 
         UI.showContinueHint(true)
         await waitForContinue()
