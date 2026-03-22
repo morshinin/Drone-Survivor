@@ -19,6 +19,8 @@ Audio manager
 UI manager
 Assets manager
 Entity manager
+Input manager
+Collision manager
 
 ## 0.17.3
 

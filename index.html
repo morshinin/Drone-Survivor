@@ -1347,6 +1347,92 @@ Command approves. Probably.`,
 
     const inputManager = new InputManager()
 
+    class Physics {
+      static isColliding(a, b) {
+        if (!a || !b || !a.alive || !b.alive) return false;
+
+        const w1 = a.width || a.size || 0;
+        const h1 = a.height || a.size || 0;
+        const w2 = b.width || b.size || 0;
+        const h2 = b.height || b.size || 0;
+
+        return a.x < b.x + w2 &&
+          a.x + w1 > b.x &&
+          a.y < b.y + h2 &&
+          a.y + h1 > b.y;
+      }
+
+      // В будущем сюда можно добавить другие функции:
+      // static distance(a, b) { ... }
+      // static clamp(value, min, max) { ... }
+      // static normalize(vector) { ... }
+    }
+
+    class CollisionManager {
+      constructor(entityManager, player) {
+        this.entityManager = entityManager;
+        this.player = player;
+      }
+
+      update() {
+        this.checkPlayerBulletsVsDrones();
+        this.checkEnemyProjectiles();
+      }
+
+      checkPlayerBulletsVsDrones() {
+        const bullets = this.entityManager.getByCategory('bullet');
+        const drones = this.entityManager.getByCategory('drone');
+
+        for (const bullet of bullets) {
+          if (!bullet.alive) continue;
+          for (const drone of drones) {
+            if (!drone.alive) continue;
+
+            if (Physics.isColliding(bullet, drone)) {
+              bullet.alive = false;
+              if (drone.takeDamage(1)) {
+                drone.onDeath();
+                const gained = calculateDroneScore(drone);
+                score += gained;
+                UI.updateScore(score);
+              }
+              break; // Пуля попала, нет смысла проверять её дальше
+            }
+          }
+        }
+      }
+
+      checkEnemyProjectiles() {
+        const enemyProjectiles = this.entityManager.getByCategory('enemyBullet');
+
+        for (const projectile of enemyProjectiles) {
+          if (!projectile.alive) continue;
+
+          // Проверка на столкновение с землей
+          if (projectile.y > canvas.height - groundHeight) {
+            if (typeof projectile.explode === 'function') {
+              projectile.explode(); // Для камикадзе, у которых есть метод explode
+            } else {
+              spawnGroundExplosion(projectile.x, projectile.y);
+            }
+            projectile.alive = false;
+            continue;
+          }
+
+          // Проверка на столкновение с игроком
+          if (this.player.alive && Physics.isColliding(projectile, this.player)) {
+            if (typeof projectile.explode === 'function') {
+              projectile.explode();
+            }
+            this.player.die();
+            projectile.alive = false;
+          }
+        }
+      }
+    }
+
+    const collisionManager = new CollisionManager(entityManager, player)
+
     // ======================
     // RENDERING
     // ======================
@@ -1973,7 +2059,7 @@ Command approves. Probably.`,
         }
 
         // Проверка столкновения с игроком
-        if (isColliding(this, player)) {
+        if (Physics.isColliding(this, player)) {
           this.explode()
         }
 
@@ -2281,6 +2367,15 @@ Command approves. Probably.`,
         this.category = 'enemyBullet' // Грены тоже пули врага
       }
 
+      explode() {
+        this.exploded = true;
+        spawnGroundExplosion(this.x, this.y);
+        // Логика урона по области
+        if (Physics.isColliding(this, player)) { // Упрощенная проверка
+          player.die();
+        }
+      }
+
       update() {
         if (!this.onGround) {
           this.y += this.vy
@@ -2296,9 +2391,7 @@ Command approves. Probably.`,
         this.timer--
 
         if (this.timer <= 0 && !this.exploded) {
-          this.exploded = true
-
-          explodeGrenade(this)
+          this.explode()
 
           this.alive = false
         }
@@ -2527,20 +2620,6 @@ Command approves. Probably.`,
     // ======================
     // HELPERS
     // ======================
-    function isColliding(a, b) {
-      if (!a || !b || !a.alive || !b.alive) return false
-
-      const w1 = a.width || a.size || 0
-      const h1 = a.height || a.size || 0
-      const w2 = b.width || b.size || 0
-      const h2 = b.height || b.size || 0
-
-      return a.x < b.x + w2 &&
-        a.x + w1 > b.x &&
-        a.y < b.y + h2 &&
-        a.y + h1 > b.y
-    }
-
     function countEnemyBullets() {
       return globalEnemyBulletsCount
     }
@@ -2557,23 +2636,6 @@ Command approves. Probably.`,
 
       return Math.floor(rawScore)
     }
-
-    // function getShootDirection() {
-    //   let dx = 0
-    //   let dy = -1   // по умолчанию вверх
-    //
-    //   if (keys["ArrowRight"]) {
-    //     dx = 0.7
-    //     dy = -0.7
-    //   }
-    //
-    //   if (keys["ArrowLeft"]) {
-    //     dx = -0.7
-    //     dy = -0.7
-    //   }
-    //
-    //   return { dx, dy }
-    // }
 
     function splitTextIntoPages(text, maxChars = 140) {
       const words = text.split(" ")
@@ -2625,10 +2687,6 @@ Command approves. Probably.`,
 
     function spawn(obj) {
       entityManager.add(obj)
-    }
-
-    function isFirePressed() {
-      return keys[" "] || keys["Space"]
     }
 
     function spawnExplosion(x, y) {
@@ -3045,45 +3103,6 @@ Anyone falling back without orders will be treated as hostile.`
       }
     }
 
-    function handleCollisions() {
-      const bullets = entityManager.getByCategory('bullet')
-      const drones = entityManager.getByCategory('drone')
-      const enemyBullets = entityManager.getByCategory('enemyBullet')
-
-      // Коллизии: Пули игрока vs Дроны
-      for (const bullet of bullets) {
-        for (const drone of drones) {
-          if (isColliding(bullet, drone)) {
-            bullet.alive = false
-            if (drone.takeDamage(1)) {
-              drone.onDeath()
-              const gained = calculateDroneScore(drone)
-              score += gained
-              UI.updateScore(score)
-            }
-            // Пуля попала, можно перестать проверять её столкновения с другими дронами
-            break
-          }
-        }
-      }
-
-      // Коллизии: Пули врагов vs Игрок и земля
-      for (const enemyBullet of enemyBullets) {
-        // Столкновение с землей
-        if (enemyBullet.y > canvas.height - groundHeight) {
-          spawnGroundExplosion(enemyBullet.x, enemyBullet.y)
-          enemyBullet.alive = false
-          continue // Пуля уничтожена, переходим к следующей
-        }
-
-        // Столкновение с игроком
-        if (player.alive && isColliding(enemyBullet, player)) {
-          player.die()
-          enemyBullet.alive = false
-        }
-      }
-    }
-
     function cleanupEntities() {
       entityManager.cleanup()
     }
@@ -3162,7 +3181,7 @@ Anyone falling back without orders will be treated as hostile.`
     function updateGameplay(delta) {
       handlePlayerInput()
       updateEntities(delta)
-      handleCollisions()
+      collisionManager.update()
       cleanupEntities()
 
       survivalTime += delta / 1000
@@ -3179,6 +3198,7 @@ Anyone falling back without orders will be treated as hostile.`
     function initGame() {
       // игрок
       player = new Player()
+      collisionManager.player = player
 
       // оружие
       currentWeapon = createWeapon("pistol")
