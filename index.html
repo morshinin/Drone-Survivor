@@ -406,8 +406,6 @@
     let keys = {}
     let timeScale = 1
 
-    let globalActiveDronesCount = 0
-
     let player
     let playerName = "AAA"
 
@@ -882,7 +880,7 @@ Command approves. Probably.`,
 
         // ===== ФАЗА 2: ОЖИДАНИЕ — все заспавнены, ждём гибели =====
         // Проверяем каждый кадр (не через spawnTimer), чтобы не пропустить момент
-        const alive = countDrones()
+        const alive = entityManager.getCountByCategory('drone')
 
         if (alive === 0) {
           this.currentWaveIndex++
@@ -1243,6 +1241,7 @@ Command approves. Probably.`,
         this.entities = [];
         this.categories = {
           drone: [],
+          boss: [],
           bullet: [],
           enemyBullet: [],
           vfx: []
@@ -1383,12 +1382,15 @@ Command approves. Probably.`,
       }
 
       checkPlayerBulletsVsDrones() {
-        const bullets = this.entityManager.getByCategory('bullet');
-        const drones = this.entityManager.getByCategory('drone');
+        const bullets = this.entityManager.getByCategory('bullet')
+        const drones = this.entityManager.getByCategory('drone')
+        const bosses = this.entityManager.getByCategory('boss')
+
+        const allTargets = [...drones, ...bosses]
 
         for (const bullet of bullets) {
           if (!bullet.alive) continue;
-          for (const drone of drones) {
+          for (const drone of allTargets) {
             if (!drone.alive) continue;
 
             if (Physics.isColliding(bullet, drone)) {
@@ -2120,7 +2122,7 @@ Command approves. Probably.`,
         this.spawnTimer = 0
         this.missileTimer = 0
         this.active = false
-        this.category = 'drone' // Важно для коллизий
+        this.category = 'boss' // Важно для коллизий
         this.maxMinions = 8
         this.spawnedMinions = 0
       }
@@ -2142,7 +2144,7 @@ Command approves. Probably.`,
           this.spawnTimer += delta
           if (this.spawnTimer > 7000) { // 7 секунд
             this.spawnTimer = 0
-            if (countDrones() < 1 + 3) { // 1 босс + 3 миньона
+            if (entityManager.getCountByCategory('drone') < 1 + 3) { // 1 босс + 3 миньона
               spawnNormalDrone()
             }
           }
@@ -2153,7 +2155,7 @@ Command approves. Probably.`,
           this.spawnTimer += delta
           if (this.spawnTimer > 5000) { // 5 секунд
             this.spawnTimer = 0
-            if (countDrones() < 1 + 3) {
+            if (entityManager.getCountByCategory('drone') < 1 + 3) {
               if (Math.random() < 0.6) {
                 spawnNormalDrone()
               } else {
@@ -2621,15 +2623,10 @@ Command approves. Probably.`,
     // ======================
     // HELPERS
     // ======================
-    function countDrones() {
-      // Исключаем босса из общего лимита, если хотим чтобы миньоны спавнились всегда
-      return globalActiveDronesCount
-    }
-
     function calculateDroneScore(drone) {
       const rawScore = drone.scoreValue *
         (1 + Math.min(survivalTime / 60, 5)) *
-        (1 + Math.min(countDrones() / 20, 4))
+        (1 + Math.min(entityManager.getCountByCategory('drone') / 20, 4))
 
       return Math.floor(rawScore)
     }
@@ -2794,32 +2791,9 @@ Command approves. Probably.`,
       box.style.display = "none"
     }
 
-    function explodeGrenade(g) {
-      spawnGroundExplosion(g.x, g.y)
-
-      const explosionRadius = 80
-
-      const gx = g.x + g.width / 2
-      const gy = g.y + g.height / 2
-
-      const px = player.x + player.width / 2
-      const py = player.y + player.height / 2
-
-      const dx = px - gx
-      const dy = py - gy
-
-      const dist = Math.sqrt(dx * dx + dy * dy)
-
-      if (dist < explosionRadius) {
-        if (!DEBUG.godMode && player.alive) {
-          player.die()
-        }
-      }
-    }
-
     function spawnNormalDrone() {
       const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
+      if (entityManager.getCountByCategory('drone') >= maxDrones) return
 
       const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
       spawn(drone)
@@ -2828,7 +2802,7 @@ Command approves. Probably.`,
 
     function spawnGrenadier() {
       const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
+      if (entityManager.getCountByCategory('drone') >= maxDrones) return
 
       const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
       spawn(drone)
@@ -2837,7 +2811,7 @@ Command approves. Probably.`,
 
     function spawnKamikaze() {
       const maxDrones = waveManager.maxDrones
-      if (countDrones() >= maxDrones) return
+      if (entityManager.getCountByCategory('drone') >= maxDrones) return
 
       const drone = new KamikazeDrone()
       spawn(drone)
