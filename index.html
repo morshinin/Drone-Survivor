@@ -1308,6 +1308,10 @@ Command approves. Probably.`,
         }
       }
 
+      spawn(entity) {
+        this.add(entity);
+      }
+
       // Получить все объекты
       getAll() {
         return this.entities;
@@ -1348,6 +1352,25 @@ Command approves. Probably.`,
     }
 
     const entityManager = new EntityManager();
+
+    class VFXManager {
+      constructor(entityManager, audio) {
+        this.entityManager = entityManager
+        this.audio = audio
+      }
+
+      playExplosion(x, y) {
+        this.entityManager.spawn(new Explosion(x, y))
+        this.audio.playSfx('drone_explosion')
+      }
+
+      playGroundExplosion(x, y) {
+        this.entityManager.spawn(new GroundExplosion(x, y))
+        this.audio.playSfx('ground_explosion')
+      }
+    }
+
+    const vfxManager = new VFXManager(entityManager, audio)
 
     /**
      * Менеджер подсчёта очков и достижений игрока.
@@ -1537,7 +1560,7 @@ Command approves. Probably.`,
             if (typeof projectile.explode === 'function') {
               projectile.explode(); // Для камикадзе, у которых есть метод explode
             } else {
-              spawnGroundExplosion(projectile.x, projectile.y);
+              vfxManager.playGroundExplosion(projectile.x, projectile.y);
             }
             projectile.alive = false;
             continue;
@@ -1827,7 +1850,7 @@ Command approves. Probably.`,
 
         timeScale = 0.25
 
-        spawnExplosion(
+        vfxManager.playExplosion(
           player.x + player.width / 2,
           player.y + player.height / 2
         )
@@ -2045,7 +2068,7 @@ Command approves. Probably.`,
 
       onDeath() {
         // Эффект при смерти
-        spawnExplosion(this.x + this.width / 2, this.y + this.height / 2)
+        vfxManager.playExplosion(this.x + this.width / 2, this.y + this.height / 2)
       }
     }
 
@@ -2078,7 +2101,7 @@ Command approves. Probably.`,
       shoot() {
         this.fireTimer = 0
         if (entityManager.getCountByCategory('enemyBullet') < waveManager.maxBullets) {
-          spawn(new EnemyBullet(
+          entityManager.spawn(new EnemyBullet(
             this.x + this.width / 2,
             this.y + this.height
           ))
@@ -2117,7 +2140,7 @@ Command approves. Probably.`,
       }
 
       dropGrenade() {
-        spawn(new Grenade(this.x, this.y))
+        entityManager.spawn(new Grenade(this.x, this.y))
       }
 
       draw(ctx) {
@@ -2197,7 +2220,7 @@ Command approves. Probably.`,
       }
 
       explode() {
-        spawnGroundExplosion(this.x, this.y)
+        vfxManager.playGroundExplosion(this.x, this.y)
 
         // Проверка урона игроку
         const dx = player.x + player.width / 2 - (this.x + this.width / 2)
@@ -2291,7 +2314,7 @@ Command approves. Probably.`,
           // Только одна ракета за раз
           // Оптимизация: используем глобальный счетчик или простой лимит
           if (entityManager.getCountByCategory('enemyBullet') < 40) {
-            spawn(new Missile(
+            entityManager.spawn(new Missile(
               this.x + this.width / 2,
               this.y + this.height,
               player.x + player.width / 2
@@ -2491,7 +2514,7 @@ Command approves. Probably.`,
 
       explode() {
         this.exploded = true;
-        spawnGroundExplosion(this.x, this.y);
+        vfxManager.playGroundExplosion(this.x, this.y);
         // Логика урона по области
         if (Physics.isColliding(this, player)) { // Упрощенная проверка
           player.die();
@@ -2742,20 +2765,6 @@ Command approves. Probably.`,
     // ======================
     // HELPERS
     // ======================
-    function spawn(obj) {
-      entityManager.add(obj)
-    }
-
-    function spawnExplosion(x, y) {
-      spawn(new Explosion(x, y))
-      audio.playSfx('drone_explosion')
-    }
-
-    function spawnGroundExplosion(x, y) {
-      spawn(new GroundExplosion(x, y))
-      audio.playSfx('ground_explosion')
-    }
-
     function createWeapon(type) {
       switch (type) {
         case "pistol":
@@ -2803,7 +2812,7 @@ Command approves. Probably.`,
       }
 
       for (const s of shots) {
-        spawn(new Bullet(s.x, s.y, s.vx, s.vy))
+        entityManager.spawn(new Bullet(s.x, s.y, s.vx, s.vy))
       }
     }
 
@@ -2859,7 +2868,7 @@ Command approves. Probably.`,
       if (entityManager.getCountByCategory('drone') >= maxDrones) return
 
       const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
-      spawn(drone)
+      entityManager.spawn(drone)
       return drone
     }
 
@@ -2868,7 +2877,7 @@ Command approves. Probably.`,
       if (entityManager.getCountByCategory('drone') >= maxDrones) return
 
       const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
-      spawn(drone)
+      entityManager.spawn(drone)
       return drone
     }
 
@@ -2877,13 +2886,13 @@ Command approves. Probably.`,
       if (entityManager.getCountByCategory('drone') >= maxDrones) return
 
       const drone = new KamikazeDrone()
-      spawn(drone)
+      entityManager.spawn(drone)
       return drone
     }
 
     function spawnBoss() {
       const boss = new BossDrone()
-      spawn(boss)
+      entityManager.spawn(boss)
       boss.active = true
       return boss
     }
