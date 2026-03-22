@@ -1244,6 +1244,63 @@ Command approves. Probably.`,
     audio.registerSfx("radio_off", "radio_off.mp3")
     audio.registerSfx("typewriter", "typeWriter.mp3")
 
+    class EntityManager {
+      constructor() {
+        this.entities = [];
+        this.categories = {
+          drone: [],
+          bullet: [],
+          enemyBullet: [],
+          vfx: []
+        };
+        this.entityMap = new Map(); // Для быстрого доступа по ID, если понадобится
+      }
+
+      add(entity) {
+        this.entities.push(entity);
+        const category = entity.category;
+        if (this.categories[category]) {
+          this.categories[category].push(entity);
+        }
+      }
+
+      // Получить все объекты
+      getAll() {
+        return this.entities;
+      }
+
+      // Получить объекты по категории
+      getByCategory(category) {
+        return this.categories[category] || [];
+      }
+
+      // Очистка "мёртвых" объектов
+      cleanup() {
+        const cleanupList = (list) => {
+          for (let i = list.length - 1; i >= 0; i--) {
+            if (!list[i].alive) {
+              list.splice(i, 1);
+            }
+          }
+        };
+
+        cleanupList(this.entities);
+        for (const category in this.categories) {
+          cleanupList(this.categories[category]);
+        }
+      }
+
+      // Полная очистка (для рестарта игры)
+      clear() {
+        this.entities = [];
+        for (const category in this.categories) {
+          this.categories[category] = [];
+        }
+      }
+    }
+
+    const entityManager = new EntityManager();
+
     // ======================
     // RENDERING
     // ======================
@@ -2523,7 +2580,7 @@ Command approves. Probably.`,
     }
 
     function spawn(obj) {
-      gameObjects.push(obj)
+      entityManager.add(obj)
     }
 
     function isFirePressed() {
@@ -2731,7 +2788,7 @@ Command approves. Probably.`,
 
       document.body.classList.add("hide-cursor")
       player = new Player()
-      gameObjects = []
+      entityManager.clear()
     }
 
     async function endGame() {
@@ -2912,6 +2969,81 @@ Anyone falling back without orders will be treated as hostile.`
       renderLeaderboard()
     }
 
+    function handlePlayerInput() {
+      if (player.alive && shooting && player.weapon?.auto) {
+        const dir = getShootDirection()
+        fireCurrentWeapon(dir.dx, dir.dy)
+      }
+    }
+
+    function updateEntities(delta) {
+      if (!player.alive) {
+        player.deathTimer -= delta
+        if (player.deathTimer <= 0) {
+          timeScale = 1
+          endGame()
+        }
+        return
+      }
+
+      player.update()
+
+      if (globalEnemyFireCooldown > 0) {
+        globalEnemyFireCooldown -= delta
+      }
+
+      waveManager.update(delta)
+
+      for (const obj of entityManager.getAll()) {
+        if (obj.alive) {
+          obj.update(delta)
+        }
+      }
+    }
+
+    function handleCollisions() {
+      const bullets = entityManager.getByCategory('bullet')
+      const drones = entityManager.getByCategory('drone')
+      const enemyBullets = entityManager.getByCategory('enemyBullet')
+
+      // Коллизии: Пули игрока vs Дроны
+      for (const bullet of bullets) {
+        for (const drone of drones) {
+          if (isColliding(bullet, drone)) {
+            bullet.alive = false
+            if (drone.takeDamage(1)) {
+              drone.onDeath()
+              const gained = calculateDroneScore(drone)
+              score += gained
+              UI.updateScore(score)
+            }
+            // Пуля попала, можно перестать проверять её столкновения с другими дронами
+            break
+          }
+        }
+      }
+
+      // Коллизии: Пули врагов vs Игрок и земля
+      for (const enemyBullet of enemyBullets) {
+        // Столкновение с землей
+        if (enemyBullet.y > canvas.height - groundHeight) {
+          spawnGroundExplosion(enemyBullet.x, enemyBullet.y)
+          enemyBullet.alive = false
+          continue // Пуля уничтожена, переходим к следующей
+        }
+
+        // Столкновение с игроком
+        if (player.alive && isColliding(enemyBullet, player)) {
+          player.die()
+          enemyBullet.alive = false
+        }
+      }
+    }
+
+    function cleanupEntities() {
+      entityManager.cleanup()
+    }
+
     // ======================
     // MAIN LOOP
     // ======================
@@ -2984,107 +3116,10 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     function updateGameplay(delta) {
-      // if (hitFreeze > 0) {
-      //   hitFreeze -= delta
-      //   return
-      // }
-
-      // if (!player.alive) {
-      //   player.deathTimer -= delta
-      //   if (player.deathTimer <= 0) {
-      //     timeScale = 1
-      //     endGame()
-      //   }
-      //   return
-      // }
-
-      player.update()
-
-      if (globalEnemyFireCooldown > 0) {
-        globalEnemyFireCooldown -= delta
-      }
-
-      waveManager.update(delta)
-
-      if (player.alive && shooting && currentWeapon?.auto) {
-        const dir = getShootDirection()
-        fireCurrentWeapon(dir.dx, dir.dy)
-      }
-
-      const stillAlive = []
-      const activeDrones = []
-      const activeBullets = []
-      const activeEnemyBullets = []
-
-      globalActiveDronesCount = 0
-      globalEnemyBulletsCount = 0
-      globalVFXCount = 0
-
-      for (let i = 0; i < gameObjects.length; i++) {
-        const obj = gameObjects[i]
-
-        if (obj.alive) {
-          obj.update(delta)
-
-          if (obj.alive) {
-            stillAlive.push(obj)
-
-            if (obj.category === 'drone') {
-              activeDrones.push(obj)
-              globalActiveDronesCount++
-            } else if (obj.category === 'bullet') {
-              activeBullets.push(obj)
-            } else if (obj.category === 'enemyBullet') {
-              activeEnemyBullets.push(obj)
-              globalEnemyBulletsCount++
-            } else if (obj.category === 'vfx') {
-              globalVFXCount++
-            }
-          }
-        }
-      }
-
-      gameObjects = stillAlive
-
-      if (frameCounter % 2 === 0 && activeBullets.length > 0 && activeDrones.length > 0) {
-        for (const b of activeBullets) {
-          if (!b.alive) continue
-
-          for (const d of activeDrones) {
-            if (!d.alive) continue
-
-            if (isColliding(b, d)) {
-              b.alive = false
-              if (d.takeDamage(1)) {
-                d.onDeath()
-                const gained = calculateDroneScore(d)
-                score += gained
-                UI.updateScore(score)
-              }
-              break
-            }
-          }
-        }
-      }
-
-      if (activeEnemyBullets.length > 0) {
-        for (const obj of activeEnemyBullets) {
-          if (!obj.alive) continue
-
-          if (obj.y > canvas.height - groundHeight) {
-            spawnGroundExplosion(obj.x, obj.y)
-            obj.alive = false
-            continue
-          }
-
-          if (isColliding(obj, player)) {
-            if (player.alive) {
-              player.die()
-            }
-            obj.alive = false
-          }
-        }
-      }
+      handlePlayerInput()
+      updateEntities(delta)
+      handleCollisions()
+      cleanupEntities()
 
       survivalTime += delta / 1000
     }
@@ -3095,23 +3130,6 @@ Anyone falling back without orders will be treated as hostile.`
       if (cityFire?.alive) cityFire.update()
     }
 
-    // function updateHud(delta) {
-    //   uiTimer += delta
-    //   if (uiTimer > 100) {
-    //     UI.updateHud({
-    //       score,
-    //       weaponName: currentWeapon?.name || "",
-    //       ammo: currentWeapon?.ammoInMagazine ?? 0,
-    //       magazineSize: currentWeapon?.magazineSize ?? 0,
-    //       magazines: currentWeapon?.remainingMagazines ?? 0,
-    //       reloading: currentWeapon?.reloading ?? false,
-    //     })
-    //
-    //     uiTimer = 0
-    //   }
-    // }
-
-    // Создаем экземпляр менеджера
     const waveManager = new WaveManager()
 
     function initGame() {
@@ -3165,7 +3183,7 @@ Anyone falling back without orders will be treated as hostile.`
         player.draw(ctx)
       }
 
-      for (const obj of gameObjects) {
+      for (const obj of entityManager.getAll()) {
         if (obj.alive) {
           obj.draw(ctx)
         }
