@@ -413,7 +413,6 @@
     let shootCooldown = 0
     let globalEnemyFireCooldown = 0
 
-    let score = 0
     let survivalTime = 0
 
     let leaderboard = []
@@ -1298,6 +1297,74 @@ Command approves. Probably.`,
 
     const entityManager = new EntityManager();
 
+    /**
+     * Менеджер подсчёта очков и достижений игрока.
+     * Централизует логику начисления очков за разные действия и проверку достижений.
+     */
+    class ScoreManager {
+      constructor(getSurvivalTime, getEntityManager) {
+        this._score = 0;
+        this._getSurvivalTime = getSurvivalTime;
+        this._getEntityManager = getEntityManager;
+        this._achievements = new Map(); // id -> { id, name, unlocked, unlockedAt }
+      }
+
+      // --- Подсчёт очков ---
+
+      /**
+       * Рассчитывает очки за уничтожение дрона/босса.
+       * Множители: время выживания (до 5x) и количество врагов на экране (до 4x).
+       */
+      calculateDroneScore(drone) {
+        const survivalTime = this._getSurvivalTime();
+        const droneCount = this._getEntityManager().getCountByCategory('drone');
+        const rawScore = drone.scoreValue *
+          (1 + Math.min(survivalTime / 60, 5)) *
+          (1 + Math.min(droneCount / 20, 4));
+        return Math.floor(rawScore);
+      }
+
+      addScore(amount) {
+        this._score += amount;
+        return this._score;
+      }
+
+      getScore() {
+        return this._score;
+      }
+
+      reset() {
+        this._score = 0;
+      }
+
+      // --- Достижения (заготовка на будущее) ---
+
+      registerAchievement(id, name) {
+        if (!this._achievements.has(id)) {
+          this._achievements.set(id, { id, name, unlocked: false, unlockedAt: null });
+        }
+      }
+
+      unlockAchievement(id) {
+        const a = this._achievements.get(id);
+        if (a && !a.unlocked) {
+          a.unlocked = true;
+          a.unlockedAt = this._getSurvivalTime();
+          return true;
+        }
+        return false;
+      }
+
+      getUnlockedAchievements() {
+        return [...this._achievements.values()].filter(a => a.unlocked);
+      }
+    }
+
+    const scoreManager = new ScoreManager(
+      () => survivalTime,
+      () => entityManager
+    );
+
     class InputManager {
       constructor() {
         this.keys = {};
@@ -1397,9 +1464,9 @@ Command approves. Probably.`,
               bullet.alive = false;
               if (drone.takeDamage(1)) {
                 drone.onDeath();
-                const gained = calculateDroneScore(drone);
-                score += gained;
-                UI.updateScore(score);
+                const gained = scoreManager.calculateDroneScore(drone);
+                scoreManager.addScore(gained);
+                UI.updateScore(scoreManager.getScore());
               }
               break; // Пуля попала, нет смысла проверять её дальше
             }
@@ -2623,14 +2690,6 @@ Command approves. Probably.`,
     // ======================
     // HELPERS
     // ======================
-    function calculateDroneScore(drone) {
-      const rawScore = drone.scoreValue *
-        (1 + Math.min(survivalTime / 60, 5)) *
-        (1 + Math.min(entityManager.getCountByCategory('drone') / 20, 4))
-
-      return Math.floor(rawScore)
-    }
-
     function splitTextIntoPages(text, maxChars = 140) {
       const words = text.split(" ")
       const pages = []
@@ -2877,7 +2936,7 @@ Command approves. Probably.`,
       await loadLeaderboard()
       saveScore()
 
-      UI.showGameOver(playerName, score)
+      UI.showGameOver(playerName, scoreManager.getScore())
       if (UI.el.restartBtn) {
         UI.el.restartBtn.onclick = restartGame
       }
@@ -3017,7 +3076,7 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     function saveScore() {
-      leaderboard.push({ name: playerName, score: score, time: Math.floor(survivalTime) })
+      leaderboard.push({ name: playerName, score: scoreManager.getScore(), time: Math.floor(survivalTime) })
       leaderboard.sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score
         return b.time - a.time
@@ -3028,7 +3087,7 @@ Anyone falling back without orders will be treated as hostile.`
     async function saveScoreOnline() {
       const { data, error } = await db
         .from("leaderboard")
-        .insert([{ name: playerName, score: score }])
+        .insert([{ name: playerName, score: scoreManager.getScore() }])
       if (error) { console.error(error) }
     }
 
@@ -3175,7 +3234,7 @@ Anyone falling back without orders will be treated as hostile.`
       currentWeapon = createWeapon("pistol")
 
       // игра
-      score = 0
+      scoreManager.reset()
       survivalTime = 0
       dropTimer = 0
       shootCooldown = 0
