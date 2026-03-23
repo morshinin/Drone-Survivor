@@ -431,7 +431,6 @@
     let last = 0
     let progress = 0
 
-    let currentWeapon
     let shooting = false
 
     // ======================
@@ -1842,6 +1841,65 @@ Command approves. Probably.`,
 
         this.alive = true
         this.deathTimer = 2000
+        this.weapon = null
+      }
+
+      setWeapon(type) {
+        this.weapon = createWeapon(type)
+        UI.updateWeapon(this.weapon)
+        this.weapon.reloading = false
+      }
+
+      fire(dirX, dirY) {
+        if (!this.weapon) return
+        if (dirX === 0 && dirY === 0) return
+
+        const shots = this.weapon.shoot(this, dirX, dirY)
+        if (shots.length === 0) return
+
+        UI.updateAmmo(this.weapon)
+
+        switch (this.weapon.name) {
+          case "Pistol":
+            audio.playSfx("pistol_shot", 0.4)
+            break
+          case "Assault Rifle":
+            audio.playSfx("rifle_shot", 0.4)
+            break
+          case "Shotgun":
+            audio.playSfx("shotgun_shot", 0.4)
+            break
+          case "Machine Gun":
+            audio.playSfx("machinegun_shot", 0.4)
+            break
+        }
+
+        for (const s of shots) {
+          entityManager.spawn(new Bullet(s.x, s.y, s.vx, s.vy))
+        }
+      }
+
+      reload() {
+        if (!this.weapon) return
+        if (this.weapon.reloading) return
+
+        const started = this.weapon.reload(UI)
+        if (!started) return
+
+        switch (this.weapon.name) {
+          case "Pistol":
+            audio.playSfx("pistol_reload", 0.5)
+            break
+          case "Assault Rifle":
+            audio.playSfx("rifle_reload", 0.5)
+            break
+          case "Shotgun":
+            audio.playSfx("shotgun_reload", 0.5)
+            break
+          case "Machine Gun":
+            audio.playSfx("machinegun_reload", 0.5)
+            break
+        }
       }
 
       die() {
@@ -2780,65 +2838,6 @@ Command approves. Probably.`,
       }
     }
 
-    function setWeapon(type) {
-      currentWeapon = createWeapon(type)
-      UI.updateWeapon(currentWeapon)
-
-      currentWeapon.reloading = false
-    }
-
-    function fireCurrentWeapon(dirX, dirY) {
-      if (!currentWeapon) return
-      if (dirX === 0 && dirY === 0) return
-
-      const shots = currentWeapon.shoot(player, dirX, dirY)
-      if (shots.length === 0) return
-
-      UI.updateAmmo(currentWeapon)
-
-      switch (currentWeapon.name) {
-        case "Pistol":
-          audio.playSfx("pistol_shot", 0.4)
-          break
-        case "Assault Rifle":
-          audio.playSfx("rifle_shot", 0.4)
-          break
-        case "Shotgun":
-          audio.playSfx("shotgun_shot", 0.4)
-          break
-        case "Machine Gun":
-          audio.playSfx("machinegun_shot", 0.4)
-          break
-      }
-
-      for (const s of shots) {
-        entityManager.spawn(new Bullet(s.x, s.y, s.vx, s.vy))
-      }
-    }
-
-    function startReload() {
-      if (!currentWeapon) return
-      if (!currentWeapon.reloading) return
-
-      const started = currentWeapon.reload(UI)
-      if (!started) return
-
-      switch (currentWeapon.name) {
-        case "Pistol":
-          audio.playSfx("pistol_reload", 0.5)
-          break
-        case "Assault Rifle":
-          audio.playSfx("rifle_reload", 0.5)
-          break
-        case "Shotgun":
-          audio.playSfx("shotgun_reload", 0.5)
-          break
-        case "Machine Gun":
-          audio.playSfx("machinegun_reload", 0.5)
-          break
-      }
-    }
-
     async function animateCommanderBox() {
       const box = UI.el.commanderBalloon
 
@@ -3115,9 +3114,9 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     function handlePlayerInput() {
-      if (player.alive && inputManager.isShooting() && currentWeapon?.auto) {
+      if (player.alive && inputManager.isShooting() && player.weapon?.auto) {
         const dir = inputManager.getShootDirection()
-        fireCurrentWeapon(dir.dx, dir.dy)
+        player.fire(dir.dx, dir.dy)
       }
     }
 
@@ -3244,7 +3243,7 @@ Anyone falling back without orders will be treated as hostile.`
       collisionManager.player = player
 
       // оружие
-      currentWeapon = createWeapon("pistol")
+      player.setWeapon("pistol")
 
       // игра
       scoreManager.reset()
@@ -3357,9 +3356,9 @@ Anyone falling back without orders will be treated as hostile.`
 
     document.addEventListener("keydown", e => {
       if (e.code === "Space") {
-        if (currentWeapon && !currentWeapon.auto) {
+        if (player.weapon && !player.weapon.auto) {
           const dir = inputManager.getShootDirection()
-          fireCurrentWeapon(dir.dx, dir.dy)
+          player.fire(dir.dx, dir.dy)
         }
       }
 
@@ -3376,15 +3375,15 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       if (e.key === "i") {
-        setWeapon('rifle')
+        player.setWeapon('rifle')
       }
 
       if (e.key === "s") {
-        setWeapon('shotgun')
+        player.setWeapon('shotgun')
       }
 
       if (e.key === "m") {
-        setWeapon('machinegun')
+        player.setWeapon('machinegun')
       }
 
       if (e.code === "Space") {
@@ -3392,8 +3391,8 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       if (e.code === "KeyR") {
-        if (currentWeapon?.reloading) return
-        startReload()
+        if (player.weapon?.reloading) return
+        player.reload()
       }
 
       keys[e.key] = true
