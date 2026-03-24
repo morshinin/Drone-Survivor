@@ -3185,6 +3185,91 @@ Anyone falling back without orders will be treated as hostile.`
       entityManager.cleanup()
     }
 
+    class GameRenderer {
+      constructor(ctx, canvas, groundHeight, assets, backgroundScene, entityManager, getPlayer) {
+        this.ctx = ctx
+        this.canvas = canvas
+        this.groundHeight = groundHeight
+        this.assets = assets
+        this.backgroundScene = backgroundScene
+        this.entityManager = entityManager
+        this.getPlayer = getPlayer
+      }
+
+      clear() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+      }
+
+      drawBackgroundAndScene() {
+        const background = this.assets.get('background')
+
+        if (background.complete) {
+          this.ctx.drawImage(background, 0, 0, this.canvas.width, this.canvas.height)
+        }
+
+        this.backgroundScene.drawEffects(this.ctx)
+
+        this.ctx.fillStyle = "rgba(0,0,0,0)"
+        this.ctx.fillRect(0, this.canvas.height - this.groundHeight, this.canvas.width, this.groundHeight)
+
+        this.backgroundScene.drawDecals(this.ctx)
+      }
+
+      drawEntities() {
+        const player = this.getPlayer()
+        if (player?.alive) {
+          player.draw(this.ctx)
+        }
+
+        for (const obj of this.entityManager.getAll()) {
+          if (obj.alive) {
+            obj.draw(this.ctx)
+          }
+        }
+      }
+
+      drawWorld() {
+        this.clear()
+        this.drawBackgroundAndScene()
+        this.drawEntities()
+      }
+
+      drawPaused() {
+        this.drawWorld()
+
+        this.ctx.save()
+        this.ctx.fillStyle = "rgba(0,0,0,0.45)"
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+        this.ctx.fillStyle = "#ffffff"
+        this.ctx.font = "42px 'Press Start 2P'"
+        this.ctx.textAlign = "center"
+        this.ctx.fillText("PAUSED", this.canvas.width / 2, this.canvas.height / 2)
+
+        this.ctx.font = "18px 'Press Start 2P'"
+        this.ctx.fillText("Press P to continue", this.canvas.width / 2, this.canvas.height / 2 + 60)
+        this.ctx.restore()
+      }
+
+      drawDeathOverlay() {
+        this.ctx.save()
+        this.ctx.fillStyle = "rgba(0,0,0,0.7)"
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+        this.ctx.fillStyle = "red"
+        this.ctx.font = "96px 'Press Start 2P'"
+        this.ctx.textAlign = "center"
+        this.ctx.shadowColor = "black"
+        this.ctx.shadowBlur = 10
+        this.ctx.fillText("You are KIA!", this.canvas.width / 2, this.canvas.height / 2)
+        this.ctx.restore()
+      }
+
+      drawMenu() {
+        // Меню на DOM; canvas в состоянии MENU не перерисовываем.
+      }
+    }
+
     // ======================
     // MAIN LOOP
     // ======================
@@ -3209,31 +3294,31 @@ Anyone falling back without orders will be treated as hostile.`
         case GameState.MENU:
           if (frameCounter % 3 === 0) {
             updateMenu(delta)
-            drawMenu()
+            gameRenderer.drawMenu()
           }
           break
 
         case GameState.GAME:
           updateAmbient(delta)
           updateGameplay(delta)
-          drawGame()
+          gameRenderer.drawWorld()
           break
 
         case GameState.DIALOG:
           updateDialog(delta)
-          drawGame()
+          gameRenderer.drawWorld()
           break
 
         case GameState.PAUSED:
           if (frameCounter % 6 === 0) {
             updatePaused(delta)
-            drawPaused()
+            gameRenderer.drawPaused()
           }
           break
 
         case GameState.GAME_OVER:
           if (frameCounter % 3 === 0) {
-            drawDeathOverlay()
+            gameRenderer.drawDeathOverlay()
           }
           break
       }
@@ -3272,6 +3357,15 @@ Anyone falling back without orders will be treated as hostile.`
     const waveManager = new WaveManager()
     const droneSpawner = new DroneSpawner(entityManager, waveManager, canvas)
     const backgroundScene = new BackgroundScene(canvas, groundHeight, assets)
+    const gameRenderer = new GameRenderer(
+      ctx,
+      canvas,
+      groundHeight,
+      assets,
+      backgroundScene,
+      entityManager,
+      () => player
+    )
 
     function initGame() {
       // игрок
@@ -3290,86 +3384,8 @@ Anyone falling back without orders will be treated as hostile.`
       backgroundScene.initEffects()
     }
 
-    function drawBackgroundAndScene() {
-      const background = assets.get('background')
-
-      // Фон
-      if (background.complete) {
-        ctx.drawImage(background, 0, 0, canvas.width, canvas.height)
-      }
-
-      // Анимированные спрайты сцены
-      backgroundScene.drawEffects(ctx)
-
-      // Земля
-      ctx.fillStyle = "rgba(0,0,0,0)"
-      ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight)
-
-      // Статичные объекты сцены
-      backgroundScene.drawDecals(ctx)
-    }
-
-    function drawEntities() {
-      if (player?.alive) {
-        player.draw(ctx)
-      }
-
-      for (const obj of entityManager.getAll()) {
-        if (obj.alive) {
-          obj.draw(ctx)
-        }
-      }
-    }
-
-    function drawDeathOverlay() {
-      ctx.save()
-      ctx.fillStyle = "rgba(0,0,0,0.7)"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      ctx.fillStyle = "red"
-      ctx.font = "96px 'Press Start 2P'"
-      ctx.textAlign = "center"
-      ctx.shadowColor = "black"
-      ctx.shadowBlur = 10
-      ctx.fillText("You are KIA!", canvas.width / 2, canvas.height / 2)
-      ctx.restore()
-    }
-
-    function draw() {
-      // Очистка канваса
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      drawBackgroundAndScene()
-      drawEntities()
-    }
-
-    function drawPaused() {
-      draw()
-
-      ctx.save()
-      ctx.fillStyle = "rgba(0,0,0,0.45)"
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      ctx.fillStyle = "#ffffff"
-      ctx.font = "42px 'Press Start 2P'"
-      ctx.textAlign = "center"
-      ctx.fillText("PAUSED", canvas.width / 2, canvas.height / 2)
-
-      ctx.font = "18px 'Press Start 2P'"
-      ctx.fillText("Press P to continue", canvas.width / 2, canvas.height / 2 + 60)
-      ctx.restore()
-    }
-
     function updateMenu(delta) {
 
-    }
-
-    function drawMenu() {
-
-    }
-
-    function drawGame() {
-      draw()
     }
 
     if (gameLoopInstances === 0) {
