@@ -399,10 +399,6 @@
     }
 
     /* Global Variables */
-    let citySmoke = null
-    let tankSmoke = null
-    let cityFire = null
-
     let keys = {}
     let timeScale = 1
 
@@ -416,9 +412,6 @@
     let survivalTime = 0
 
     let leaderboard = []
-
-    let SMOKE_FRAME_WIDTH
-    let SMOKE_FRAME_HEIGHT
 
     let currentState
     let gameLoopRunning = true
@@ -1692,21 +1685,41 @@ Command approves. Probably.`,
       // }
     }
 
-    function initCitySmoke() {
-      const citySmokeSprite = assets.get('city_smoke')
+    effectsLayer.style.display = "none"
 
-      if (citySmokeSprite.complete) {
-        citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
-          columns: 2,
-          totalFrames: 98,
-          frameDelay: 8,
-          scale: 1.5,
-          opacity: 0.6,
-          loop: true
-        })
-      } else {
-        citySmokeSprite.onload = () => {
-          citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+    class BackgroundScene {
+      constructor(canvas, groundHeight, assets) {
+        this.canvas = canvas
+        this.groundHeight = groundHeight
+        this.assets = assets
+        this.citySmoke = null
+        this.tankSmoke = null
+        this.cityFire = null
+        this.tank = {
+          x: this.canvas.width * 0.85,
+          y: this.canvas.height - this.groundHeight - 150,
+          w: 280,
+          h: 180
+        }
+        this.destroyedCity = {
+          x: 100,
+          y: this.canvas.height - this.groundHeight - 120,
+          w: 180,
+          h: 80
+        }
+      }
+
+      initEffects() {
+        this.initCitySmoke()
+        this.initTankSmoke()
+        this.initFire()
+      }
+
+      initCitySmoke() {
+        const citySmokeSprite = this.assets.get('city_smoke')
+
+        if (citySmokeSprite.complete) {
+          this.citySmoke = new AnimatedSprite(130, 400, citySmokeSprite, {
             columns: 2,
             totalFrames: 98,
             frameDelay: 8,
@@ -1714,28 +1727,25 @@ Command approves. Probably.`,
             opacity: 0.6,
             loop: true
           })
+        } else {
+          citySmokeSprite.onload = () => {
+            this.citySmoke = new AnimatedSprite(150, 500, citySmokeSprite, {
+              columns: 2,
+              totalFrames: 98,
+              frameDelay: 8,
+              scale: 1.5,
+              opacity: 0.6,
+              loop: true
+            })
+          }
         }
       }
-    }
 
-    function initTankSmoke() {
-      const tankSmokeSprite = assets.get('tank_smoke')
+      initTankSmoke() {
+        const tankSmokeSprite = this.assets.get('tank_smoke')
 
-      SMOKE_FRAME_WIDTH = tankSmokeSprite.width / 2
-      SMOKE_FRAME_HEIGHT = tankSmokeSprite.height / 29
-
-      if (tankSmokeSprite.complete) {
-        tankSmoke = new AnimatedSprite(1200, 550, tankSmokeSprite, {
-          columns: 2,
-          totalFrames: 58,
-          frameDelay: 8,
-          scale: 1.2,
-          opacity: 0.4,
-          loop: true
-        })
-      } else {
-        tankSmokeSprite.onload = () => {
-          tankSmoke = new AnimatedSprite(1200, 550, tankSmokeSprite, {
+        if (tankSmokeSprite.complete) {
+          this.tankSmoke = new AnimatedSprite(1200, 550, tankSmokeSprite, {
             columns: 2,
             totalFrames: 58,
             frameDelay: 8,
@@ -1743,27 +1753,25 @@ Command approves. Probably.`,
             opacity: 0.4,
             loop: true
           })
+        } else {
+          tankSmokeSprite.onload = () => {
+            this.tankSmoke = new AnimatedSprite(1200, 550, tankSmokeSprite, {
+              columns: 2,
+              totalFrames: 58,
+              frameDelay: 8,
+              scale: 1.2,
+              opacity: 0.4,
+              loop: true
+            })
+          }
         }
       }
-    }
 
-    function initFire() {
-      const fireSprite = assets.get('fire')
+      initFire() {
+        const fireSprite = this.assets.get('fire')
 
-      if (fireSprite.complete) {
-        cityFire = new AnimatedSprite(100, 600, fireSprite, {
-          columns: 2,
-          totalFrames: 8,
-          frameDelay: 8,
-          scale: 1,
-          opacity: 0.9,
-          width: 144,
-          height: 144,
-          loop: true
-        })
-      } else {
-        fireSprite.onload = () => {
-          cityFire = new AnimatedSprite(100, 600, fireSprite, {
+        if (fireSprite.complete) {
+          this.cityFire = new AnimatedSprite(100, 600, fireSprite, {
             columns: 2,
             totalFrames: 8,
             frameDelay: 8,
@@ -1773,24 +1781,51 @@ Command approves. Probably.`,
             height: 144,
             loop: true
           })
+        } else {
+          fireSprite.onload = () => {
+            this.cityFire = new AnimatedSprite(100, 600, fireSprite, {
+              columns: 2,
+              totalFrames: 8,
+              frameDelay: 8,
+              scale: 1,
+              opacity: 0.9,
+              width: 144,
+              height: 144,
+              loop: true
+            })
+          }
         }
       }
-    }
 
-    effectsLayer.style.display = "none"
+      updateAmbient() {
+        if (this.tankSmoke?.alive) this.tankSmoke.update()
+        if (this.citySmoke?.alive) this.citySmoke.update()
+        if (this.cityFire?.alive) this.cityFire.update()
+      }
 
-    const tank = {
-      x: canvas.width * 0.85,
-      y: canvas.height - groundHeight - 150,
-      w: 280,
-      h: 180
-    }
+      drawEffects(ctx) {
+        if (this.tankSmoke?.alive) this.tankSmoke.draw(ctx)
+        if (this.citySmoke?.alive) this.citySmoke.draw(ctx)
+        if (this.cityFire?.alive) this.cityFire.draw(ctx)
+      }
 
-    const destroyedCity = {
-      x: 100,
-      y: canvas.height - groundHeight - 120,
-      w: 180,
-      h: 80
+      drawDecals(ctx) {
+        const tankImg = this.assets.get('tank')
+        const destroyedCityImg = this.assets.get('destroyed_city')
+
+        if (tankImg.complete) {
+          ctx.drawImage(tankImg, this.tank.x, this.tank.y, this.tank.w, this.tank.h)
+        }
+        if (destroyedCityImg.complete) {
+          ctx.drawImage(
+            destroyedCityImg,
+            this.destroyedCity.x,
+            this.destroyedCity.y,
+            this.destroyedCity.w,
+            this.destroyedCity.h
+          )
+        }
+      }
     }
 
     function renderLeaderboard() {
@@ -3231,13 +3266,12 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     function updateAmbient() {
-      if (tankSmoke?.alive) tankSmoke.update()
-      if (citySmoke?.alive) citySmoke.update()
-      if (cityFire?.alive) cityFire.update()
+      backgroundScene.updateAmbient()
     }
 
     const waveManager = new WaveManager()
     const droneSpawner = new DroneSpawner(entityManager, waveManager, canvas)
+    const backgroundScene = new BackgroundScene(canvas, groundHeight, assets)
 
     function initGame() {
       // игрок
@@ -3253,15 +3287,11 @@ Anyone falling back without orders will be treated as hostile.`
       dropTimer = 0
       shootCooldown = 0
 
-      initCitySmoke()
-      initTankSmoke()
-      initFire()
+      backgroundScene.initEffects()
     }
 
     function drawBackgroundAndScene() {
       const background = assets.get('background')
-      const tankImg = assets.get('tank')
-      const destroyedCityImg = assets.get('destroyed_city')
 
       // Фон
       if (background.complete) {
@@ -3269,21 +3299,14 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       // Анимированные спрайты сцены
-      if (tankSmoke?.alive) tankSmoke.draw(ctx)
-      if (citySmoke?.alive) citySmoke.draw(ctx)
-      if (cityFire?.alive) cityFire.draw(ctx)
+      backgroundScene.drawEffects(ctx)
 
       // Земля
       ctx.fillStyle = "rgba(0,0,0,0)"
       ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight)
 
       // Статичные объекты сцены
-      if (tankImg.complete) {
-        ctx.drawImage(tankImg, tank.x, tank.y, tank.w, tank.h)
-      }
-      if (destroyedCityImg.complete) {
-        ctx.drawImage(destroyedCityImg, destroyedCity.x, destroyedCity.y, destroyedCity.w, destroyedCity.h)
-      }
+      backgroundScene.drawDecals(ctx)
     }
 
     function drawEntities() {
