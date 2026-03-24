@@ -1169,6 +1169,23 @@ Command approves. Probably.`,
         }
       }
 
+      async animateCommanderIn() {
+        const box = this.el.commanderBalloon
+        if (!box) return
+        box.style.display = "block"
+        await new Promise(r => setTimeout(r, 20))
+        box.style.right = "40px"
+        await new Promise(r => setTimeout(r, 600))
+      }
+
+      async animateCommanderOut() {
+        const box = this.el.commanderBalloon
+        if (!box) return
+        box.style.right = "-500px"
+        await new Promise(r => setTimeout(r, 600))
+        box.style.display = "none"
+      }
+
       hideDialog() {
         if (this.el.commanderBalloon) {
           this.el.commanderBalloon.style.display = "none"
@@ -2838,30 +2855,6 @@ Command approves. Probably.`,
       }
     }
 
-    async function animateCommanderBox() {
-      const box = UI.el.commanderBalloon
-
-      box.style.display = "block"
-
-      // маленькая задержка чтобы браузер применил display
-      await new Promise(r => setTimeout(r, 20))
-
-      box.style.right = "40px"
-
-      // ждём завершения анимации
-      await new Promise(r => setTimeout(r, 600))
-    }
-
-    async function hideCommanderBox() {
-      const box = UI.el.commanderBalloon
-
-      box.style.right = "-500px"
-
-      await new Promise(r => setTimeout(r, 600))
-
-      box.style.display = "none"
-    }
-
     function spawnNormalDrone() {
       const maxDrones = waveManager.maxDrones
       if (entityManager.getCountByCategory('drone') >= maxDrones) return
@@ -3038,7 +3031,7 @@ Anyone falling back without orders will be treated as hostile.`
       const balloon = UI.el.commanderBalloon
       const p = balloon.querySelector("p")
 
-      await animateCommanderBox()
+      await UI.animateCommanderIn()
 
       await audio.playSfx('radio_on')
 
@@ -3055,7 +3048,7 @@ Anyone falling back without orders will be treated as hostile.`
       }
 
       await audio.playSfx('radio_off')
-      await hideCommanderBox()
+      await UI.animateCommanderOut()
 
       currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
 
