@@ -930,13 +930,13 @@ Command approves. Probably.`,
       spawnDroneByType(type) {
         switch (type) {
           case DroneType.NORMAL:
-            return spawnNormalDrone()
+            return droneSpawner.spawnNormalDrone()
           case DroneType.GRENADIER:
-            return spawnGrenadier()
+            return droneSpawner.spawnGrenadier()
           case DroneType.KAMIKAZE:
-            return spawnKamikaze()
+            return droneSpawner.spawnKamikaze()
           case 'boss':
-            return spawnBoss()
+            return droneSpawner.spawnBoss()
         }
       }
     }
@@ -2362,7 +2362,7 @@ Command approves. Probably.`,
           if (this.spawnTimer > 7000) { // 7 секунд
             this.spawnTimer = 0
             if (entityManager.getCountByCategory('drone') < 1 + 3) { // 1 босс + 3 миньона
-              spawnNormalDrone()
+              droneSpawner.spawnNormalDrone()
             }
           }
         }
@@ -2374,9 +2374,9 @@ Command approves. Probably.`,
             this.spawnTimer = 0
             if (entityManager.getCountByCategory('drone') < 1 + 3) {
               if (Math.random() < 0.6) {
-                spawnNormalDrone()
+                droneSpawner.spawnNormalDrone()
               } else {
-                spawnGrenadier()
+                droneSpawner.spawnGrenadier()
               }
             }
           }
@@ -2840,6 +2840,48 @@ Command approves. Probably.`,
     // ======================
     // HELPERS
     // ======================
+    class DroneSpawner {
+      constructor(entityManager, waveManager, canvas) {
+        this.entityManager = entityManager
+        this.waveManager = waveManager
+        this.canvas = canvas
+      }
+
+      spawnNormalDrone() {
+        const maxDrones = this.waveManager.maxDrones
+        if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
+
+        const drone = new NormalDrone(Math.random() * this.canvas.height * 0.4)
+        this.entityManager.spawn(drone)
+        return drone
+      }
+
+      spawnGrenadier() {
+        const maxDrones = this.waveManager.maxDrones
+        if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
+
+        const drone = new GrenadierDrone(Math.random() * this.canvas.height * 0.4)
+        this.entityManager.spawn(drone)
+        return drone
+      }
+
+      spawnKamikaze() {
+        const maxDrones = this.waveManager.maxDrones
+        if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
+
+        const drone = new KamikazeDrone()
+        this.entityManager.spawn(drone)
+        return drone
+      }
+
+      spawnBoss() {
+        const boss = new BossDrone()
+        this.entityManager.spawn(boss)
+        boss.active = true
+        return boss
+      }
+    }
+
     function createWeapon(type) {
       switch (type) {
         case "pistol":
@@ -2853,40 +2895,6 @@ Command approves. Probably.`,
         default:
           return new PistolWeapon()
       }
-    }
-
-    function spawnNormalDrone() {
-      const maxDrones = waveManager.maxDrones
-      if (entityManager.getCountByCategory('drone') >= maxDrones) return
-
-      const drone = new NormalDrone(Math.random() * canvas.height * 0.4)
-      entityManager.spawn(drone)
-      return drone
-    }
-
-    function spawnGrenadier() {
-      const maxDrones = waveManager.maxDrones
-      if (entityManager.getCountByCategory('drone') >= maxDrones) return
-
-      const drone = new GrenadierDrone(Math.random() * canvas.height * 0.4)
-      entityManager.spawn(drone)
-      return drone
-    }
-
-    function spawnKamikaze() {
-      const maxDrones = waveManager.maxDrones
-      if (entityManager.getCountByCategory('drone') >= maxDrones) return
-
-      const drone = new KamikazeDrone()
-      entityManager.spawn(drone)
-      return drone
-    }
-
-    function spawnBoss() {
-      const boss = new BossDrone()
-      entityManager.spawn(boss)
-      boss.active = true
-      return boss
     }
 
     // ======================
@@ -3229,6 +3237,7 @@ Anyone falling back without orders will be treated as hostile.`
     }
 
     const waveManager = new WaveManager()
+    const droneSpawner = new DroneSpawner(entityManager, waveManager, canvas)
 
     function initGame() {
       // игрок
