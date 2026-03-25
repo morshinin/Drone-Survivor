@@ -1370,10 +1370,52 @@ Command approves. Probably.`,
 
     const entityManager = new EntityManager();
 
+    class TransitionManager {
+      constructor(fadeElement) {
+        this.fadeElement = fadeElement
+      }
+
+      async fadeTo(duration, targetOpacity) {
+        if (!this.fadeElement) return
+
+        return new Promise((resolve) => {
+          this.fadeElement.style.transition = `opacity ${duration}ms`
+          this.fadeElement.style.opacity = targetOpacity.toString()
+          setTimeout(resolve, duration)
+        })
+      }
+
+      async fadeIn(duration = 1000) {
+        return this.fadeTo(duration, 0)
+      }
+
+      async fadeOut(duration = 1000) {
+        return this.fadeTo(duration, 1)
+      }
+
+      async crossfade(action, duration = 800) {
+        await this.fadeOut(duration / 2)
+
+        if (action) {
+          await action()
+        }
+
+        await this.fadeIn(duration / 2)
+      }
+
+      reset() {
+        if (this.fadeElement) {
+          this.fadeElement.style.transition = ''
+          this.fadeElement.style.opacity = '0'
+        }
+      }
+    }
+
     class VFXManager {
       constructor(entityManager, audio) {
         this.entityManager = entityManager
         this.audio = audio
+        this.transitions = new TransitionManager(fadeEl)
       }
 
       playExplosion(x, y) {
@@ -1384,6 +1426,25 @@ Command approves. Probably.`,
       playGroundExplosion(x, y) {
         this.entityManager.spawn(new GroundExplosion(x, y))
         this.audio.playSfx('ground_explosion')
+      }
+
+      async fadeOutMenu() {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        document.body.classList.add("hide-cursor")
+        this.audio.playMusic('ambient')
+        await this.transitions.fadeOut(3000)
+      }
+
+      async fadeIn(duration) {
+        return this.transitions.fadeIn(duration)
+      }
+
+      async fadeOut(duration) {
+        return this.transitions.fadeOut(duration)
+      }
+
+      async crossfade(action, duration) {
+        return this.transitions.crossfade(action, duration)
       }
     }
 
@@ -3078,7 +3139,7 @@ Command approves. Probably.`,
     // ======================
     async function startGame() {
       try {
-        await fadeOutMenu()
+        await vfxManager.fadeOutMenu()
         initGame()
         await startGameSequence()
         await animatePlayerIntro()
@@ -3105,7 +3166,7 @@ Command approves. Probably.`,
       ui.classList.remove("game_over_bg")
       effectsLayer.style.display = "block"
 
-      await fadeScreen()
+      await vfxManager.crossfade()
 
       document.body.classList.add("hide-cursor")
       player = new Player()
@@ -3132,27 +3193,19 @@ Command approves. Probably.`,
       leaderboardManager.render()
     }
 
-    async function fadeOutMenu() {
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      document.body.classList.add("hide-cursor")
-      audio.playMusic('ambient')
-      // await crossfadeMusic(menuMusic, GAME_SOUNDS.ambient, 2000)
-      fadeEl.style.opacity = "1"
-      fadeEl.style.transition = "opacity 3s"
-    }
-
     async function startGameSequence() {
       await new Promise(r => setTimeout(r, 5000))
-      const ui = document.getElementById("ui")
-      fadeEl.style.opacity = "0"
-      ui.style.display = "none"
-      effectsLayer.style.display = "block"
+      await vfxManager.crossfade(async () => {
+        UI.el.fade.style.opacity = "0"
+        UI.el.ui.style.display = "none"
+        effectsLayer.style.display = "block"
 
-      // Отключаем все визуальные эффекты
-      EffectsManager.disableForGame()
+        // Отключаем все визуальные эффекты
+        EffectsManager.disableForGame()
 
-      currentState = GameState.GAME
+        currentState = GameState.GAME
+      }, 1000)
+
       await new Promise(r => setTimeout(r, 1000))
     }
 
@@ -3236,18 +3289,6 @@ Anyone falling back without orders will be treated as hostile.`
       currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
 
       UI.hideDialog()
-    }
-
-    function fadeScreen(duration = 800) {
-      const f = document.getElementById("fade")
-      return new Promise(resolve => {
-        f.style.transition = `opacity ${duration / 2}ms`
-        f.style.opacity = '1'
-        setTimeout(() => {
-          f.style.opacity = '0'
-          setTimeout(resolve, duration / 2)
-        }, duration / 2)
-      })
     }
 
     function waitForContinue() {
