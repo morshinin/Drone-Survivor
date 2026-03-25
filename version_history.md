@@ -23,6 +23,11 @@ Input manager
 Collision manager
 Score manager
 Text manager
+VFX manager
+Refactor weapon handling
+Drone spawner
+Game renderer class
+Leaderboard manager
 
 ## 0.17.3
 

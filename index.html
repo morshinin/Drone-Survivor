@@ -411,8 +411,6 @@
 
     let survivalTime = 0
 
-    let leaderboard = []
-
     let currentState
     let gameLoopRunning = true
     let lastFrameTime = 0
@@ -432,7 +430,6 @@
     const gameVersion = document.getElementById("game-version")
     const effectsLayer = document.getElementById("effects-layer")
     const fadeEl = document.getElementById("fade")
-    const leaderboardEl = document.getElementById("leaderboard")
 
     /* Canvas */
     const canvas = document.getElementById("game")
@@ -456,6 +453,7 @@
     // ======================
     // SYSTEMS / MANAGERS
     // ======================
+
     class AssetManager {
       constructor() {
         this.assets = new Map()
@@ -1213,6 +1211,16 @@ Command approves. Probably.`,
           this.el.leaderboard.innerHTML = html
         }
       }
+
+      updateLeaderboard(entries) {
+        if (!this.el.leaderboard) return
+
+        let html = "<h3>Top Survivors</h3>"
+        entries.forEach((entry, index) => {
+          html += `${index + 1}. ${entry.name} — ${entry.score} pts<br>`
+        })
+        this.el.leaderboard.innerHTML = html
+      }
     }
 
     const UI = new UIManager()
@@ -1381,10 +1389,6 @@ Command approves. Probably.`,
 
     const vfxManager = new VFXManager(entityManager, audio)
 
-    /**
-     * Менеджер подсчёта очков и достижений игрока.
-     * Централизует логику начисления очков за разные действия и проверку достижений.
-     */
     class ScoreManager {
       constructor(getSurvivalTime, getEntityManager) {
         this._score = 0;
@@ -1448,6 +1452,152 @@ Command approves. Probably.`,
       () => survivalTime,
       () => entityManager
     );
+
+    class LeaderboardManager {
+      constructor(db, uiManager, scoreManager) {
+        this.db = db
+        this.uiManager = uiManager
+        this.scoreManager = scoreManager
+        this.leaderboard = [] // локальный кэш
+        this.localStorageKey = 'game_leaderboard'
+
+        this.loadLocalCache()
+      }
+
+      loadLocalCache() {
+        try {
+          const cached = localStorage.getItem(this.localStorageKey)
+          if (cached) {
+            this.leaderboard = JSON.parse(cached)
+          }
+        } catch (error) {
+          console.warn('Failed to load cached leaderboard', error)
+        }
+      }
+
+      saveLocalCache() {
+        try {
+          localStorage.setItem(this.localStorageKey, JSON.stringify(this.leaderboard))
+        } catch (error) {
+          console.warn('Failed to save leaderboard to cache', error)
+        }
+      }
+
+      /**
+       * Загрузить лидерборд из БД
+       */
+      async load() {
+        try {
+          const { data, error } = await this.db
+            .from("leaderboard")
+            .select("*")
+            .order("score", { ascending: false })
+            .limit(5)
+
+          if (data && data.length) {
+            this.leaderboard = data
+            this.saveLocalCache() // обновляем кэш
+          }
+
+          this.render()
+          return this.leaderboard
+        } catch (error) {
+          console.error("Failed to load leaderboard from server, using cache", error)
+          // Используем кэш при ошибке сети
+          this.render()
+          return this.leaderboard
+        }
+      }
+
+
+      /**
+       * Сохранить текущий результат игрока
+       */
+      async saveCurrentScore(playerName) {
+        const score = this.scoreManager.getScore()
+        if (!score || !playerName) return
+
+        try {
+          const { error } = await this.db
+            .from("leaderboard")
+            .insert([{ name: playerName, score: score }])
+
+          if (error) throw error
+
+          // После сохранения обновляем локальный лидерборд
+          await this.load()
+          return true
+        } catch (error) {
+          console.error("Failed to save score:", error)
+          return false
+        }
+      }
+
+      /**
+       * Сохранить в локальный кэш (для оффлайн или финального результата)
+       */
+      saveLocal(playerName, survivalTime) {
+        const score = this.scoreManager.getScore()
+        const entry = {
+          name: playerName,
+          score: score,
+          time: Math.floor(survivalTime)
+        }
+
+        this.leaderboard.push(entry)
+        this.leaderboard.sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score
+          return b.time - a.time
+        })
+        this.leaderboard = this.leaderboard.slice(0, 10)
+
+        this.render()
+      }
+
+      /**
+       * Получить топ N записей
+       */
+      getTop(limit = 5) {
+        return this.leaderboard.slice(0, limit)
+      }
+
+      /**
+       * Отрисовать лидерборд через UIManager
+       */
+      render() {
+        const html = this.generateHTML()
+        this.uiManager.setLeaderboardHTML(html)
+      }
+
+      /**
+       * Сгенерировать HTML для лидерборда
+       */
+      generateHTML() {
+        if (!this.leaderboard.length) {
+          return "<h3>Top Survivors</h3><p>No scores yet</p>"
+        }
+
+        let html = "<h3>Top Survivors</h3>"
+        this.leaderboard.forEach((entry, index) => {
+          html += `${index + 1}. ${entry.name} — ${entry.score} pts<br>`
+        })
+        return html
+      }
+
+      /**
+       * Очистить локальный лидерборд
+       */
+      clear() {
+        this.leaderboard = []
+        this.render()
+      }
+    }
+
+    const leaderboardManager = new LeaderboardManager(
+      db,      // Supabase клиент
+      UI,      // UIManager
+      scoreManager
+    )
 
     class InputManager {
       constructor() {
@@ -1826,15 +1976,6 @@ Command approves. Probably.`,
           )
         }
       }
-    }
-
-    function renderLeaderboard() {
-      let html = "<h3>Top Survivors</h3>"
-      leaderboard.forEach((p, i) => {
-        html += `${i + 1}. ${p.name} — ${p.score} pts<br>`
-      })
-
-      leaderboardEl.innerHTML = html
     }
 
     // ======================
@@ -2980,16 +3121,15 @@ Command approves. Probably.`,
       audio.stopAll()
       audio.playMusic('gameover')
 
-      await saveScoreOnline()
-      await loadLeaderboard()
-      saveScore()
+      await leaderboardManager.saveCurrentScore(playerName)
+      leaderboardManager.saveLocal(playerName, survivalTime)
 
       UI.showGameOver(playerName, scoreManager.getScore())
       if (UI.el.restartBtn) {
         UI.el.restartBtn.onclick = restartGame
       }
 
-      UI.setLeaderboardHTML(loadLeaderboard())
+      leaderboardManager.render()
     }
 
     async function fadeOutMenu() {
@@ -3121,32 +3261,6 @@ Anyone falling back without orders will be treated as hostile.`
 
         window.addEventListener("keydown", handler)
       })
-    }
-
-    function saveScore() {
-      leaderboard.push({ name: playerName, score: scoreManager.getScore(), time: Math.floor(survivalTime) })
-      leaderboard.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score
-        return b.time - a.time
-      })
-      leaderboard = leaderboard.slice(0, 10)
-    }
-
-    async function saveScoreOnline() {
-      const { data, error } = await db
-        .from("leaderboard")
-        .insert([{ name: playerName, score: scoreManager.getScore() }])
-      if (error) { console.error(error) }
-    }
-
-    async function loadLeaderboard() {
-      const { data } = await db
-        .from("leaderboard")
-        .select("*")
-        .order("score", { ascending: false })
-        .limit(5)
-      leaderboard = data
-      renderLeaderboard()
     }
 
     function handlePlayerInput() {
@@ -3468,7 +3582,7 @@ Anyone falling back without orders will be treated as hostile.`
 
     window.addEventListener("load", async () => {
       await preloadAssets()
-      await loadLeaderboard()
+      await leaderboardManager.load()
     })
 
   </script>
