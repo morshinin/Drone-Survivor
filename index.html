@@ -93,6 +93,7 @@
       cursor: none;
     }
 
+
     #score {
       position: absolute;
       top: 10px;
@@ -271,6 +272,14 @@
       margin-top: 10px;
     }
 
+    .hud-hidden {
+      display: none;
+    }
+
+    .hud-visible {
+      display: flex; /* или block, в зависимости от вашего стиля */
+    }
+
     .menu {
       display: flex;
       flex-direction: column;
@@ -322,14 +331,15 @@
     <div id="effects-layer">
     </div>
 
-    <div id="hud">
-      <div id="score"></div>
-      <div id="score-pop"></div>
-      <div class="weapon-info">
-        <div id="hud-weapon-name">Pistol</div>
-        <div id="hud-ammo">15 / 15</div>
-        <div id="hud-magazines">Magazines: 8</div>
-        <div id="hud-reloading" class="hidden">RELOADING...</div>
+    <div id="hud" class="hud-hidden">
+      <div id="score-container">
+        <span id="score">0</span>
+      </div>
+      <div id="weapon-info">
+        Weapon: <span id="hud-weapon-name">Pistol</span>
+        <span id="hud-ammo">Ammo: 15/15</span>
+        <span id="hud-magazines">Magazines: 8</span>
+        <span id="hud-reloading" class="hidden">RELOADING...</span>
       </div>
     </div>
   </div>
@@ -571,11 +581,11 @@
         const ui = document.getElementById('ui')
 
         // Возвращаем CRT класс и убираем no-crt
-        container.classList.add('crt')
-        container.classList.remove('no-crt')
+        // container.classList.add('crt')
+        // container.classList.remove('no-crt')
 
         // Возвращаем анимацию UI
-        ui.style.animation = 'glitch1 1s infinite'
+        // ui.style.animation = 'glitch1 1s infinite'
       }
     }
 
@@ -1162,6 +1172,7 @@
         this.el.continueHint = document.getElementById("continueHint")
         this.el.gameInfo = document.getElementById("game-info")
 
+        this.hudContainer = document.getElementById("hud")
         this.hud.score = document.getElementById("score")
         this.hud.scorePop = document.getElementById("score-pop")
         this.hud.nameInput = document.getElementById("nameInput")
@@ -1344,6 +1355,36 @@
           }
           window.addEventListener("keydown", handler)
         })
+      }
+
+      showHUD() {
+        if (this.hudContainer) {
+          this.hudContainer.classList.remove('hud-hidden')
+          this.hudContainer.classList.add('hud-visible')
+        }
+
+        // Показываем отдельные элементы, если нужно
+        if (this.hud.weaponName) {
+          this.hud.weaponName.parentElement?.classList.remove('hud-hidden')
+        }
+        if (this.hud.score) {
+          this.hud.score.parentElement?.classList.remove('hud-hidden')
+        }
+      }
+
+      hideHUD() {
+        if (this.hudContainer) {
+          this.hudContainer.classList.remove('hud-visible')
+          this.hudContainer.classList.add('hud-hidden')
+        }
+
+        // Скрываем отдельные элементы
+        if (this.hud.weaponName) {
+          this.hud.weaponName.parentElement?.classList.add('hud-hidden')
+        }
+        if (this.hud.score) {
+          this.hud.score.parentElement?.classList.add('hud-hidden')
+        }
       }
 
     }
@@ -2352,13 +2393,13 @@
 
       die() {
         if (DEBUG.godMode) return
-        player.alive = false
+        this.alive = false
 
         timeScale = 0.25
 
         this.vfxManager.playExplosion(
-          player.x + player.width / 2,
-          player.y + player.height / 2
+          this.x + this.width / 2,
+          this.y + this.height / 2
         )
 
         this.audioManager.stopAll()
@@ -2665,7 +2706,7 @@
     }
 
     class KamikazeDrone extends BaseDrone {
-      constructor(assets, entityManager, vfxManager, getPlayer) {
+      constructor(assets, entityManager, vfxManager, player) {
         // Случайная стартовая позиция
         const side = Math.random()
         let x, y
@@ -2692,26 +2733,18 @@
           image: assets.get('kamikaze')
         })
 
+        const dx = player.x - this.x
+        const dy = player.y - this.y
+        const dist = Math.hypot(dx, dy)
+        this.vx = dx / dist * this.speed
+        this.vy = dy / dist * this.speed
 
         this.explosionRadius = 80
 
-        this.getPlayer = getPlayer
-        this.initialized = false
+        this.player = player
       }
 
       update(delta) {
-        if (!this.initialized && this.getPlayer()) {
-          const player = this.getPlayer()
-          if (player) {
-            const dx = player.x - this.x
-            const dy = player.y - this.y
-            const dist = Math.hypot(dx, dy)
-            this.vx = dx / dist * this.speed
-            this.vy = dy / dist * this.speed
-            this.initialized = true
-          }
-        }
-
         // Камикадзе не использует базовое движение
         this.x += this.vx
         this.y += this.vy
@@ -2723,7 +2756,7 @@
         }
 
         // Проверка столкновения с игроком
-        if (Physics.isColliding(this, player)) {
+        if (Physics.isColliding(this, this.player)) {
           this.explode()
         }
 
@@ -2742,17 +2775,13 @@
         this.vfxManager.playGroundExplosion(this.x, this.y)
 
         // Проверка урона игроку
-        const player = this.getPlayer()
+        const dx = this.player.x + this.player.width / 2 - (this.x + this.width / 2)
+        const dy = this.player.y + this.player.height / 2 - (this.y + this.height / 2)
+        const dist = Math.sqrt(dx * dx + dy * dy)
 
-        if (player) {
-          const dx = player.x + player.width / 2 - (this.x + this.width / 2)
-          const dy = player.y + player.height / 2 - (this.y + this.height / 2)
-          const dist = Math.sqrt(dx * dx + dy * dy)
-
-          if (dist < this.explosionRadius) {
-            if (!DEBUG.godMode && player.alive) {
-              player.die()
-            }
+        if (dist < this.explosionRadius) {
+          if (!DEBUG.godMode && this.player.alive) {
+            this.player.die()
           }
         }
 
@@ -3299,13 +3328,13 @@
     // HELPERS
     // ======================
     class DroneSpawner {
-      constructor(entityManager, waveManager, canvas, assetsManager, vfxManager, getPlayer) {
+      constructor(entityManager, waveManager, canvas, assetsManager, vfxManager, player) {
         this.entityManager = entityManager
         this.waveManager = waveManager
         this.canvas = canvas
         this.assetsManager = assetsManager
         this.vfxManager = vfxManager
-        this.getPlayer = getPlayer
+        this.player = player
       }
 
       spawnNormalDrone() {
@@ -3330,7 +3359,7 @@
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new KamikazeDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager, this.getPlayer)
+        const drone = new KamikazeDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager, this.player)
         this.entityManager.spawn(drone)
         return drone
       }
@@ -3573,6 +3602,7 @@
         this.backgroundScene = backgroundScene
         this.entityManager = entityManager
         this.getPlayer = getPlayer
+        this.textManager = textManager
       }
 
       clear() {
@@ -3669,6 +3699,7 @@
         if (this.initialized) return
 
         try {
+          this.player = null
           // 1. Сначала создаем все менеджеры в правильном порядке
           this.assets = new AssetManager()
           this.assets.registerGameAssets()
@@ -3878,10 +3909,11 @@
           this.initGame()
           await this.startGameSequence()
           await this.animatePlayerIntro()
-          await new Promise(resolve => setTimeout(resolve, 3000))
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          this.managers.ui.showHUD()
           // await this.showCommanderIntro()
-          await this.managers.wave.initStages()
-          await this.managers.wave.startStage(0)
+          // await this.managers.wave.initStages()
+          // await this.managers.wave.startStage(0)
 
           const playerNameInput = document.getElementById("nameInput").value.toUpperCase()
           this.playerName = playerNameInput.length >= 3 ? playerNameInput : "AAA"
@@ -3896,14 +3928,18 @@
         this.player.setWeapon("pistol")
         this.managers.score.reset()
         this.survivalTime = 0
+        this.managers.ui.hideHUD()
         this.renderer.backgroundScene.initEffects()
         // this.renderer.drawBackgroundAndScene()
         // this.renderer.drawWorld()
+        this.managers.entity.clear()
       }
 
       async endGame() {
         this.gameState = GameState.GAME_OVER
-        this.managers.vfx.enableForMenu()
+
+        this.managers.ui.hideHUD()
+        // this.managers.vfx.enableForMenu()
         document.body.classList.remove("hide-cursor")
         this.managers.audio.stopAll()
         this.managers.audio.playMusic('gameover')
@@ -3932,6 +3968,7 @@
         await this.managers.transition.fadeIn()
         document.body.classList.add("hide-cursor")
         this.managers.entity.clear()
+        this.managers.ui.showHUD()
       }
 
       // async showCommanderIntro() {

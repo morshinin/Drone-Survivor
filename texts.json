@@ -3,20 +3,20 @@
     "commander": {
       "stages": [
         {
-          "start": "Alright, listen up, soldier.\\nHere's the situation… yeah… here's the situation.\\nYour mission: at H-hour, you move out to reinforce a fortified position.\\nUnits from the 69th are already dug in — area's considered secure.\\nYou'll assist with supply lines and comms.\\nRotations will be… happening soon enough.\\nIn case of injury, you'll be… taken care of and evacuated to the rear.\\nAnyone falling back without orders will be treated as hostile.",
+          "start": "Alright, listen up, soldier. Here's the situation… yeah… here's the situation. Your mission: at H-hour, you move out to reinforce a fortified position. Units from the 69th are already dug in — area's considered secure. You'll assist with supply lines and comms. Rotations will be… happening soon enough. In case of injury, you'll be… taken care of and evacuated to the rear. Anyone falling back without orders will be treated as hostile.",
           "end": "…You're still up? Huh. That's… not according to plan."
         },
         {
-          "start": "Squad, roger that—actually, wait, I didn't say anything yet.\nAnyway, get moving.",
-          "end": "Well I'll be damned.\nYou actually made it, soldier."
+          "start": "Squad, roger that—actually, wait, I didn't say anything yet. Anyway, get moving.",
+          "end": "Well I'll be damned. You actually made it, soldier."
         },
         {
-          "start": "This is Command… I think.\nContact expected. Try not to die immediately.",
-          "end": "You're alive.\nI'm marking that as a… success."
+          "start": "This is Command… I think. Contact expected. Try not to die immediately.",
+          "end": "You're alive. I'm marking that as a… success."
         },
         {
-          "start": "That's not standard issue…\nWho signed off on that thing?",
-          "end": "Well… that worked.\nCommand approves. Probably."
+          "start": "That's not standard issue… Who signed off on that thing?",
+          "end": "Well… that worked. Command approves. Probably."
         },
         {
           "start": "Stay alive, Charlie.",
@@ -43,20 +43,20 @@
     "commander": {
       "stages": [
         {
-          "start": "Значит так, товарищ солдат. Соответственно… соответственно.\\n— Слушай боевую задачу.\\nВ час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.\\nБудешь оказывать содействие в организации снабжения и связи.\\nРотация будет каждые… очень скоро.\\nВ случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.\\nКто без команды пойдёт назад — будет принят за наступающие силы противника.",
+          "start": "Значит так, товарищ солдат. Соответственно… соответственно. — Слушай боевую задачу. В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего. Будешь оказывать содействие в организации снабжения и связи. Ротация будет каждые… очень скоро. В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл. Кто без команды пойдёт назад — будет принят за наступающие силы противника.",
           "end": "…Ты всё ещё жив? Хм. Это… не по плану."
         },
         {
-          "start": "Отряд, принял—стоп, я ещё ничего не сказал.\nВ общем, двигаемся.",
-          "end": "Ну надо же.\nТы действительно выжил, солдат."
+          "start": "Отряд, принял—стоп, я ещё ничего не сказал. В общем, двигаемся.",
+          "end": "Ну надо же. Ты действительно выжил, солдат."
         },
         {
-          "start": "Это Командование… кажется.\nОжидается контакт. Постарайся не умереть сразу.",
-          "end": "Ты жив.\nОтмечаю это как… успех."
+          "start": "Это Командование… кажется. Ожидается контакт. Постарайся не умереть сразу.",
+          "end": "Ты жив. Отмечаю это как… успех."
         },
         {
-          "start": "Это не штатная комплектация…\nКто подписал эту штуковину?",
-          "end": "Ну… сработало.\nКомандование одобряет. Наверное."
+          "start": "Это не штатная комплектация… Кто подписал эту штуковину?",
+          "end": "Ну… сработало. Командование одобряет. Наверное."
         },
         {
           "start": "Держись, Чарли.",
