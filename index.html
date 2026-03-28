@@ -24,11 +24,12 @@
       overflow: hidden;
       font-family: "Press Start 2P", monospace;
 
-      background-color: #333;
       color: lime;
 
       image-rendering: pixelated;
       /*image-rendering: crisp-edges;*/
+      background: url("menu_bg.png") center no-repeat;
+      background-size: cover;
 
       display: flex;
       justify-content: center;
@@ -78,6 +79,7 @@
       text-align: center;
       padding-top: 20%;
       z-index: 2;
+      margin-top: 50px;
     }
 
     button {
@@ -269,6 +271,19 @@
       margin-top: 10px;
     }
 
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .menu-item {
+      color: lawngreen;
+      font-size: 28px;
+      text-shadow: 3px 3px black;
+    }
+
     .hidden {
       display: none;
     }
@@ -339,19 +354,25 @@
   </div>
 
   <div id="ui">
-    <div class="nes-field">
+    <div class="nes-field" style="display: none">
       <label for="nameInput">Enter your name (3 letters)</label>
       <input id="nameInput" maxlength="3" type="text" class="nes-input">
     </div>
 
     <button id="startBtn" class="nes-btn is-success">Try to Survive</button>
 
+    <div class="menu">
+      <a href="" class="menu-item">Settings</a>
+      <a href="" class="menu-item">Your Profile</a>
+      <a href="" class="menu-item">Leaderboard</a>
+    </div>
+
     <div id="leaderboard"></div>
 
     <div id="game-info">
       <div>Drone Survivor</div>
-      <div>Version <span id="game-version"></span></div>
-      <div>© 2026 Mikhail Morshinin</div>
+      <div>V.<span id="game-version"></span></div>
+      <div>© 2026 Jacking In Games</div>
       <div>
         <a href="https://github.com/morshinin/drone-survivor" target="_blank">
           GitHub
@@ -399,30 +420,30 @@
     }
 
     /* Global Variables */
-    let keys = {}
+    // let keys = {}
     let timeScale = 1
 
     let player
-    let playerName = "AAA"
-
-    let dropTimer = 0
-    let shootCooldown = 0
+    // let playerName = "AAA"
+    //
+    // let dropTimer = 0
+    // let shootCooldown = 0
     let globalEnemyFireCooldown = 0
 
-    let survivalTime = 0
+    // let survivalTime = 0
 
-    let currentState
-    let gameLoopRunning = true
-    let lastFrameTime = 0
-    let frameCounter = 0
-    let lastFpsFrameCount = 0
-    let fps = 0
-    let gameLoopInstances = 0
+    // let currentState
+    // let gameLoopRunning = true
+    // let lastFrameTime = 0
+    // let frameCounter = 0
+    // let lastFpsFrameCount = 0
+    // let fps = 0
+    // let gameLoopInstances = 0
 
     let last = 0
-    let progress = 0
+    // let progress = 0
 
-    let shooting = false
+    // let shooting = false
 
     // ======================
     // DOM REFERENCES
@@ -446,7 +467,7 @@
       PAUSED: "paused",
     }
 
-    currentState = GameState.MENU
+    // currentState = GameState.MENU
 
     gameVersion.innerText = GAME_VERSION
 
@@ -460,6 +481,11 @@
         this.promises = []
         this.loadedCount = 0
         this.totalCount = 0
+        this.assetsList = []
+      }
+
+      register(key, src) {
+        this.assetsList.push({ key, src })
       }
 
       loadImage(key, src) {
@@ -480,8 +506,38 @@
         this.promises.push(promise)
       }
 
+      // async loadAll() {
+      //   await Promise.all(this.promises)
+      // }
+
       async loadAll() {
+        this.totalCount = this.assetsList.length
+
+        for (const { key, src } of this.assetsList) {
+          await this.loadImage(key, src)
+        }
+
         await Promise.all(this.promises)
+      }
+
+      registerGameAssets() {
+        this.register("background", "game_bg.png")
+        this.register("player", "soldier.png")
+        this.register("player_walk", "soldier_walk_sprite.png")
+        this.register("drone", "mavic.png")
+        this.register("drone_bullet", "drone_bullet.png")
+        this.register("boss", "boss.png")
+        this.register("missile", "drone_bullet.png")
+        this.register("tank", "tank.png")
+        this.register("destroyed_city", "destroyed_city.png")
+        this.register("grenade", "grenade.png")
+        this.register("kamikaze", "kamikaze.png")
+        this.register("tank_smoke", "tank_smoke_sprite.png")
+        this.register("city_smoke", "city_smoke.png")
+        this.register("clouds", "clouds_bg.png")
+        this.register("fire", "fire_sprite.png")
+        this.register("explosion", "explosion_sprite.png")
+        this.register("ground_explosion", "ground_explosion_sprite.png")
       }
 
       get(key) {
@@ -494,26 +550,6 @@
         return this.totalCount > 0 ? this.loadedCount / this.totalCount : 1
       }
     }
-
-    const assets = new AssetManager()
-
-    assets.loadImage("background", "game_bg.png")
-    assets.loadImage("player", "soldier.png")
-    assets.loadImage("player_walk", "soldier_walk_sprite.png")
-    assets.loadImage("drone", "mavic.png")
-    assets.loadImage("drone_bullet", "drone_bullet.png")
-    assets.loadImage("boss", "boss.png")
-    assets.loadImage("missile", "drone_bullet.png") // Note: same as drone_bullet
-    assets.loadImage("tank", "tank.png")
-    assets.loadImage("destroyed_city", "destroyed_city.png")
-    assets.loadImage("grenade", "grenade.png")
-    assets.loadImage("kamikaze", "kamikaze.png")
-    assets.loadImage("tank_smoke", "tank_smoke_sprite.png")
-    assets.loadImage("city_smoke", "city_smoke.png")
-    assets.loadImage("clouds", "clouds_bg.png")
-    assets.loadImage("fire", "fire_sprite.png")
-    assets.loadImage("explosion", "explosion_sprite.png")
-    assets.loadImage("ground_explosion", "ground_explosion_sprite.png")
 
     const EffectsManager = {
       // Отключить все визуальные эффекты для игры
@@ -544,8 +580,12 @@
     }
 
     class WaveManager {
-      constructor() {
-        this.stages = [] // все этапы
+      constructor(textManager, entityManager, uiManager, droneSpawner) {
+        this.textManager = textManager
+        this.entityManager = entityManager
+        this.uiManager = uiManager
+        this.droneSpawner = droneSpawner
+        this.stages = []// все этапы
         this.currentStageIndex = 0
         this.currentWaveIndex = 0
         this.isActive = false
@@ -557,16 +597,13 @@
         this.maxDrones = 15
         this.maxBullets = 30
 
-        // Инициализация этапов
-        this.initStages()
-
         this.currentWaveDrones = []
       }
 
       initStages() {
         // Этап 1: Начало
         this.stages.push(new StageConfig('Начало', {
-          startMessage: 'Charlie’s hot, Alpha’s somewhere… probably. Move out.',
+          startMessage: this.textManager.getCommanderStageStart(0),
           waves: [
             new WaveConfig('Разведка', {
               drones: [{ type: DroneType.NORMAL, count: 5 }],
@@ -587,14 +624,13 @@
               spawnInterval: 900
             })
           ],
-          endMessage: '…You’re still up? Huh. That’s… not according to plan.',
+          endMessage: this.textManager.getCommanderStageEnd(0),
           pauseAfter: 4000
         }))
 
         // Этап 2: Нарастание
         this.stages.push(new StageConfig('Нарастание', {
-          startMessage: `Squad, roger that—actually, wait, I didn’t say anything yet.
-Anyway, get moving.`,
+          startMessage: this.textManager.getCommanderStageStart(1),
           waves: [
             new WaveConfig('Волна 1', {
               drones: [
@@ -623,15 +659,13 @@ Anyway, get moving.`,
               spawnInterval: 500
             })
           ],
-          endMessage: `Well I’ll be damned.
-You actually made it, soldier.`,
+          endMessage: this.textManager.getCommanderStageEnd(1),
           pauseAfter: 5000
         }))
 
         // Этап 3: Тяжелый
         this.stages.push(new StageConfig('Тяжелый', {
-          startMessage: `This is Command… I think.
-Contact expected. Try not to die immediately.`,
+          startMessage: this.textManager.getCommanderStageStart(2),
           waves: [
             new WaveConfig('Волна 1', {
               drones: [
@@ -661,15 +695,13 @@ Contact expected. Try not to die immediately.`,
               spawnInterval: 350
             })
           ],
-          endMessage: `You’re alive.
-I’m marking that as a… success.`,
+          endMessage: this.textManager.getCommanderStageEnd(2),
           pauseAfter: 6000
         }))
 
         // Этап 4: Босс
         this.stages.push(new StageConfig('Босс', {
-          startMessage: `That’s not standard issue…
-Who signed off on that thing?`,
+          startMessage: this.textManager.getCommanderStageStart(3),
           bossWave: true,
           waves: [
             new WaveConfig('Босс и свита', {
@@ -682,14 +714,13 @@ Who signed off on that thing?`,
               spawnInterval: 1200
             })
           ],
-          endMessage: `Well… that worked.
-Command approves. Probably.`,
+          endMessage: this.textManager.getCommanderStageEnd(3),
           pauseAfter: 8000
         }))
 
         // Этап 5: Бесконечный режим
         this.stages.push(new StageConfig('Бесконечность', {
-          startMessage: `Stay alive, Charlie.`,
+          startMessage: this.textManager.getCommanderStageStart(4),
           waves: this.generateInfiniteWaves(),
           infiniteMode: true
         }))
@@ -737,7 +768,7 @@ Command approves. Probably.`,
 
         if (stage.startMessage) {
           // Показываем сообщение, затем запускаем волну
-          showCommanderMessage(5000, stage.startMessage).then(() => {
+          this.uiManager.showCommanderMessage(5000, stage.startMessage).then(() => {
             this.isActive = true
             this.startCurrentWave()
           })
@@ -792,7 +823,7 @@ Command approves. Probably.`,
         }
 
         if (stage.endMessage) {
-          showCommanderMessage(5000, stage.endMessage).then(() => {
+          this.uiManager.showCommanderMessage(5000, stage.endMessage).then(() => {
             if (stage.bossWave) {
               this.startInfiniteMode()
             } else {
@@ -813,7 +844,7 @@ Command approves. Probably.`,
 
         const stage = this.stages[this.currentStageIndex]
         if (stage.startMessage) {
-          showCommanderMessage(5000, stage.startMessage).then(() => {
+          this.uiManager.showCommanderMessage(5000, stage.startMessage).then(() => {
             this.startCurrentWave()
           })
         }
@@ -869,7 +900,7 @@ Command approves. Probably.`,
 
         // ===== ФАЗА 2: ОЖИДАНИЕ — все заспавнены, ждём гибели =====
         // Проверяем каждый кадр (не через spawnTimer), чтобы не пропустить момент
-        const alive = entityManager.getCountByCategory('drone')
+        const alive = this.entityManager.getCountByCategory('drone')
 
         if (alive === 0) {
           this.currentWaveIndex++
@@ -921,13 +952,13 @@ Command approves. Probably.`,
       spawnDroneByType(type) {
         switch (type) {
           case DroneType.NORMAL:
-            return droneSpawner.spawnNormalDrone()
+            return this.droneSpawner.spawnNormalDrone()
           case DroneType.GRENADIER:
-            return droneSpawner.spawnGrenadier()
+            return this.droneSpawner.spawnGrenadier()
           case DroneType.KAMIKAZE:
-            return droneSpawner.spawnKamikaze()
+            return this.droneSpawner.spawnKamikaze()
           case 'boss':
-            return droneSpawner.spawnBoss()
+            return this.droneSpawner.spawnBoss()
         }
       }
     }
@@ -944,6 +975,36 @@ Command approves. Probably.`,
         this.currentMusic = null
 
         this.loadSettings()
+        this.registerAll()
+      }
+
+      registerAll() {
+        // Музыка
+        this.registerMusic("menu", "menu.mp3", { loop: true })
+        this.registerMusic("game", "game.mp3", { loop: true })
+        this.registerMusic("ambient", "ambient.mp3")
+        this.registerMusic("wave1", "wave1.mp3")
+        this.registerMusic("wave2", "wave2.mp3")
+        this.registerMusic("wave3", "wave3.mp3")
+        this.registerMusic("boss", "boss.mp3")
+        this.registerMusic("gameover", "gameover.mp3")
+
+        // Звуковые эффекты
+        this.registerSfx("pistol_shot", "pistol_shot.mp3")
+        this.registerSfx("pistol_reload", "pistol_reload.mp3")
+        this.registerSfx("rifle_shot", "rifle_shot.mp3")
+        this.registerSfx("rifle_reload", "rifle_reload.mp3")
+        this.registerSfx("shotgun_shot", "shotgun_shot.mp3")
+        this.registerSfx("shotgun_reload", "shotgun_reload.mp3")
+        this.registerSfx("machinegun_shot", "machinegun_shot.mp3")
+        this.registerSfx("machinegun_reload", "machinegun_reload.mp3")
+
+        this.registerSfx("drone_explosion", "drone_explosion.mp3")
+        this.registerSfx("ground_explosion", "ground_explosion.mp3")
+        this.registerSfx("death", "death.mp3")
+        this.registerSfx("radio_on", "radio_chatter.mp3")
+        this.registerSfx("radio_off", "radio_off.mp3")
+        this.registerSfx("typewriter", "typeWriter.mp3")
       }
 
       registerMusic(name, src, { loop = false, volume = this.musicVolume } = {}) {
@@ -1080,9 +1141,13 @@ Command approves. Probably.`,
     }
 
     class UIManager {
-      constructor() {
+      constructor(textManager, audioManager, gameManager) {
         this.el = {}
         this.hud = {}
+        this.onStartGame = null
+        this.textManager = textManager
+        this.audioManager = audioManager
+        this.gameManager = gameManager
         this.init()
       }
 
@@ -1106,6 +1171,23 @@ Command approves. Probably.`,
         this.hud.ammo = document.getElementById("hud-ammo")
         this.hud.magazines = document.getElementById("hud-magazines")
         this.hud.reloading = document.getElementById("hud-reloading")
+
+        this.bindEvents()
+      }
+
+      bindEvents() {
+        // StartBtn - будем вызывать колбэк, если он установлен
+        if (this.hud.startBtn) {
+          this.hud.startBtn.onclick = () => {
+            if (this.onStartGame) {
+              this.onStartGame()
+            }
+          }
+        }
+      }
+
+      setStartGameCallback(callback) {
+        this.onStartGame = callback
       }
 
       updateScore(score) {
@@ -1189,7 +1271,7 @@ Command approves. Probably.`,
         }
       }
 
-      showGameOver(playerName, score) {
+      showGameOver(playerName, score, gameOverMessage) {
         if (!this.el.ui) return
 
         this.el.ui.classList.add("game_over_bg")
@@ -1197,8 +1279,8 @@ Command approves. Probably.`,
         if (this.el.gameInfo) this.el.gameInfo.style.display = "block"
 
         this.el.ui.innerHTML = `
-      <h2 class="current_player_name">${playerName} - Final score: ${score} pts</h2>
-      <button class="nes-btn is-success" id="restartBtn">Try Again</button>
+      <h2 class="current_player_name">${playerName} - ${gameOverMessage.finalScore} - ${score} pts</h2>
+      <button class="nes-btn is-success" id="restartBtn">${gameOverMessage.tryAgain}</button>
       <div id="leaderboard"></div>
     `
 
@@ -1221,40 +1303,112 @@ Command approves. Probably.`,
         })
         this.el.leaderboard.innerHTML = html
       }
+
+      async showCommanderMessage(duration = 10000, message = null) {
+        const prevState = this.gameManager.gameState
+        this.gameManager.gameState = GameState.DIALOG
+
+        this.showDialog()
+        const balloon = this.el.commanderBalloon
+        const p = balloon.querySelector("p")
+
+        await this.animateCommanderIn()
+        await this.audioManager.playSfx('radio_on')
+        await new Promise(r => setTimeout(r, 300))
+
+        // const textToShow = message || this.managers.text.getCommanderIntro()
+        const pages = this.textManager.splitIntoPages(message)
+
+        for (let i = 0; i < pages.length; i++) {
+          const page = pages[i] + "..."
+          await this.textManager.typeToElement(p, page)
+          this.showContinueHint(true)
+          await this.waitForContinue()
+          this.showContinueHint(false)
+        }
+
+        await this.audioManager.playSfx('radio_off')
+        await this.animateCommanderOut()
+
+        this.gameManager.gameState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
+        this.hideDialog()
+      }
+
+      waitForContinue() {
+        return new Promise(resolve => {
+          function handler(e) {
+            if (e.code === "Enter") {
+              window.removeEventListener("keydown", handler)
+              resolve()
+            }
+          }
+          window.addEventListener("keydown", handler)
+        })
+      }
+
     }
-
-    const UI = new UIManager()
-
-    const audio = new AudioManager()
-
-    audio.registerMusic("menu", "menu.mp3", { loop: true })
-    audio.registerMusic("game", "game.mp3", { loop: true })
-    audio.registerMusic("ambient", "ambient.mp3")
-    audio.registerMusic("wave1", "wave1.mp3")
-    audio.registerMusic("wave2", "wave2.mp3")
-    audio.registerMusic("wave3", "wave3.mp3")
-    audio.registerMusic("boss", "boss.mp3")
-    audio.registerMusic("gameover", "gameover.mp3")
-
-    audio.registerSfx("pistol_shot", "pistol_shot.mp3")
-    audio.registerSfx("pistol_reload", "pistol_reload.mp3")
-    audio.registerSfx("rifle_shot", "rifle_shot.mp3")
-    audio.registerSfx("rifle_reload", "rifle_reload.mp3")
-    audio.registerSfx("shotgun_shot", "shotgun_shot.mp3")
-    audio.registerSfx("shotgun_reload", "shotgun_reload.mp3")
-    audio.registerSfx("machinegun_shot", "machinegun_shot.mp3")
-    audio.registerSfx("machinegun_reload", "machinegun_reload.mp3")
-
-    audio.registerSfx("drone_explosion", "drone_explosion.mp3")
-    audio.registerSfx("ground_explosion", "ground_explosion.mp3")
-    audio.registerSfx("death", "death.mp3")
-    audio.registerSfx("radio_on", "radio_chatter.mp3")
-    audio.registerSfx("radio_off", "radio_off.mp3")
-    audio.registerSfx("typewriter", "typeWriter.mp3")
 
     class TextManager {
       constructor(audio) {
+        this.currentLanguage = 'en'
+        this.texts = null
         this.audio = audio
+      }
+
+      async load() {
+        const response = await fetch('texts.json')
+        this.texts = await response.json()
+        this.loadLanguagePreference()
+      }
+
+      // getCommanderIntro() {
+      //   return this.texts[this.currentLanguage].commander.intro
+      // }
+
+      getCommanderStageStart(stageIndex) {
+        let stages
+        try {
+          stages = this.texts[this.currentLanguage]?.commander?.stages
+        } catch (error) {
+          console.log(this.texts[this.currentLanguage])
+          throw new Error(`Could not get commander stage: ${error}`)
+        }
+        return stages[stageIndex]?.start || null
+      }
+
+      getCommanderStageEnd(stageIndex) {
+        const stages = this.texts[this.currentLanguage]?.commander?.stages
+        return stages[stageIndex]?.end || null
+      }
+
+      getGameOverMessage() {
+        return {
+          gameOver: this.texts[this.currentLanguage].ui.gameOver,
+          finalScore: this.texts[this.currentLanguage].ui.finalScore,
+          tryAgain: this.texts[this.currentLanguage].ui.tryAgain,
+        }
+      }
+
+      getPauseMessage() {
+        return { title: this.texts[this.currentLanguage].ui.pause, text: this.texts[this.currentLanguage].ui.continue }
+      }
+
+      getContinueMessage() {
+        return this.texts[this.currentLanguage].ui.continue
+      }
+
+      setLanguage(lang) {
+        if (this.texts[lang]) {
+          this.currentLanguage = lang
+          localStorage.setItem('gameLanguage', lang)
+        }
+      }
+
+      loadLanguagePreference() {
+        const saved = localStorage.getItem('gameLanguage')
+        if (saved && this.texts[saved]) {
+          this.currentLanguage = saved
+        }
       }
 
       splitIntoPages(text, maxChars = 140) {
@@ -1301,8 +1455,6 @@ Command approves. Probably.`,
         window.removeEventListener("keydown", skipHandler)
       }
     }
-
-    const textManager = new TextManager(audio)
 
     class EntityManager {
       constructor() {
@@ -1368,8 +1520,6 @@ Command approves. Probably.`,
       }
     }
 
-    const entityManager = new EntityManager();
-
     class TransitionManager {
       constructor(fadeElement) {
         this.fadeElement = fadeElement
@@ -1412,19 +1562,20 @@ Command approves. Probably.`,
     }
 
     class VFXManager {
-      constructor(entityManager, audio) {
+      constructor(entityManager, audio, assetsManager) {
         this.entityManager = entityManager
         this.audio = audio
+        this.assetsManager = assetsManager
         this.transitions = new TransitionManager(fadeEl)
       }
 
       playExplosion(x, y) {
-        this.entityManager.spawn(new Explosion(x, y))
+        this.entityManager.spawn(new Explosion(this.assetsManager, x, y))
         this.audio.playSfx('drone_explosion')
       }
 
       playGroundExplosion(x, y) {
-        this.entityManager.spawn(new GroundExplosion(x, y))
+        this.entityManager.spawn(new GroundExplosion(this.assetsManager, x, y))
         this.audio.playSfx('ground_explosion')
       }
 
@@ -1447,8 +1598,6 @@ Command approves. Probably.`,
         return this.transitions.crossfade(action, duration)
       }
     }
-
-    const vfxManager = new VFXManager(entityManager, audio)
 
     class ScoreManager {
       constructor(getSurvivalTime, getEntityManager) {
@@ -1508,11 +1657,6 @@ Command approves. Probably.`,
         return [...this._achievements.values()].filter(a => a.unlocked);
       }
     }
-
-    const scoreManager = new ScoreManager(
-      () => survivalTime,
-      () => entityManager
-    );
 
     class LeaderboardManager {
       constructor(db, uiManager, scoreManager) {
@@ -1654,28 +1798,77 @@ Command approves. Probably.`,
       }
     }
 
-    const leaderboardManager = new LeaderboardManager(
-      db,      // Supabase клиент
-      UI,      // UIManager
-      scoreManager
-    )
-
     class InputManager {
-      constructor() {
+      constructor(gameManager) {
+        this.gameManager = gameManager
         this.keys = {};
         this.shooting = false;
 
-        document.addEventListener("keydown", e => this.handleKeyDown(e));
-        document.addEventListener("keyup", e => this.handleKeyUp(e));
+        this.bindEvents()
       }
 
+      bindEvents() {
+        document.addEventListener("keydown", (e) => this.handleKeyDown(e))
+        document.addEventListener("keyup", (e) => this.handleKeyUp(e))
+      }
+
+      // handleKeyDown(e) {
+      //   const { gameState, player } = this.gameManager
+      //
+      //   if (e.code === "Space") this.shooting = true;
+      //   this.keys[e.code] = true; // Используем e.code для независимости от раскладки
+      // }
       handleKeyDown(e) {
-        if (e.code === "Space") this.shooting = true;
-        this.keys[e.code] = true; // Используем e.code для независимости от раскладки
+        const { gameState, player } = this.gameManager
+
+        if (e.code === "Space") {
+          this.shooting = true;
+
+          // Для полуавтоматического оружия стреляем при нажатии
+          if (player?.alive && player.weapon && !player.weapon.auto) {
+            const dir = this.getShootDirection()
+            player.fire(dir.dx, dir.dy)
+          }
+
+          e.preventDefault()
+        }
+
+        this.keys[e.code] = true;
       }
 
       handleKeyUp(e) {
+        const { gameState, player } = this.gameManager
         if (e.code === "Space") this.shooting = false;
+
+        if (e.code === "KeyP") {
+          if (gameState === GameState.GAME) {
+            this.gameManager.gameState = GameState.PAUSED
+          } else if (gameState === GameState.PAUSED) {
+            this.gameManager.gameState = GameState.GAME
+          }
+        }
+
+        if (this.gameManager.gameState === GameState.PAUSED) {
+          return
+        }
+
+        if (e.key === "i") {
+          player?.setWeapon('rifle')
+        }
+
+        if (e.key === "s") {
+          player?.setWeapon('shotgun')
+        }
+
+        if (e.key === "m") {
+          player?.setWeapon('machinegun')
+        }
+
+        if (e.code === "KeyR") {
+          if (player?.weapon?.reloading) return
+          player?.reload()
+        }
+
         this.keys[e.code] = false;
       }
 
@@ -1709,8 +1902,6 @@ Command approves. Probably.`,
       }
     }
 
-    const inputManager = new InputManager()
-
     class Physics {
       static isColliding(a, b) {
         if (!a || !b || !a.alive || !b.alive) return false;
@@ -1733,9 +1924,12 @@ Command approves. Probably.`,
     }
 
     class CollisionManager {
-      constructor(entityManager, player) {
-        this.entityManager = entityManager;
-        this.player = player;
+      constructor(entityManager, player, uiManager, scoreManager, vfxManager) {
+        this.entityManager = entityManager
+        this.player = player
+        this.uiManager = uiManager
+        this.scoreManager = scoreManager
+        this.vfxManager = vfxManager
       }
 
       update() {
@@ -1759,9 +1953,9 @@ Command approves. Probably.`,
               bullet.alive = false;
               if (drone.takeDamage(1)) {
                 drone.onDeath();
-                const gained = scoreManager.calculateDroneScore(drone);
-                scoreManager.addScore(gained);
-                UI.updateScore(scoreManager.getScore());
+                const gained = this.scoreManager.calculateDroneScore(drone);
+                this.scoreManager.addScore(gained);
+                this.uiManager.updateScore(this.scoreManager.getScore());
               }
               break; // Пуля попала, нет смысла проверять её дальше
             }
@@ -1780,7 +1974,7 @@ Command approves. Probably.`,
             if (typeof projectile.explode === 'function') {
               projectile.explode(); // Для камикадзе, у которых есть метод explode
             } else {
-              vfxManager.playGroundExplosion(projectile.x, projectile.y);
+              this.vfxManager.playGroundExplosion(projectile.x, projectile.y);
             }
             projectile.alive = false;
             continue;
@@ -1797,8 +1991,6 @@ Command approves. Probably.`,
         }
       }
     }
-
-    const collisionManager = new CollisionManager(entityManager, player)
 
     // ======================
     // RENDERING
@@ -1895,8 +2087,6 @@ Command approves. Probably.`,
       //   this.alive = true
       // }
     }
-
-    effectsLayer.style.display = "none"
 
     class BackgroundScene {
       constructor(canvas, groundHeight, assets) {
@@ -2075,7 +2265,11 @@ Command approves. Probably.`,
     // ENTITIES
     // ======================
     class Player {
-      constructor() {
+      constructor(uiManager, vfxManager, assets, entityManager, audioManager) {
+        this.uiManager = uiManager
+        this.vfxManager = vfxManager
+        this.entityManager = entityManager
+        this.audioManager = audioManager
         this.x = 0
         this.y = 0
         this.width = 100
@@ -2100,7 +2294,7 @@ Command approves. Probably.`,
 
       setWeapon(type) {
         this.weapon = createWeapon(type)
-        UI.updateWeapon(this.weapon)
+        this.uiManager.updateWeapon(this.weapon)
         this.weapon.reloading = false
       }
 
@@ -2111,25 +2305,25 @@ Command approves. Probably.`,
         const shots = this.weapon.shoot(this, dirX, dirY)
         if (shots.length === 0) return
 
-        UI.updateAmmo(this.weapon)
+        this.uiManager.updateAmmo(this.weapon)
 
         switch (this.weapon.name) {
           case "Pistol":
-            audio.playSfx("pistol_shot", 0.4)
+            this.audioManager.playSfx("pistol_shot", 0.4)
             break
           case "Assault Rifle":
-            audio.playSfx("rifle_shot", 0.4)
+            this.audioManager.playSfx("rifle_shot", 0.4)
             break
           case "Shotgun":
-            audio.playSfx("shotgun_shot", 0.4)
+            this.audioManager.playSfx("shotgun_shot", 0.4)
             break
           case "Machine Gun":
-            audio.playSfx("machinegun_shot", 0.4)
+            this.audioManager.playSfx("machinegun_shot", 0.4)
             break
         }
 
         for (const s of shots) {
-          entityManager.spawn(new Bullet(s.x, s.y, s.vx, s.vy))
+          this.entityManager.spawn(new Bullet(s.x, s.y, s.vx, s.vy))
         }
       }
 
@@ -2137,21 +2331,21 @@ Command approves. Probably.`,
         if (!this.weapon) return
         if (this.weapon.reloading) return
 
-        const started = this.weapon.reload(UI)
+        const started = this.weapon.reload(this.uiManager)
         if (!started) return
 
         switch (this.weapon.name) {
           case "Pistol":
-            audio.playSfx("pistol_reload", 0.5)
+            this.audioManager.playSfx("pistol_reload", 0.5)
             break
           case "Assault Rifle":
-            audio.playSfx("rifle_reload", 0.5)
+            this.audioManager.playSfx("rifle_reload", 0.5)
             break
           case "Shotgun":
-            audio.playSfx("shotgun_reload", 0.5)
+            this.audioManager.playSfx("shotgun_reload", 0.5)
             break
           case "Machine Gun":
-            audio.playSfx("machinegun_reload", 0.5)
+            this.audioManager.playSfx("machinegun_reload", 0.5)
             break
         }
       }
@@ -2162,13 +2356,13 @@ Command approves. Probably.`,
 
         timeScale = 0.25
 
-        vfxManager.playExplosion(
+        this.vfxManager.playExplosion(
           player.x + player.width / 2,
           player.y + player.height / 2
         )
 
-        audio.stopAll()
-        audio.playSfx('death')
+        this.audioManager.stopAll()
+        this.audioManager.playSfx('death')
       }
 
       update(delta, input = null) {
@@ -2246,13 +2440,17 @@ Command approves. Probably.`,
         ctx.restore()
 
         if (DEBUG.showHitboxes) {
-          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
+          this.uiManager.showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
         }
       }
     }
 
     class BaseDrone {
-      constructor(x, y, options = {}) {
+      constructor(x, y, assets, entityManager, vfxManager, waveManager, options = {}) {
+        this.assets = assets
+        this.entityManager = entityManager
+        this.vfxManager = vfxManager
+        this.waveManager = waveManager
         this.x = x
         this.y = y
         this.width = options.width || 80
@@ -2286,7 +2484,7 @@ Command approves. Probably.`,
         this.frameDelay = options.frameDelay || 8
 
         // Изображение
-        this.image = options.image || assets.get('drone')
+        this.image = options.image || this.assets.get('drone')
       }
 
       update(delta) {
@@ -2380,13 +2578,13 @@ Command approves. Probably.`,
 
       onDeath() {
         // Эффект при смерти
-        vfxManager.playExplosion(this.x + this.width / 2, this.y + this.height / 2)
+        this.vfxManager.playExplosion(this.x + this.width / 2, this.y + this.height / 2)
       }
     }
 
     class NormalDrone extends BaseDrone {
-      constructor(y) {
-        super(0, y, {
+      constructor(y, assets, entityManager, vfxManager, waveManager) {
+        super(0, y, assets, entityManager, vfxManager, waveManager, {
           type: 'normal',
           width: 80,
           height: 60,
@@ -2412,8 +2610,9 @@ Command approves. Probably.`,
 
       shoot() {
         this.fireTimer = 0
-        if (entityManager.getCountByCategory('enemyBullet') < waveManager.maxBullets) {
-          entityManager.spawn(new EnemyBullet(
+        if (this.entityManager.getCountByCategory('enemyBullet') < this.waveManager.maxBullets) {
+          this.entityManager.spawn(new EnemyBullet(
+            this.assets,
             this.x + this.width / 2,
             this.y + this.height
           ))
@@ -2426,8 +2625,8 @@ Command approves. Probably.`,
     }
 
     class GrenadierDrone extends BaseDrone {
-      constructor(y) {
-        super(0, y, {
+      constructor(y, assets, entityManager, vfxManager) {
+        super(0, y, assets, entityManager, vfxManager, {
           type: 'grenadier',
           width: 90,
           height: 70,
@@ -2452,7 +2651,7 @@ Command approves. Probably.`,
       }
 
       dropGrenade() {
-        entityManager.spawn(new Grenade(this.x, this.y))
+        this.entityManager.spawn(new Grenade(this.assets, this.vfxManager, this.x, this.y))
       }
 
       draw(ctx) {
@@ -2466,7 +2665,7 @@ Command approves. Probably.`,
     }
 
     class KamikazeDrone extends BaseDrone {
-      constructor() {
+      constructor(assets, entityManager, vfxManager, getPlayer) {
         // Случайная стартовая позиция
         const side = Math.random()
         let x, y
@@ -2482,7 +2681,7 @@ Command approves. Probably.`,
           y = -50
         }
 
-        super(x, y, {
+        super(x, y, assets, entityManager, vfxManager, {
           type: 'kamikaze',
           width: 60,
           height: 60,
@@ -2493,18 +2692,26 @@ Command approves. Probably.`,
           image: assets.get('kamikaze')
         })
 
-        // Расчет направления к игроку
-        const dx = player.x - this.x
-        const dy = player.y - this.y
-        const dist = Math.hypot(dx, dy)
-
-        this.vx = dx / dist * this.speed
-        this.vy = dy / dist * this.speed
 
         this.explosionRadius = 80
+
+        this.getPlayer = getPlayer
+        this.initialized = false
       }
 
       update(delta) {
+        if (!this.initialized && this.getPlayer()) {
+          const player = this.getPlayer()
+          if (player) {
+            const dx = player.x - this.x
+            const dy = player.y - this.y
+            const dist = Math.hypot(dx, dy)
+            this.vx = dx / dist * this.speed
+            this.vy = dy / dist * this.speed
+            this.initialized = true
+          }
+        }
+
         // Камикадзе не использует базовое движение
         this.x += this.vx
         this.y += this.vy
@@ -2532,16 +2739,20 @@ Command approves. Probably.`,
       }
 
       explode() {
-        vfxManager.playGroundExplosion(this.x, this.y)
+        this.vfxManager.playGroundExplosion(this.x, this.y)
 
         // Проверка урона игроку
-        const dx = player.x + player.width / 2 - (this.x + this.width / 2)
-        const dy = player.y + player.height / 2 - (this.y + this.height / 2)
-        const dist = Math.sqrt(dx * dx + dy * dy)
+        const player = this.getPlayer()
 
-        if (dist < this.explosionRadius) {
-          if (!DEBUG.godMode && player.alive) {
-            player.die()
+        if (player) {
+          const dx = player.x + player.width / 2 - (this.x + this.width / 2)
+          const dy = player.y + player.height / 2 - (this.y + this.height / 2)
+          const dist = Math.sqrt(dx * dx + dy * dy)
+
+          if (dist < this.explosionRadius) {
+            if (!DEBUG.godMode && player.alive) {
+              player.die()
+            }
           }
         }
 
@@ -2561,8 +2772,8 @@ Command approves. Probably.`,
     }
 
     class BossDrone extends BaseDrone {
-      constructor() {
-        super(canvas.width / 2 - 150, -120, {
+      constructor(assets, entityManager, vfxManager) {
+        super(canvas.width / 2 - 150, -120, assets, entityManager, vfxManager, {
           width: 300,
           height: 260,
           hp: 200,
@@ -2598,7 +2809,7 @@ Command approves. Probably.`,
           this.spawnTimer += delta
           if (this.spawnTimer > 7000) { // 7 секунд
             this.spawnTimer = 0
-            if (entityManager.getCountByCategory('drone') < 1 + 3) { // 1 босс + 3 миньона
+            if (this.entityManager.getCountByCategory('drone') < 1 + 3) { // 1 босс + 3 миньона
               droneSpawner.spawnNormalDrone()
             }
           }
@@ -2609,7 +2820,7 @@ Command approves. Probably.`,
           this.spawnTimer += delta
           if (this.spawnTimer > 5000) { // 5 секунд
             this.spawnTimer = 0
-            if (entityManager.getCountByCategory('drone') < 1 + 3) {
+            if (this.entityManager.getCountByCategory('drone') < 1 + 3) {
               if (Math.random() < 0.6) {
                 droneSpawner.spawnNormalDrone()
               } else {
@@ -2625,8 +2836,9 @@ Command approves. Probably.`,
           this.missileTimer = 0
           // Только одна ракета за раз
           // Оптимизация: используем глобальный счетчик или простой лимит
-          if (entityManager.getCountByCategory('enemyBullet') < 40) {
-            entityManager.spawn(new Missile(
+          if (this.entityManager.getCountByCategory('enemyBullet') < 40) {
+            this.entityManager.spawn(new Missile(
+              this.assetsManager,
               this.x + this.width / 2,
               this.y + this.height,
               player.x + player.width / 2
@@ -2689,6 +2901,7 @@ Command approves. Probably.`,
       }
 
       update() {
+        debugger
         this.x += this.vx
         this.y += this.vy
 
@@ -2706,7 +2919,8 @@ Command approves. Probably.`,
     }
 
     class EnemyBullet {
-      constructor(x, y) {
+      constructor(assetsManager, x, y) {
+        this.assets = assetsManager
         this.x = x
         this.y = y
         this.speed = 4
@@ -2718,13 +2932,15 @@ Command approves. Probably.`,
         this.alive = true
         this.category = 'enemyBullet'
       }
+
       update() {
         this.y += this.speed
         if (this.y > canvas.height + 100) this.alive = false
       }
+
       draw() {
         ctx.drawImage(
-          assets.get('drone_bullet'),
+          this.assets.get('drone_bullet'),
           Math.floor(this.x),
           Math.floor(this.y),
           this.width,
@@ -2738,7 +2954,8 @@ Command approves. Probably.`,
     }
 
     class Missile {
-      constructor(x, y, targetX) {
+      constructor(assetsManager, x, y, targetX) {
+        this.assetsManager = assetsManager
         this.x = x
         this.y = y
 
@@ -2761,7 +2978,7 @@ Command approves. Probably.`,
 
       draw() {
         ctx.drawImage(
-          assets.get('drone_bullet'),
+          this.assetsManager.get('drone_bullet'),
           Math.floor(this.x),
           Math.floor(this.y),
           16,
@@ -2770,7 +2987,8 @@ Command approves. Probably.`,
     }
 
     class Explosion {
-      constructor(x, y, width = EXPLOSION_FRAME_WIDTH, height = EXPLOSION_FRAME_HEIGHT) {
+      constructor(assetsManager, x, y, width = EXPLOSION_FRAME_WIDTH, height = EXPLOSION_FRAME_HEIGHT) {
+        this.assetsManager = assetsManager
         this.x = x + width / 2;
         this.y = y + height / 2;
         this.frame = 0;
@@ -2794,7 +3012,7 @@ Command approves. Probably.`,
       draw(ctx) {
         if (this.alive) {
           ctx.drawImage(
-            assets.get('explosion'),
+            this.assetsManager.get('explosion'),
             Math.floor(this.frame * EXPLOSION_FRAME_WIDTH), 0,
             EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
             Math.floor(this.x - EXPLOSION_FRAME_WIDTH / 2),
@@ -2807,7 +3025,9 @@ Command approves. Probably.`,
     }
 
     class Grenade {
-      constructor(x, y) {
+      constructor(assetsManager, vfxManager, x, y) {
+        this.assetsManager = assetsManager
+        this.vfxManager = vfxManager
         this.x = x
         this.y = y
 
@@ -2826,7 +3046,7 @@ Command approves. Probably.`,
 
       explode() {
         this.exploded = true;
-        vfxManager.playGroundExplosion(this.x, this.y);
+        this.vfxManager.playGroundExplosion(this.x, this.y);
         // Логика урона по области
         if (Physics.isColliding(this, player)) { // Упрощенная проверка
           player.die();
@@ -2855,7 +3075,7 @@ Command approves. Probably.`,
       }
 
       draw() {
-        const grenadeImg = assets.get('grenade')
+        const grenadeImg = this.assetsManager.get('grenade')
 
         if (this.onGround && this.timer < 60) {
           if (Math.floor(this.timer / 10) % 2 === 0) {
@@ -2873,7 +3093,8 @@ Command approves. Probably.`,
     }
 
     class GroundExplosion {
-      constructor(x, y) {
+      constructor(assetsManager, x, y) {
+        this.assetsManager = assetsManager
         this.x = x;
         this.y = y - 30;
         this.frame = 0;
@@ -2897,7 +3118,7 @@ Command approves. Probably.`,
 
       draw(ctx) {
         ctx.drawImage(
-          assets.get('ground_explosion'),
+          this.assetsManager.get('ground_explosion'),
           Math.floor(this.frame * GROUND_EXPLOSION_FRAME_WIDTH),
           0,
           GROUND_EXPLOSION_FRAME_WIDTH,
@@ -3078,17 +3299,20 @@ Command approves. Probably.`,
     // HELPERS
     // ======================
     class DroneSpawner {
-      constructor(entityManager, waveManager, canvas) {
+      constructor(entityManager, waveManager, canvas, assetsManager, vfxManager, getPlayer) {
         this.entityManager = entityManager
         this.waveManager = waveManager
         this.canvas = canvas
+        this.assetsManager = assetsManager
+        this.vfxManager = vfxManager
+        this.getPlayer = getPlayer
       }
 
       spawnNormalDrone() {
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new NormalDrone(Math.random() * this.canvas.height * 0.4)
+        const drone = new NormalDrone(Math.random() * this.canvas.height * 0.4, this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
         this.entityManager.spawn(drone)
         return drone
       }
@@ -3097,7 +3321,7 @@ Command approves. Probably.`,
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new GrenadierDrone(Math.random() * this.canvas.height * 0.4)
+        const drone = new GrenadierDrone(Math.random() * this.canvas.height * 0.4, this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
         this.entityManager.spawn(drone)
         return drone
       }
@@ -3106,13 +3330,13 @@ Command approves. Probably.`,
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new KamikazeDrone()
+        const drone = new KamikazeDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager, this.getPlayer)
         this.entityManager.spawn(drone)
         return drone
       }
 
       spawnBoss() {
-        const boss = new BossDrone()
+        const boss = new BossDrone(this.assetsManager, this.entityManager, this.vfxManager)
         this.entityManager.spawn(boss)
         boss.active = true
         return boss
@@ -3137,211 +3361,211 @@ Command approves. Probably.`,
     // ======================
     // GAME FLOW
     // ======================
-    async function startGame() {
-      try {
-        await vfxManager.fadeOutMenu()
-        initGame()
-        await startGameSequence()
-        await animatePlayerIntro()
-        await new Promise(resolve => setTimeout(resolve, 3000))
-        await showCommanderIntro()
-        await waveManager.startStage(0)
+    // async function startGame() {
+    //   try {
+    //     await vfxManager.fadeOutMenu()
+    //     initGame()
+    //     await startGameSequence()
+    //     await animatePlayerIntro()
+    //     await new Promise(resolve => setTimeout(resolve, 3000))
+    //     // await showCommanderIntro()
+    //     await waveManager.startStage(0)
+    //
+    //     playerName = document.getElementById("nameInput").value.toUpperCase()
+    //     if (playerName.length < 3) playerName = "AAA"
+    //   } catch (err) {
+    //     console.error("CRITICAL STARTUP ERROR:", err)
+    //   }
+    // }
 
-        playerName = document.getElementById("nameInput").value.toUpperCase()
-        if (playerName.length < 3) playerName = "AAA"
-      } catch (err) {
-        console.error("CRITICAL STARTUP ERROR:", err)
-      }
-    }
+    // async function restartGame() {
+    //   // Отключаем эффекты для игры
+    //   EffectsManager.disableForGame()
+    //
+    //   initGame()
+    //   currentState = GameState.GAME
+    //
+    //   const ui = document.getElementById("ui")
+    //   ui.style.display = "none"
+    //   ui.classList.remove("game_over_bg")
+    //   effectsLayer.style.display = "block"
+    //
+    //   await vfxManager.crossfade()
+    //
+    //   document.body.classList.add("hide-cursor")
+    //   player = new Player()
+    //   entityManager.clear()
+    // }
 
-    async function restartGame() {
-      // Отключаем эффекты для игры
-      EffectsManager.disableForGame()
+    // async function endGame() {
+    //   currentState = GameState.GAME_OVER
+    //
+    //   EffectsManager.enableForMenu()
+    //   document.body.classList.remove("hide-cursor")
+    //
+    //   audio.stopAll()
+    //   audio.playMusic('gameover')
+    //
+    //   await leaderboardManager.saveCurrentScore(playerName)
+    //   leaderboardManager.saveLocal(playerName, survivalTime)
+    //
+    //   UI.showGameOver(playerName, scoreManager.getScore(), textManager.getGameOverMessage())
+    //   if (UI.el.restartBtn) {
+    //     UI.el.restartBtn.onclick = restartGame
+    //   }
+    //
+    //   leaderboardManager.render()
+    // }
+    //
+    // async function startGameSequence() {
+    //   await new Promise(r => setTimeout(r, 5000))
+    //   await vfxManager.crossfade(async () => {
+    //     UI.el.fade.style.opacity = "0"
+    //     UI.el.ui.style.display = "none"
+    //     effectsLayer.style.display = "block"
+    //
+    //     // Отключаем все визуальные эффекты
+    //     EffectsManager.disableForGame()
+    //
+    //     currentState = GameState.GAME
+    //   }, 1000)
+    //
+    //   await new Promise(r => setTimeout(r, 1000))
+    // }
+//
+//     async function showCommanderIntro() {
+//       await new Promise(r => setTimeout(r, 500))
+//
+// //       const msg = `
+// //     Значит так, товарищ солдат. Соответственно… соответственно.
+// // — Слушай боевую задачу.
+// // В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
+// // Будешь оказывать содействие в организации снабжения и связи.
+// // Ротация будет каждые… очень скоро.
+// // В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
+// // Кто без команды пойдёт назад — будет принят за наступающие силы противника.
+// //     `
+//       const msg = `Alright, listen up, soldier.
+// Here’s the situation… yeah… here’s the situation.
+// Your mission: at H-hour, you move out to reinforce a fortified position.
+// Units from the 69th are already dug in — area’s considered secure.
+// You’ll assist with supply lines and comms.
+// Rotations will be… happening soon enough.
+// In case of injury, you’ll be… taken care of and evacuated to the rear.
+// Anyone falling back without orders will be treated as hostile.`
+//       await showCommanderMessage(3000, msg)
+//     }
 
-      initGame()
-      currentState = GameState.GAME
+    // async function animatePlayerIntro() {
+    //   player.x = -player.width
+    //   player.y = canvas.height - groundHeight - player.height
+    //   player.direction = 1 // идем вправо
+    //   const targetX = canvas.width * 0.5
+    //   const speed = 3
+    //
+    //   return new Promise(resolve => {
+    //     const interval = setInterval(() => {
+    //       // “имитация” движения, как при нажатии клавиш
+    //       player.vx = speed
+    //       player.isMoving = true
+    //       player.update()  // обновляем позицию и кадры
+    //
+    //       if (player.x >= targetX) {
+    //         player.x = targetX
+    //         player.vx = 0
+    //         player.isMoving = false
+    //         player.update()
+    //         clearInterval(interval)
+    //         resolve()
+    //       }
+    //     }, 100)
+    //   })
+    // }
+    //
+    // async function showCommanderMessage(duration = 10000, message = null) {
+    //   const prevState = currentState
+    //   currentState = GameState.DIALOG
+    //
+    //   UI.showDialog()
+    //
+    //   const balloon = UI.el.commanderBalloon
+    //   const p = balloon.querySelector("p")
+    //
+    //   await UI.animateCommanderIn()
+    //
+    //   await audio.playSfx('radio_on')
+    //
+    //   await new Promise(r => setTimeout(r, 300))
+    //
+    //   const pages = textManager.splitIntoPages(message)
+    //   for (let i = 0; i < pages.length; i++) {
+    //     const page = pages[i] + "..."
+    //     await textManager.typeToElement(p, page)
+    //
+    //     UI.showContinueHint(true)
+    //     await waitForContinue()
+    //     UI.showContinueHint(false)
+    //   }
+    //
+    //   await audio.playSfx('radio_off')
+    //   await UI.animateCommanderOut()
+    //
+    //   currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
+    //
+    //   UI.hideDialog()
+    // }
+    //
+    // function waitForContinue() {
+    //   return new Promise(resolve => {
+    //     function handler(e) {
+    //       if (e.code === "Enter") {
+    //         window.removeEventListener("keydown", handler)
+    //         resolve()
+    //       }
+    //     }
+    //
+    //     window.addEventListener("keydown", handler)
+    //   })
+    // }
 
-      const ui = document.getElementById("ui")
-      ui.style.display = "none"
-      ui.classList.remove("game_over_bg")
-      effectsLayer.style.display = "block"
-
-      await vfxManager.crossfade()
-
-      document.body.classList.add("hide-cursor")
-      player = new Player()
-      entityManager.clear()
-    }
-
-    async function endGame() {
-      currentState = GameState.GAME_OVER
-
-      EffectsManager.enableForMenu()
-      document.body.classList.remove("hide-cursor")
-
-      audio.stopAll()
-      audio.playMusic('gameover')
-
-      await leaderboardManager.saveCurrentScore(playerName)
-      leaderboardManager.saveLocal(playerName, survivalTime)
-
-      UI.showGameOver(playerName, scoreManager.getScore())
-      if (UI.el.restartBtn) {
-        UI.el.restartBtn.onclick = restartGame
-      }
-
-      leaderboardManager.render()
-    }
-
-    async function startGameSequence() {
-      await new Promise(r => setTimeout(r, 5000))
-      await vfxManager.crossfade(async () => {
-        UI.el.fade.style.opacity = "0"
-        UI.el.ui.style.display = "none"
-        effectsLayer.style.display = "block"
-
-        // Отключаем все визуальные эффекты
-        EffectsManager.disableForGame()
-
-        currentState = GameState.GAME
-      }, 1000)
-
-      await new Promise(r => setTimeout(r, 1000))
-    }
-
-    async function showCommanderIntro() {
-      await new Promise(r => setTimeout(r, 500))
-
-//       const msg = `
-//     Значит так, товарищ солдат. Соответственно… соответственно.
-// — Слушай боевую задачу.
-// В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
-// Будешь оказывать содействие в организации снабжения и связи.
-// Ротация будет каждые… очень скоро.
-// В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
-// Кто без команды пойдёт назад — будет принят за наступающие силы противника.
-//     `
-      const msg = `Alright, listen up, soldier.
-Here’s the situation… yeah… here’s the situation.
-Your mission: at H-hour, you move out to reinforce a fortified position.
-Units from the 69th are already dug in — area’s considered secure.
-You’ll assist with supply lines and comms.
-Rotations will be… happening soon enough.
-In case of injury, you’ll be… taken care of and evacuated to the rear.
-Anyone falling back without orders will be treated as hostile.`
-      await showCommanderMessage(3000, msg)
-    }
-
-    async function animatePlayerIntro() {
-      player.x = -player.width
-      player.y = canvas.height - groundHeight - player.height
-      player.direction = 1 // идем вправо
-      const targetX = canvas.width * 0.5
-      const speed = 3
-
-      return new Promise(resolve => {
-        const interval = setInterval(() => {
-          // “имитация” движения, как при нажатии клавиш
-          player.vx = speed
-          player.isMoving = true
-          player.update()  // обновляем позицию и кадры
-
-          if (player.x >= targetX) {
-            player.x = targetX
-            player.vx = 0
-            player.isMoving = false
-            player.update()
-            clearInterval(interval)
-            resolve()
-          }
-        }, 100)
-      })
-    }
-
-    async function showCommanderMessage(duration = 10000, message = null) {
-      const prevState = currentState
-      currentState = GameState.DIALOG
-
-      UI.showDialog()
-
-      const balloon = UI.el.commanderBalloon
-      const p = balloon.querySelector("p")
-
-      await UI.animateCommanderIn()
-
-      await audio.playSfx('radio_on')
-
-      await new Promise(r => setTimeout(r, 300))
-
-      const pages = textManager.splitIntoPages(message)
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i] + "..."
-        await textManager.typeToElement(p, page)
-
-        UI.showContinueHint(true)
-        await waitForContinue()
-        UI.showContinueHint(false)
-      }
-
-      await audio.playSfx('radio_off')
-      await UI.animateCommanderOut()
-
-      currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
-
-      UI.hideDialog()
-    }
-
-    function waitForContinue() {
-      return new Promise(resolve => {
-        function handler(e) {
-          if (e.code === "Enter") {
-            window.removeEventListener("keydown", handler)
-            resolve()
-          }
-        }
-
-        window.addEventListener("keydown", handler)
-      })
-    }
-
-    function handlePlayerInput() {
-      if (player.alive && inputManager.isShooting() && player.weapon?.auto) {
-        const dir = inputManager.getShootDirection()
-        player.fire(dir.dx, dir.dy)
-      }
-    }
-
-    function updateEntities(delta) {
-      if (!player.alive) {
-        player.deathTimer -= delta
-        if (player.deathTimer <= 0) {
-          timeScale = 1
-          endGame()
-        }
-        return
-      }
-
-      player.update(delta, inputManager)
-
-      if (globalEnemyFireCooldown > 0) {
-        globalEnemyFireCooldown -= delta
-      }
-
-      waveManager.update(delta)
-
-      for (const obj of entityManager.getAll()) {
-        if (obj.alive) {
-          obj.update(delta)
-        }
-      }
-    }
-
-    function cleanupEntities() {
-      entityManager.cleanup()
-    }
+    // function handlePlayerInput() {
+    //   if (player.alive && inputManager.isShooting() && player.weapon?.auto) {
+    //     const dir = inputManager.getShootDirection()
+    //     player.fire(dir.dx, dir.dy)
+    //   }
+    // }
+    //
+    // function updateEntities(delta) {
+    //   if (!player.alive) {
+    //     player.deathTimer -= delta
+    //     if (player.deathTimer <= 0) {
+    //       timeScale = 1
+    //       endGame()
+    //     }
+    //     return
+    //   }
+    //
+    //   player.update(delta, inputManager)
+    //
+    //   if (globalEnemyFireCooldown > 0) {
+    //     globalEnemyFireCooldown -= delta
+    //   }
+    //
+    //   waveManager.update(delta)
+    //
+    //   for (const obj of entityManager.getAll()) {
+    //     if (obj.alive) {
+    //       obj.update(delta)
+    //     }
+    //   }
+    // }
+    //
+    // function cleanupEntities() {
+    //   entityManager.cleanup()
+    // }
 
     class GameRenderer {
-      constructor(ctx, canvas, groundHeight, assets, backgroundScene, entityManager, getPlayer) {
+      constructor(ctx, canvas, groundHeight, assets, backgroundScene, entityManager, getPlayer, textManager) {
         this.ctx = ctx
         this.canvas = canvas
         this.groundHeight = groundHeight
@@ -3387,9 +3611,10 @@ Anyone falling back without orders will be treated as hostile.`
         this.clear()
         this.drawBackgroundAndScene()
         this.drawEntities()
+        // this.backgroundScene.initEffects()
       }
 
-      drawPaused() {
+      drawPaused(pauseContent) {
         this.drawWorld()
 
         this.ctx.save()
@@ -3399,10 +3624,10 @@ Anyone falling back without orders will be treated as hostile.`
         this.ctx.fillStyle = "#ffffff"
         this.ctx.font = "42px 'Press Start 2P'"
         this.ctx.textAlign = "center"
-        this.ctx.fillText("PAUSED", this.canvas.width / 2, this.canvas.height / 2)
+        this.ctx.fillText(pauseContent.title, this.canvas.width / 2, this.canvas.height / 2)
 
         this.ctx.font = "18px 'Press Start 2P'"
-        this.ctx.fillText("Press P to continue", this.canvas.width / 2, this.canvas.height / 2 + 60)
+        this.ctx.fillText(pauseContent.text, this.canvas.width / 2, this.canvas.height / 2 + 60)
         this.ctx.restore()
       }
 
@@ -3416,215 +3641,597 @@ Anyone falling back without orders will be treated as hostile.`
         this.ctx.textAlign = "center"
         this.ctx.shadowColor = "black"
         this.ctx.shadowBlur = 10
-        this.ctx.fillText("You are KIA!", this.canvas.width / 2, this.canvas.height / 2)
+        this.ctx.fillText(this.textManager.getGameOverMessage().gameOver, this.canvas.width / 2, this.canvas.height / 2)
         this.ctx.restore()
       }
 
       drawMenu() {
         // Меню на DOM; canvas в состоянии MENU не перерисовываем.
       }
+
+      updateAmbient() {
+        this.backgroundScene.updateAmbient()
+      }
     }
 
     // ======================
     // MAIN LOOP
     // ======================
-    function gameLoop(t) {
-      if (!gameLoopRunning) {
-        setTimeout(() => requestAnimationFrame(gameLoop), 100)
-        return
+    class GameManager {
+      constructor() {
+        // Все менеджеры будут здесь
+        this.managers = {}
+        this.initialized = false
+        this.gameState = GameState.MENU
       }
 
-      frameCounter++
-      if (t - lastFrameTime > 1000) {
-        fps = frameCounter - (lastFpsFrameCount || 0)
-        lastFpsFrameCount = frameCounter
-        lastFrameTime = t
-      }
+      async initialize() {
+        if (this.initialized) return
 
-      const rawDelta = Math.min(t - last, 100)
-      const delta = rawDelta * timeScale
-      last = t
+        try {
+          // 1. Сначала создаем все менеджеры в правильном порядке
+          this.assets = new AssetManager()
+          this.assets.registerGameAssets()
+          this.managers.audio = new AudioManager()
+          this.managers.text = new TextManager(this.managers.audio)
+          this.managers.entity = new EntityManager()
 
-      switch (currentState) {
-        case GameState.MENU:
-          if (frameCounter % 3 === 0) {
-            updateMenu(delta)
-            gameRenderer.drawMenu()
-          }
-          break
+          this.managers.ui = new UIManager(this.managers.text, this.managers.audio, this)
+          // 2. Загружаем тексты (асинхронно)
+          await this.managers.text.load()
 
-        case GameState.GAME:
-          updateAmbient(delta)
-          updateGameplay(delta)
-          gameRenderer.drawWorld()
-          break
+          this.managers.input = new InputManager(this)
+          this.managers.vfx = new VFXManager(this.managers.entity, this.managers.audio, this.assets)
+          this.managers.transition = new TransitionManager()
+          // this.managers.droneSpawner = new DroneSpawner(this.managers.entity, null, canvas, this.assets, this.managers.vfx)
+          // this.managers.wave = new WaveManager(this.managers.text, this.managers.entity, this.managers.ui, this.managers.droneSpawner)
+          // this.managers.droneSpawner.waveManager = this.managers.wave
+          this.managers.wave = new WaveManager(
+            this.managers.text,
+            this.managers.entity,
+            this.managers.ui,
+            null  // droneSpawner будет установлен позже
+          )
 
-        case GameState.DIALOG:
-          updateDialog(delta)
-          gameRenderer.drawWorld()
-          break
+          this.managers.droneSpawner = new DroneSpawner(
+            this.managers.entity,
+            this.managers.wave,
+            canvas,
+            this.assets,
+            this.managers.vfx,
+            () => this.player
+          )
 
-        case GameState.PAUSED:
-          if (frameCounter % 6 === 0) {
-            updatePaused(delta)
-            gameRenderer.drawPaused()
-          }
-          break
+          this.managers.wave.droneSpawner = this.managers.droneSpawner
 
-        case GameState.GAME_OVER:
-          if (frameCounter % 3 === 0) {
-            gameRenderer.drawDeathOverlay()
-          }
-          break
-      }
+          // 3. Создаем менеджеры, зависящие от текстов
+          this.managers.score = new ScoreManager(
+            () => this.survivalTime,
+            () => this.managers.entity
+          )
+          this.managers.leaderboard = new LeaderboardManager(db, this.managers.ui, this.managers.score)
 
-      if (gameLoopInstances > 1) {
-        console.error("MULTIPLE GAME LOOPS DETECTED! Stopping instance.")
-        gameLoopInstances--
-        return
-      }
+          // 4. Создаем вспомогательные менеджеры
+          this.managers.droneSpawner = new DroneSpawner(this.managers.entity, this.managers.wave, canvas)
+          this.managers.collision = new CollisionManager(this.managers.entity, null, this.managers.ui, this.managers.score, this.managers.vfx) // player будет установлен позже
+          this.managers.ui.setStartGameCallback(() => this.startGame())
 
-      requestAnimationFrame(gameLoop)
-    }
+          const backgroundScene = new BackgroundScene(canvas, groundHeight, this.assets)
 
-    function updateDialog(delta) {
-      updateAmbient(delta)
-    }
+          this.renderer = new GameRenderer(
+            ctx,
+            canvas,
+            groundHeight,
+            this.assets,
+            backgroundScene,
+            this.managers.entity,
+            () => this.player,
+            this.managers.text
+          )
 
-    function updatePaused(delta) {
-      // Ничего из игрового мира не двигаем.
-      // Если захочешь мигающий PAUSED — можно обновлять только его.
-    }
+          // 5. Игровые объекты
+          this.player = null
+          this.survivalTime = 0
+          this.gameLoopRunning = true
 
-    function updateGameplay(delta) {
-      handlePlayerInput()
-      updateEntities(delta)
-      collisionManager.update()
-      cleanupEntities()
+          // 6. Загружаем ассеты
+          await this.preloadAssets()
 
-      survivalTime += delta / 1000
-    }
+          // 7. Загружаем лидерборд
+          await this.managers.leaderboard.render()
 
-    function updateAmbient() {
-      backgroundScene.updateAmbient()
-    }
+          this.initialized = true
+          this.startGameLoop()
 
-    const waveManager = new WaveManager()
-    const droneSpawner = new DroneSpawner(entityManager, waveManager, canvas)
-    const backgroundScene = new BackgroundScene(canvas, groundHeight, assets)
-    const gameRenderer = new GameRenderer(
-      ctx,
-      canvas,
-      groundHeight,
-      assets,
-      backgroundScene,
-      entityManager,
-      () => player
-    )
-
-    function initGame() {
-      // игрок
-      player = new Player()
-      collisionManager.player = player
-
-      // оружие
-      player.setWeapon("pistol")
-
-      // игра
-      scoreManager.reset()
-      survivalTime = 0
-      dropTimer = 0
-      shootCooldown = 0
-
-      backgroundScene.initEffects()
-    }
-
-    function updateMenu(delta) {
-
-    }
-
-    if (gameLoopInstances === 0) {
-      gameLoopInstances++
-      requestAnimationFrame(gameLoop)
-    }
-
-    UI.hud.startBtn.onclick = startGame
-
-    document.addEventListener("keydown", e => {
-      if (e.code === "Space") {
-        if (player.weapon && !player.weapon.auto) {
-          const dir = inputManager.getShootDirection()
-          player.fire(dir.dx, dir.dy)
+        } catch (error) {
+          console.error("Failed to initialize game:", error)
         }
       }
 
-      if (e.code === "KeyP") {
-        if (currentState === GameState.GAME) {
-          currentState = GameState.PAUSED
-        } else if (currentState === GameState.PAUSED) {
-          currentState = GameState.GAME
+      async preloadAssets() {
+        // Логика загрузки ассетов
+        const interval = setInterval(() => {
+          this.managers.ui.setLoadingProgress(this.assets.getProgress() * 100)
+        }, 50)
+
+        await this.assets.loadAll()
+        clearInterval(interval)
+        this.managers.ui.setLoadingProgress(100)
+        await new Promise(r => setTimeout(r, 200))
+        this.managers.ui.hideLoadingScreen()
+      }
+
+      // async loadLeaderboard() {
+      //   // Логика загрузки лидерборда
+      //   const { data } = await db
+      //     .from("leaderboard")
+      //     .select("*")
+      //     .order("score", { ascending: false })
+      //     .limit(5)
+      //
+      //   this.leaderboard = data
+      //   this.managers.score.renderLeaderboard(this.leaderboard)
+      // }
+
+      startGameLoop() {
+        if (this.gameLoopRunning) {
+          this.last = 0
+          this.frameCounter = 0
+          this.lastFpsFrameCount = 0
+          this.fps = 0
+          this.gameLoopInstances = 0
+
+          requestAnimationFrame((t) => this.gameLoop(t))
         }
       }
 
-      if (currentState === GameState.PAUSED) {
-        return
-      }
-
-      if (e.key === "i") {
-        player.setWeapon('rifle')
-      }
-
-      if (e.key === "s") {
-        player.setWeapon('shotgun')
-      }
-
-      if (e.key === "m") {
-        player.setWeapon('machinegun')
-      }
-
-      if (e.code === "Space") {
-        e.preventDefault()
-      }
-
-      if (e.code === "KeyR") {
-        if (player.weapon?.reloading) return
-        player.reload()
-      }
-
-      keys[e.key] = true
-    })
-
-    document.addEventListener("keyup", e => {
-      if (currentState === GameState.PAUSED) {
-        if (e.code === "Space") {
-          shooting = false
+      gameLoop(t) {
+        if (!this.gameLoopRunning) {
+          setTimeout(() => requestAnimationFrame((t) => this.gameLoop(t)), 100)
+          return
         }
-        return
+
+        // FPS подсчет
+        this.frameCounter++
+        if (t - this.lastFrameTime > 1000) {
+          this.fps = this.frameCounter - (this.lastFpsFrameCount || 0)
+          this.lastFpsFrameCount = this.frameCounter
+          this.lastFrameTime = t
+        }
+
+        const rawDelta = Math.min(t - this.last, 100)
+        const delta = rawDelta * (this.timeScale || 1)
+        this.last = t
+
+        // Обновляем в зависимости от состояния
+        switch (this.gameState) {
+          case GameState.MENU:
+            // this.updateMenu(delta)
+            break
+          case GameState.GAME:
+            this.updateGame(delta)
+            break
+          case GameState.DIALOG:
+            this.renderer.updateAmbient()
+            break
+          case GameState.PAUSED:
+            break
+          case GameState.GAME_OVER:
+            // this.updateGameOver(delta)
+            break
+        }
+
+        // Рендерим
+        this.render()
+
+        requestAnimationFrame((t) => this.gameLoop(t))
       }
 
-      keys[e.key] = false
-    })
+      updatePaused() {
+        this.renderer.drawPaused(this.managers.text.getPauseMessage())
+      }
 
-    document.body.addEventListener("click", () => {
-      audio.playMusic('menu')
-    }, { once: true })
+      updateGame(delta) {
+        this.handlePlayerInput()
+        this.updateEntities(delta)
+        this.renderer.updateAmbient()
+        this.renderer.drawWorld()
+        this.managers.collision.update()
+        this.managers.entity.cleanup()
+        this.survivalTime += delta / 1000
+      }
 
-    async function preloadAssets() {
-      const interval = setInterval(() => {
-        UI.setLoadingProgress(assets.getProgress() * 100)
-      }, 50)
+      updateEntities(delta) {
+        if (!this.player.alive) {
+          this.player.deathTimer -= delta
+          if (this.player.deathTimer <= 0) {
+            this.endGame()
+          }
+          return
+        }
 
-      await assets.loadAll()
-      clearInterval(interval)
-      UI.setLoadingProgress(100)
-      await new Promise(r => setTimeout(r, 200))
-      UI.hideLoadingScreen()
+        this.player.update(delta, this.managers.input)
+
+        if (this.globalEnemyFireCooldown > 0) {
+          this.globalEnemyFireCooldown -= delta
+        }
+
+        this.managers.wave.update(delta)
+
+        for (const obj of this.managers.entity.getAll()) {
+          if (obj.alive) {
+            obj.update(delta)
+          }
+        }
+      }
+
+      handlePlayerInput() {
+        if (this.player.alive && this.managers.input.isShooting() && this.player.weapon?.auto) {
+          const dir = this.managers.input.getShootDirection()
+          this.player.fire(dir.dx, dir.dy)
+        }
+      }
+
+      async startGame() {
+        try {
+          await this.fadeOutMenu()
+          this.initGame()
+          await this.startGameSequence()
+          await this.animatePlayerIntro()
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          // await this.showCommanderIntro()
+          await this.managers.wave.initStages()
+          await this.managers.wave.startStage(0)
+
+          const playerNameInput = document.getElementById("nameInput").value.toUpperCase()
+          this.playerName = playerNameInput.length >= 3 ? playerNameInput : "AAA"
+        } catch (err) {
+          console.error("CRITICAL STARTUP ERROR:", err)
+        }
+      }
+
+      initGame() {
+        this.player = new Player(this.managers.ui, this.managers.vfx, this.assets, this.managers.entity, this.managers.audio)
+        this.managers.collision.player = this.player
+        this.player.setWeapon("pistol")
+        this.managers.score.reset()
+        this.survivalTime = 0
+        this.renderer.backgroundScene.initEffects()
+        // this.renderer.drawBackgroundAndScene()
+        // this.renderer.drawWorld()
+      }
+
+      async endGame() {
+        this.gameState = GameState.GAME_OVER
+        this.managers.vfx.enableForMenu()
+        document.body.classList.remove("hide-cursor")
+        this.managers.audio.stopAll()
+        this.managers.audio.playMusic('gameover')
+
+        await this.managers.leaderboard.saveCurrentScore(this.playerName)
+        // await this.managers.leaderboard.load()
+        // this.saveScoreLocal()
+
+        this.managers.ui.showGameOver(this.playerName, this.managers.score.getScore())
+
+        if (this.managers.ui.el.restartBtn) {
+          this.managers.ui.el.restartBtn.onclick = () => this.restartGame()
+        }
+      }
+
+      async restartGame() {
+        this.managers.vfx.disableForGame()
+        this.initGame()
+        this.gameState = GameState.GAME
+
+        const ui = document.getElementById("ui")
+        ui.style.display = "none"
+        ui.classList.remove("game_over_bg")
+        effectsLayer.style.display = "block"
+
+        await this.managers.transition.fadeIn()
+        document.body.classList.add("hide-cursor")
+        this.managers.entity.clear()
+      }
+
+      // async showCommanderIntro() {
+      //   await new Promise(r => setTimeout(r, 500))
+      //   const msg = this.managers.text.getCommanderIntro()
+      //   await this.showCommanderMessage(3000, msg)
+      // }
+
+
+      async startGameSequence() {
+        await new Promise(r => setTimeout(r, 2000))
+        await this.managers.vfx.crossfade(async () => {
+          this.managers.ui.el.fade.style.opacity = "0"
+          this.managers.ui.el.ui.style.display = "none"
+          effectsLayer.style.display = "block"
+
+          // Отключаем все визуальные эффекты
+          EffectsManager.disableForGame()
+
+          this.gameState = GameState.GAME
+        }, 1000)
+
+        await new Promise(r => setTimeout(r, 1000))
+      }
+
+      async animatePlayerIntro() {
+        this.player.x = -this.player.width
+        this.player.y = canvas.height - groundHeight - this.player.height
+        this.player.direction = 1 // идем вправо
+        const targetX = canvas.width * 0.1
+        const speed = 3
+
+        return new Promise(resolve => {
+          const interval = setInterval(() => {
+            // “имитация” движения, как при нажатии клавиш
+            this.player.vx = speed
+            this.player.isMoving = true
+            this.player.update()  // обновляем позицию и кадры
+
+            if (this.player.x >= targetX) {
+              this.player.x = targetX
+              this.player.vx = 0
+              this.player.isMoving = false
+              this.player.update()
+              clearInterval(interval)
+              resolve()
+            }
+          }, 100)
+        })
+      }
+
+
+      async fadeOutMenu() {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        document.body.classList.add("hide-cursor")
+        // this.managers.audio.playMusic('ambient')
+        await this.managers.transition.fadeOut(1000)
+      }
+
+      render() {
+        // const ctx = canvas.getContext("2d")
+
+        switch (this.gameState) {
+          case GameState.MENU:
+            // Рендер меню
+            break
+          case GameState.GAME:
+            this.renderer.drawWorld()
+            break
+          case GameState.DIALOG:
+            this.renderer.drawWorld()
+            // this.renderWorld(ctx)
+            break
+          case GameState.PAUSED:
+            this.updatePaused()
+            break
+          case GameState.GAME_OVER:
+            this.renderer.drawDeathOverlay()
+            break
+        }
+      }
+
+      // renderWorld(ctx) {
+      //   ctx.clearRect(0, 0, canvas.width, canvas.height)
+      //   // Рисуем фон, эффекты, сущности
+      //   this.backgroundScene.draw(ctx)
+      //   if (this.player?.alive) this.player.draw(ctx)
+      //   for (const obj of this.managers.entity.getAll()) {
+      //     if (obj.alive) obj.draw(ctx)
+      //   }
+      // }
+
+      // ... остальные методы
     }
 
-    window.addEventListener("load", async () => {
-      await preloadAssets()
-      await leaderboardManager.load()
-    })
+
+    // Убираем все глобальные переменные
+    // Все обращения теперь через game.managers.xxx
+    // function gameLoop(t) {
+    //   if (!gameLoopRunning) {
+    //     setTimeout(() => requestAnimationFrame(gameLoop), 100)
+    //     return
+    //   }
+    //
+    //   frameCounter++
+    //   if (t - lastFrameTime > 1000) {
+    //     fps = frameCounter - (lastFpsFrameCount || 0)
+    //     lastFpsFrameCount = frameCounter
+    //     lastFrameTime = t
+    //   }
+    //
+    //   const rawDelta = Math.min(t - last, 100)
+    //   const delta = rawDelta * timeScale
+    //   last = t
+    //
+    //   switch (currentState) {
+    //     case GameState.MENU:
+    //       if (frameCounter % 3 === 0) {
+    //         updateMenu(delta)
+    //         gameRenderer.drawMenu()
+    //       }
+    //       break
+    //
+    //     case GameState.GAME:
+    //       updateAmbient(delta)
+    //       updateGameplay(delta)
+    //       gameRenderer.drawWorld()
+    //       break
+    //
+    //     case GameState.DIALOG:
+    //       updateDialog(delta)
+    //       gameRenderer.drawWorld()
+    //       break
+    //
+    //     case GameState.PAUSED:
+    //       if (frameCounter % 6 === 0) {
+    //         updatePaused(delta)
+    //         gameRenderer.drawPaused(textManager.getPauseMessage())
+    //       }
+    //       break
+    //
+    //     case GameState.GAME_OVER:
+    //       if (frameCounter % 3 === 0) {
+    //         gameRenderer.drawDeathOverlay()
+    //       }
+    //       break
+    //   }
+    //
+    //   if (gameLoopInstances > 1) {
+    //     console.error("MULTIPLE GAME LOOPS DETECTED! Stopping instance.")
+    //     gameLoopInstances--
+    //     return
+    //   }
+    //
+    //   requestAnimationFrame(gameLoop)
+    // }
+    //
+    // function updateDialog(delta) {
+    //   updateAmbient(delta)
+    // }
+    //
+    // function updatePaused(delta) {
+    //   // Ничего из игрового мира не двигаем.
+    //   // Если захочешь мигающий PAUSED — можно обновлять только его.
+    // }
+    //
+    // function updateGameplay(delta) {
+    //   handlePlayerInput()
+    //   updateEntities(delta)
+    //   collisionManager.update()
+    //   cleanupEntities()
+    //
+    //   survivalTime += delta / 1000
+    // }
+    //
+    // function updateAmbient() {
+    //   backgroundScene.updateAmbient()
+    // }
+
+    // const waveManager = new WaveManager()
+    // const droneSpawner = new DroneSpawner(entityManager, waveManager, canvas)
+    // const backgroundScene = new BackgroundScene(canvas, groundHeight, assets)
+    // const gameRenderer = new GameRenderer(
+    //   ctx,
+    //   canvas,
+    //   groundHeight,
+    //   assets,
+    //   backgroundScene,
+    //   entityManager,
+    //   () => player
+    // )
+
+    // function initGame() {
+    //   // игрок
+    //   player = new Player()
+    //   collisionManager.player = player
+    //
+    //   // оружие
+    //   player.setWeapon("pistol")
+    //
+    //   // игра
+    //   scoreManager.reset()
+    //   survivalTime = 0
+    //   dropTimer = 0
+    //   shootCooldown = 0
+    //
+    //   backgroundScene.initEffects()
+    // }
+
+    // function updateMenu(delta) {
+    //
+    // }
+
+    // if (gameLoopInstances === 0) {
+    //   gameLoopInstances++
+    //   requestAnimationFrame(gameLoop)
+    // }
+
+    // UI.hud.startBtn.onclick = startGame
+    //
+    // document.addEventListener("keydown", e => {
+    //   if (e.code === "Space") {
+    //     if (player.weapon && !player.weapon.auto) {
+    //       const dir = inputManager.getShootDirection()
+    //       player.fire(dir.dx, dir.dy)
+    //     }
+    //   }
+    //
+    //   if (e.code === "KeyP") {
+    //     if (currentState === GameState.GAME) {
+    //       currentState = GameState.PAUSED
+    //     } else if (currentState === GameState.PAUSED) {
+    //       currentState = GameState.GAME
+    //     }
+    //   }
+    //
+    //   if (currentState === GameState.PAUSED) {
+    //     return
+    //   }
+    //
+    //   if (e.key === "i") {
+    //     player.setWeapon('rifle')
+    //   }
+    //
+    //   if (e.key === "s") {
+    //     player.setWeapon('shotgun')
+    //   }
+    //
+    //   if (e.key === "m") {
+    //     player.setWeapon('machinegun')
+    //   }
+    //
+    //   if (e.code === "Space") {
+    //     e.preventDefault()
+    //   }
+    //
+    //   if (e.code === "KeyR") {
+    //     if (player.weapon?.reloading) return
+    //     player.reload()
+    //   }
+    //
+    //   keys[e.key] = true
+    // })
+    //
+    // document.addEventListener("keyup", e => {
+    //   if (currentState === GameState.PAUSED) {
+    //     if (e.code === "Space") {
+    //       shooting = false
+    //     }
+    //     return
+    //   }
+    //
+    //   keys[e.key] = false
+    // })
+    //
+    // document.body.addEventListener("click", () => {
+    //   audio.playMusic('menu')
+    // }, { once: true })
+
+    // async function preloadAssets() {
+    //   const interval = setInterval(() => {
+    //     UI.setLoadingProgress(assets.getProgress() * 100)
+    //   }, 50)
+    //
+    //   await assets.loadAll()
+    //   clearInterval(interval)
+    //   UI.setLoadingProgress(100)
+    //   await new Promise(r => setTimeout(r, 200))
+    //   UI.hideLoadingScreen()
+    // }
+
+    // window.addEventListener("load", async () => {
+    //   await textManager.load()
+    //   await preloadAssets()
+    //   await leaderboardManager.load()
+    // })
+
+    const game = new GameManager()
+
+    window.addEventListener("load", () => game.initialize())
 
   </script>
 </body>

@@ -1,0 +1,82 @@
+{
+  "en": {
+    "commander": {
+      "stages": [
+        {
+          "start": "Alright, listen up, soldier.\\nHere's the situation… yeah… here's the situation.\\nYour mission: at H-hour, you move out to reinforce a fortified position.\\nUnits from the 69th are already dug in — area's considered secure.\\nYou'll assist with supply lines and comms.\\nRotations will be… happening soon enough.\\nIn case of injury, you'll be… taken care of and evacuated to the rear.\\nAnyone falling back without orders will be treated as hostile.",
+          "end": "…You're still up? Huh. That's… not according to plan."
+        },
+        {
+          "start": "Squad, roger that—actually, wait, I didn't say anything yet.\nAnyway, get moving.",
+          "end": "Well I'll be damned.\nYou actually made it, soldier."
+        },
+        {
+          "start": "This is Command… I think.\nContact expected. Try not to die immediately.",
+          "end": "You're alive.\nI'm marking that as a… success."
+        },
+        {
+          "start": "That's not standard issue…\nWho signed off on that thing?",
+          "end": "Well… that worked.\nCommand approves. Probably."
+        },
+        {
+          "start": "Stay alive, Charlie.",
+          "end": null
+        }
+      ]
+    },
+    "ui": {
+      "gameOver": "You are KIA!",
+      "pause": "PAUSED",
+      "continue": "Press P to continue...",
+      "topSurvivors": "Top Survivors",
+      "finalScore": "Final score",
+      "tryAgain": "Try Again",
+      "yourName": "Your Name",
+      "startGame": "Start Game",
+      "score": "Score",
+      "ammo": "Ammo",
+      "magazines": "Magazines",
+      "reloading": "RELOADING..."
+    }
+  },
+  "ru": {
+    "commander": {
+      "stages": [
+        {
+          "start": "Значит так, товарищ солдат. Соответственно… соответственно.\\n— Слушай боевую задачу.\\nВ час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.\\nБудешь оказывать содействие в организации снабжения и связи.\\nРотация будет каждые… очень скоро.\\nВ случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.\\nКто без команды пойдёт назад — будет принят за наступающие силы противника.",
+          "end": "…Ты всё ещё жив? Хм. Это… не по плану."
+        },
+        {
+          "start": "Отряд, принял—стоп, я ещё ничего не сказал.\nВ общем, двигаемся.",
+          "end": "Ну надо же.\nТы действительно выжил, солдат."
+        },
+        {
+          "start": "Это Командование… кажется.\nОжидается контакт. Постарайся не умереть сразу.",
+          "end": "Ты жив.\nОтмечаю это как… успех."
+        },
+        {
+          "start": "Это не штатная комплектация…\nКто подписал эту штуковину?",
+          "end": "Ну… сработало.\nКомандование одобряет. Наверное."
+        },
+        {
+          "start": "Держись, Чарли.",
+          "end": null
+        }
+      ]
+    },
+    "ui": {
+      "gameOver": "Ты 200!",
+      "pause": "ПАУЗА",
+      "continue": "Нажмите P чтобы продолжить...",
+      "topSurvivors": "Лучшие выжившие",
+      "finalScore": "Финальный счёт",
+      "tryAgain": "Попробовать снова",
+      "yourName": "Ваше имя",
+      "startGame": "Начать игру",
+      "score": "Очки",
+      "ammo": "Патроны",
+      "magazines": "Магазины",
+      "reloading": "ПЕРЕЗАРЯДКА..."
+    }
+  }
+}
