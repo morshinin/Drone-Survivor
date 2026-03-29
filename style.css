@@ -1,0 +1,343 @@
+
+:root {
+  --crt-red: rgb(218, 49, 49);
+  --crt-green: rgb(112, 159, 115);
+  --crt-blue: rgb(40, 129, 206);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: "Press Start 2P", monospace;
+  
+  color: lime;
+  
+  image-rendering: pixelated;
+  /*image-rendering: crisp-edges;*/
+  background: url("menu_bg.png") center no-repeat;
+  background-size: cover;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.game_over_bg {
+  background-image: url("game_over_bg.png");
+  background-size: cover;
+}
+
+/* Класс для отключения CRT эффектов */
+.no-crt {
+  background-image: none !important;
+  background-color: transparent !important;
+  animation: none !important;
+  text-shadow: none !important;
+}
+
+.no-crt::before,
+.no-crt::after {
+  display: none !important;
+}
+
+#ui {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+  padding-top: 20%;
+  z-index: 2;
+  margin-top: 50px;
+}
+
+button {
+  padding: 12px 30px;
+  font-size: 20px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.hide-cursor {
+  cursor: none;
+}
+
+
+#score {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-size: 34px;
+  font-weight: bold;
+  color: #ffe066;
+  text-shadow: 3px 3px black;
+  transition: transform 0.15s;
+  z-index: 1;
+}
+
+.score-pop {
+  transform: scale(1.25);
+}
+
+#score-pop {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  font-size: 28px;
+  color: #ffff66;
+  text-shadow: 2px 2px black;
+  opacity: 0;
+  transform: translateY(0);
+  transition: all 0.4s ease;
+}
+
+.score-pop-show {
+  opacity: 1;
+  transform: translateY(-20px);
+}
+
+#leaderboard {
+  margin-top: 20px;
+  font-size: 24px;
+  line-height: 1.5;
+  color: lawngreen;
+}
+
+#fade {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s;
+  z-index: 999;
+}
+
+#game-info {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #aaa;
+  text-align: center;
+  line-height: 1.6;
+  text-shadow: 1px 1px black;
+}
+
+#game-info a {
+  color: #7cff7c;
+  text-decoration: none;
+}
+
+#game-info a:hover {
+  text-decoration: underline;
+}
+
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background: black;
+  z-index: 9999;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-box {
+  width: 300px;
+  text-align: center;
+  color: white;
+}
+
+#commander-balloon {
+  display: none;
+  width: 600px;
+  height: 200px;
+  position: absolute;
+  top: 60px;
+  color: #333333;
+  text-shadow: none;
+  font-size: 16px;
+  right: -500px;
+  /* за пределами экрана */
+  transition: right 0.6s ease-out, opacity .5s;
+  z-index: 1000;
+}
+
+#commander-balloon.show {
+  opacity: 1;
+}
+
+.commander-face {
+  display: inline-block;
+  width: 100px;
+  height: 100px;
+  margin-right: 10px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.nes-balloon {
+  height: 100%;
+  width: 100%;
+}
+
+.commander-section {
+  display: flex;
+  height: 100%;
+}
+
+#game-container {
+  position: relative;
+  width: 1500px;
+  height: 800px;
+  
+  border-radius: 30px;
+  overflow: hidden;
+  
+  box-shadow:
+      inset 0 0 80px rgba(0, 0, 0, 0.6),
+      inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+#game-container.no-bg {
+  background-image: none !important;
+  background-color: transparent;
+}
+
+#game {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+
+
+#hud {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  color: white;
+  z-index: 100;
+}
+
+.weapon-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.weapon-icon {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+
+.weapon-name {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.ammo-section, .magazine-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ammo-icon, .magazine-icon {
+  width: 20px;
+  height: 20px;
+  image-rendering: pixelated;
+}
+
+.reloading-indicator {
+  background: red;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  animation: pulse 0.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+#hud.hud-hidden {
+  display: none;
+}
+
+#hud.hud-visible {
+  display: flex; /* или block, в зависимости от вашего стиля */
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+}
+
+.menu-item {
+  color: lawngreen;
+  font-size: 28px;
+  text-shadow: 3px 3px black;
+}
+
+.hidden {
+  display: none;
+}
+
+#continueHint {
+  opacity: 0;
+  margin-top: 10px;
+  font-size: 14px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1
+  }
+  
+  50% {
+    opacity: 0.1
+  }
+  
+  100% {
+    opacity: 1
+  }
+}

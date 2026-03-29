@@ -11,357 +11,13 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="style.css">
 
-  <style>
-    :root {
-      --crt-red: rgb(218, 49, 49);
-      --crt-green: rgb(112, 159, 115);
-      --crt-blue: rgb(40, 129, 206);
-    }
-
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: "Press Start 2P", monospace;
-
-      color: lime;
-
-      image-rendering: pixelated;
-      /*image-rendering: crisp-edges;*/
-      background: url("menu_bg.png") center no-repeat;
-      background-size: cover;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-
-      background: rgba(0, 0, 0, 0.15);
-    }
-
-    .game_over_bg {
-      background-image: url("game_over_bg.png");
-      background-size: cover;
-    }
-
-    /* Класс для отключения CRT эффектов */
-    .no-crt {
-      background-image: none !important;
-      background-color: transparent !important;
-      animation: none !important;
-      text-shadow: none !important;
-    }
-
-    .no-crt::before,
-    .no-crt::after {
-      display: none !important;
-    }
-
-    #ui {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      flex-direction: column;
-      gap: 16px;
-      text-align: center;
-      padding-top: 20%;
-      z-index: 2;
-      margin-top: 50px;
-    }
-
-    button {
-      padding: 12px 30px;
-      font-size: 20px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .hide-cursor {
-      cursor: none;
-    }
-
-
-    #score {
-      position: absolute;
-      top: 10px;
-      left: 20px;
-      font-size: 34px;
-      font-weight: bold;
-      color: #ffe066;
-      text-shadow: 3px 3px black;
-      transition: transform 0.15s;
-      z-index: 1;
-    }
-
-    .score-pop {
-      transform: scale(1.25);
-    }
-
-    #score-pop {
-      position: absolute;
-      top: 50px;
-      left: 20px;
-      font-size: 28px;
-      color: #ffff66;
-      text-shadow: 2px 2px black;
-      opacity: 0;
-      transform: translateY(0);
-      transition: all 0.4s ease;
-    }
-
-    .score-pop-show {
-      opacity: 1;
-      transform: translateY(-20px);
-    }
-
-    #leaderboard {
-      margin-top: 20px;
-      font-size: 24px;
-      line-height: 1.5;
-      color: lawngreen;
-    }
-
-    #fade {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background: black;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.8s;
-      z-index: 999;
-    }
-
-    #game-info {
-      position: fixed;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      color: #aaa;
-      text-align: center;
-      line-height: 1.6;
-      text-shadow: 1px 1px black;
-    }
-
-    #game-info a {
-      color: #7cff7c;
-      text-decoration: none;
-    }
-
-    #game-info a:hover {
-      text-decoration: underline;
-    }
-
-    #loading-screen {
-      position: fixed;
-      inset: 0;
-      background: black;
-      z-index: 9999;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .loading-box {
-      width: 300px;
-      text-align: center;
-      color: white;
-    }
-
-    #commander-balloon {
-      display: none;
-      width: 600px;
-      height: 200px;
-      position: absolute;
-      top: 60px;
-      color: #333333;
-      text-shadow: none;
-      font-size: 16px;
-      right: -500px;
-      /* за пределами экрана */
-      transition: right 0.6s ease-out, opacity .5s;
-      z-index: 1000;
-    }
-
-    #commander-balloon.show {
-      opacity: 1;
-    }
-
-    .commander-face {
-      display: inline-block;
-      width: 100px;
-      height: 100px;
-      margin-right: 10px;
-      vertical-align: middle;
-      flex-shrink: 0;
-      align-self: flex-end;
-    }
-
-    .nes-balloon {
-      height: 100%;
-      width: 100%;
-    }
-
-    .commander-section {
-      display: flex;
-      height: 100%;
-    }
-
-    #game-container {
-      position: relative;
-      width: 1500px;
-      height: 800px;
-
-      border-radius: 30px;
-      overflow: hidden;
-
-      box-shadow:
-        inset 0 0 80px rgba(0, 0, 0, 0.6),
-        inset 0 0 20px rgba(0, 0, 0, 0.8);
-    }
-
-    #game-container.no-bg {
-      background-image: none !important;
-      background-color: transparent;
-    }
-
-    #game {
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: 1;
-    }
-
-
-    #hud {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      gap: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 12px;
-      color: white;
-      z-index: 100;
-    }
-
-    .weapon-section {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding-right: 20px;
-      border-right: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .weapon-icon {
-      width: 32px;
-      height: 32px;
-      image-rendering: pixelated;
-    }
-
-    .weapon-name {
-      font-size: 10px;
-      opacity: 0.8;
-    }
-
-    .ammo-section, .magazine-section {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .ammo-icon, .magazine-icon {
-      width: 20px;
-      height: 20px;
-      image-rendering: pixelated;
-    }
-
-    .reloading-indicator {
-      background: red;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      animation: pulse 0.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    #hud.hud-hidden {
-      display: none;
-    }
-
-    #hud.hud-visible {
-      display: flex; /* или block, в зависимости от вашего стиля */
-    }
-
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      align-items: center;
-    }
-
-    .menu-item {
-      color: lawngreen;
-      font-size: 28px;
-      text-shadow: 3px 3px black;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    #continueHint {
-      opacity: 0;
-      margin-top: 10px;
-      font-size: 14px;
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      0% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: 0.1
-      }
-
-      100% {
-        opacity: 1
-      }
-    }
-  </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 </head>
 
 <body>
-
   <div id="game-container" class="crt">
     <canvas id="game" width="1500" height="800">
     </canvas>
@@ -381,13 +37,13 @@
       <!-- Патроны -->
       <div class="ammo-section">
         <img class="ammo-icon" src="pistol_bullet_icon.png" alt="ammo">
-        <span id="hud-ammo">15/15</span>
+        <span id="hud-ammo"></span>
       </div>
 
       <!-- Магазины -->
       <div class="magazine-section">
         <img class="magazine-icon" src="pistol_magazine_icon.png" alt="magazine">
-        <span id="hud-magazines">8</span>
+        <span id="hud-magazines"></span>
       </div>
 
       <!-- Индикатор перезарядки -->
@@ -461,18 +117,18 @@
 
     const groundHeight = 40
 
-    const EXPLOSION_FRAME_WIDTH = 100;
-    const EXPLOSION_FRAME_HEIGHT = 100;
-    const EXPLOSION_FRAME_COUNT = 4;
-    const EXPLOSION_FRAME_DURATION = 100;
+    // const EXPLOSION_FRAME_WIDTH = 100;
+    // const EXPLOSION_FRAME_HEIGHT = 100;
+    // const EXPLOSION_FRAME_COUNT = 4;
+    // const EXPLOSION_FRAME_DURATION = 100;
 
-    const GROUND_EXPLOSION_FRAMES = 9;
-    const GROUND_EXPLOSION_FRAME_WIDTH = 100;
-    const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
+    // const GROUND_EXPLOSION_FRAMES = 9;
+    // const GROUND_EXPLOSION_FRAME_WIDTH = 100;
+    // const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
 
-    const WALK_FRAMES = 7
-    const WALK_FRAME_WIDTH = 100
-    const WALK_FRAME_HEIGHT = 130
+    // const WALK_FRAMES = 7
+    // const WALK_FRAME_WIDTH = 100
+    // const WALK_FRAME_HEIGHT = 130
 
     // DEBUG режим для тестирования
     const DEBUG = {
@@ -1976,7 +1632,7 @@
       }
 
       handleKeyUp(e) {
-        const { gameState, player } = this.gameManager
+        const { gameState, player, droneSpawner } = this.gameManager
         if (e.code === "Space") this.shooting = false;
 
         if (e.code === "KeyP") {
@@ -2404,6 +2060,10 @@
     // ENTITIES
     // ======================
     class Player {
+      static WALK_FRAMES = 7
+      static WALK_FRAME_WIDTH = 100
+      static WALK_FRAME_HEIGHT = 130
+
       constructor(uiManager, vfxManager, assets, entityManager, audioManager) {
         this.uiManager = uiManager
         this.vfxManager = vfxManager
@@ -2538,7 +2198,7 @@
             this.frameTimer = 0
           }
 
-          if (this.frame >= WALK_FRAMES) {
+          if (this.frame >= Player.WALK_FRAMES) {
             this.frame = 0
           }
         } else {
@@ -2554,10 +2214,10 @@
 
           ctx.drawImage(
             this.walkSprite,
-            this.frame * WALK_FRAME_WIDTH,
+            this.frame * Player.WALK_FRAME_WIDTH,
             0,
-            WALK_FRAME_WIDTH,
-            WALK_FRAME_HEIGHT,
+            Player.WALK_FRAME_WIDTH,
+            Player.WALK_FRAME_HEIGHT,
             -this.x - this.width,
             this.y,
             this.width,
@@ -2566,10 +2226,10 @@
         } else {
           ctx.drawImage(
             this.walkSprite,
-            this.frame * WALK_FRAME_WIDTH,
+            this.frame * Player.WALK_FRAME_WIDTH,
             0,
-            WALK_FRAME_WIDTH,
-            WALK_FRAME_HEIGHT,
+            Player.WALK_FRAME_WIDTH,
+            Player.WALK_FRAME_HEIGHT,
             this.x,
             this.y,
             this.width,
@@ -3114,7 +2774,12 @@
     }
 
     class Explosion {
-      constructor(assetsManager, x, y, width = EXPLOSION_FRAME_WIDTH, height = EXPLOSION_FRAME_HEIGHT) {
+      static FRAME_WIDTH = 100
+      static FRAME_HEIGHT = 100
+      static FRAME_COUNT = 4
+      static FRAME_DURATION = 100
+
+      constructor(assetsManager, x, y, width = Explosion.FRAME_WIDTH, height = Explosion.FRAME_HEIGHT) {
         this.assetsManager = assetsManager
         this.x = x + width / 2;
         this.y = y + height / 2;
@@ -3127,10 +2792,10 @@
 
       update(delta) {
         this.timer += delta;
-        if (this.timer >= EXPLOSION_FRAME_DURATION) {
+        if (this.timer >= Explosion.FRAME_DURATION) {
           this.timer = 0;
           this.frame++;
-          if (this.frame >= EXPLOSION_FRAME_COUNT) {
+          if (this.frame >= Explosion.FRAME_COUNT) {
             this.alive = false; // взрыв закончился
           }
         }
@@ -3140,12 +2805,12 @@
         if (this.alive) {
           ctx.drawImage(
             this.assetsManager.get('explosion'),
-            Math.floor(this.frame * EXPLOSION_FRAME_WIDTH), 0,
-            EXPLOSION_FRAME_WIDTH, EXPLOSION_FRAME_HEIGHT,
-            Math.floor(this.x - EXPLOSION_FRAME_WIDTH / 2),
-            Math.floor(this.y - EXPLOSION_FRAME_HEIGHT / 2),
-            EXPLOSION_FRAME_WIDTH,
-            EXPLOSION_FRAME_HEIGHT
+            Math.floor(this.frame * Explosion.FRAME_WIDTH), 0,
+            Explosion.FRAME_WIDTH, Explosion.FRAME_HEIGHT,
+            Math.floor(this.x - Explosion.FRAME_WIDTH / 2),
+            Math.floor(this.y - Explosion.FRAME_HEIGHT / 2),
+            Explosion.FRAME_WIDTH,
+            Explosion.FRAME_HEIGHT
           );
         }
       }
@@ -3220,6 +2885,10 @@
     }
 
     class GroundExplosion {
+      static FRAMES = 9
+      static FRAME_WIDTH = 100
+      static FRAME_HEIGHT = 100
+
       constructor(assetsManager, x, y) {
         this.assetsManager = assetsManager
         this.x = x;
@@ -3238,7 +2907,7 @@
           this.timer = 0;
           this.frame++;
         }
-        if (this.frame >= GROUND_EXPLOSION_FRAMES) {
+        if (this.frame >= GroundExplosion.FRAMES) {
           this.alive = false;
         }
       }
@@ -3246,14 +2915,14 @@
       draw(ctx) {
         ctx.drawImage(
           this.assetsManager.get('ground_explosion'),
-          Math.floor(this.frame * GROUND_EXPLOSION_FRAME_WIDTH),
+          Math.floor(this.frame * GroundExplosion.FRAME_WIDTH),
           0,
-          GROUND_EXPLOSION_FRAME_WIDTH,
-          GROUND_EXPLOSION_FRAME_HEIGHT,
-          Math.floor(this.x - GROUND_EXPLOSION_FRAME_WIDTH / 2),
-          Math.floor(this.y - GROUND_EXPLOSION_FRAME_HEIGHT / 2),
-          GROUND_EXPLOSION_FRAME_WIDTH,
-          GROUND_EXPLOSION_FRAME_HEIGHT
+          GroundExplosion.FRAME_WIDTH,
+          GroundExplosion.FRAME_HEIGHT,
+          Math.floor(this.x - GroundExplosion.FRAME_WIDTH / 2),
+          Math.floor(this.y - GroundExplosion.FRAME_HEIGHT / 2),
+          GroundExplosion.FRAME_WIDTH,
+          GroundExplosion.FRAME_HEIGHT
         );
       }
     }
@@ -4007,11 +3676,11 @@
           this.initGame()
           await this.startGameSequence()
           await this.animatePlayerIntro()
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise(resolve => setTimeout(resolve, 500))
           this.managers.ui.showHUD()
           // await this.showCommanderIntro()
-          await this.managers.wave.initStages()
-          await this.managers.wave.startStage(0)
+          // await this.managers.wave.initStages()
+          // await this.managers.wave.startStage(0)
 
           const playerNameInput = document.getElementById("nameInput").value.toUpperCase()
           this.playerName = playerNameInput.length >= 3 ? playerNameInput : "AAA"
@@ -4077,7 +3746,7 @@
 
 
       async startGameSequence() {
-        await new Promise(r => setTimeout(r, 2000))
+        await new Promise(r => setTimeout(r, 500))
         await this.managers.vfx.crossfade(async () => {
           this.managers.ui.el.fade.style.opacity = "0"
           this.managers.ui.el.ui.style.display = "none"
@@ -4089,7 +3758,7 @@
           this.gameState = GameState.GAME
         }, 1000)
 
-        await new Promise(r => setTimeout(r, 1000))
+        await new Promise(r => setTimeout(r, 500))
       }
 
       async animatePlayerIntro() {
@@ -4123,7 +3792,7 @@
         await new Promise(resolve => setTimeout(resolve, 500))
         document.body.classList.add("hide-cursor")
         // this.managers.audio.playMusic('ambient')
-        await this.managers.transition.fadeOut(1000)
+        await this.managers.transition.fadeOut(500)
       }
 
       render() {
