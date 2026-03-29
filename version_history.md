@@ -28,6 +28,7 @@ Refactor weapon handling
 Drone spawner
 Game renderer class
 Leaderboard manager
+Weapons Icons
 
 ## 0.17.3
 
