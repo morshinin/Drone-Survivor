@@ -113,56 +113,19 @@
     // ======================
     // CONSTANTS
     // ======================
-    const GAME_VERSION = "0.17.3"
-
-    const groundHeight = 40
-
-    // const EXPLOSION_FRAME_WIDTH = 100;
-    // const EXPLOSION_FRAME_HEIGHT = 100;
-    // const EXPLOSION_FRAME_COUNT = 4;
-    // const EXPLOSION_FRAME_DURATION = 100;
-
-    // const GROUND_EXPLOSION_FRAMES = 9;
-    // const GROUND_EXPLOSION_FRAME_WIDTH = 100;
-    // const GROUND_EXPLOSION_FRAME_HEIGHT = 100;
-
-    // const WALK_FRAMES = 7
-    // const WALK_FRAME_WIDTH = 100
-    // const WALK_FRAME_HEIGHT = 130
+    const GameConfig = {
+      GAME_VERSION: "0.17.3",
+      GROUND_HEIGHT: 40,
+    }
 
     // DEBUG режим для тестирования
     const DEBUG = {
-      bossStart: false,   // начать игру сразу с босса
-      godMode: false,     // бессмертие
-      spawnDrones: false, // включить/выключить обычных дронов
+      bossStart: false,
+      godMode: false,
+      spawnDrones: false,
       showHitboxes: false,
     }
 
-    /* Global Variables */
-    // let keys = {}
-    let timeScale = 1
-
-    let player
-    // let playerName = "AAA"
-    //
-    // let dropTimer = 0
-    // let shootCooldown = 0
-    let globalEnemyFireCooldown = 0
-
-    // let survivalTime = 0
-
-    // let currentState
-    // let gameLoopRunning = true
-    // let lastFrameTime = 0
-    // let frameCounter = 0
-    // let lastFpsFrameCount = 0
-    // let fps = 0
-    // let gameLoopInstances = 0
-
-    let last = 0
-    // let progress = 0
-
-    // let shooting = false
 
     // ======================
     // DOM REFERENCES
@@ -186,9 +149,7 @@
       PAUSED: "paused",
     }
 
-    // currentState = GameState.MENU
-
-    gameVersion.innerText = GAME_VERSION
+    gameVersion.innerText = GameConfig.GAME_VERSION
 
     // ======================
     // SYSTEMS / MANAGERS
@@ -283,19 +244,6 @@
         // Отключаем анимацию UI
         ui.style.animation = 'none'
       },
-
-      // Включить эффекты для меню
-      enableForMenu() {
-        const container = document.getElementById('game-container')
-        const ui = document.getElementById('ui')
-
-        // Возвращаем CRT класс и убираем no-crt
-        // container.classList.add('crt')
-        // container.classList.remove('no-crt')
-
-        // Возвращаем анимацию UI
-        // ui.style.animation = 'glitch1 1s infinite'
-      }
     }
 
     class WaveManager {
@@ -315,6 +263,7 @@
         this.infiniteMode = false
         this.maxDrones = 15
         this.maxBullets = 30
+        this.globalEnemyFireCooldown = 0
 
         this.currentWaveDrones = []
       }
@@ -887,11 +836,6 @@
         this.hud.nameInput = document.getElementById("nameInput")
         this.hud.startBtn = document.getElementById("startBtn")
 
-        // this.hud.weaponName = document.getElementById("hud-weapon-name")
-        // this.hud.ammo = document.getElementById("hud-ammo")
-        // this.hud.magazines = document.getElementById("hud-magazines")
-        // this.hud.reloading = document.getElementById("hud-reloading")
-
         this.hud.weaponIcon = document.getElementById("weapon-icon")
         this.hud.weaponName = document.getElementById("hud-weapon-name")
         this.hud.ammo = document.getElementById("hud-ammo")
@@ -1259,7 +1203,8 @@
           boss: [],
           bullet: [],
           enemyBullet: [],
-          vfx: []
+          grenade: [],
+          vfx: [],
         };
         this.entityMap = new Map(); // Для быстрого доступа по ID, если понадобится
       }
@@ -1607,12 +1552,6 @@
         document.addEventListener("keyup", (e) => this.handleKeyUp(e))
       }
 
-      // handleKeyDown(e) {
-      //   const { gameState, player } = this.gameManager
-      //
-      //   if (e.code === "Space") this.shooting = true;
-      //   this.keys[e.code] = true; // Используем e.code для независимости от раскладки
-      // }
       handleKeyDown(e) {
         const { gameState, player } = this.gameManager
 
@@ -1725,11 +1664,13 @@
         this.uiManager = uiManager
         this.scoreManager = scoreManager
         this.vfxManager = vfxManager
+        this.groundHeight = GameConfig.GROUND_HEIGHT
       }
 
       update() {
-        this.checkPlayerBulletsVsDrones();
-        this.checkEnemyProjectiles();
+        this.checkPlayerBulletsVsDrones()
+        this.checkEnemyProjectiles()
+        this.checkGrenadeCollision()
       }
 
       checkPlayerBulletsVsDrones() {
@@ -1765,7 +1706,7 @@
           if (!projectile.alive) continue;
 
           // Проверка на столкновение с землей
-          if (projectile.y > canvas.height - groundHeight) {
+          if (projectile.y > canvas.height - this.groundHeight) {
             if (typeof projectile.explode === 'function') {
               projectile.explode(); // Для камикадзе, у которых есть метод explode
             } else {
@@ -1782,6 +1723,23 @@
             }
             this.player.die();
             projectile.alive = false;
+          }
+        }
+      }
+
+      checkGrenadeCollision() {
+        const grenades = this.entityManager.getByCategory('grenade')  // добавить категорию
+        for (const grenade of grenades) {
+          if (grenade.exploded) continue
+
+          // Проверка времени взрыва
+          if (grenade.timer <= 0 && !grenade.exploded) {
+            grenade.explode()
+
+            // Проверка урона игроку
+            if (Physics.isColliding(grenade, this.player)) {
+              this.player.die()
+            }
           }
         }
       }
@@ -2064,11 +2022,12 @@
       static WALK_FRAME_WIDTH = 100
       static WALK_FRAME_HEIGHT = 130
 
-      constructor(uiManager, vfxManager, assets, entityManager, audioManager) {
+      constructor(uiManager, vfxManager, assets, entityManager, audioManager, gameManager) {
         this.uiManager = uiManager
         this.vfxManager = vfxManager
         this.entityManager = entityManager
         this.audioManager = audioManager
+        this.gameManager = gameManager
         this.x = 0
         this.y = 0
         this.width = 100
@@ -2153,7 +2112,7 @@
         if (DEBUG.godMode) return
         this.alive = false
 
-        timeScale = 0.25
+        this.gameManager.timeScale = 0.25
 
         this.vfxManager.playExplosion(
           this.x + this.width / 2,
@@ -2382,7 +2341,7 @@
     }
 
     class NormalDrone extends BaseDrone {
-      constructor(y, assets, entityManager, vfxManager, waveManager) {
+      constructor(y, assets, entityManager, vfxManager, waveManager, gameManager) {
         super(0, y, assets, entityManager, vfxManager, waveManager, {
           type: 'normal',
           width: 80,
@@ -2394,6 +2353,7 @@
 
         this.fireTimer = Math.random() * 1000
         this.fireCooldown = 800 + Math.random() * 1200
+        this.gameManager = gameManager
       }
 
       update(delta) {
@@ -2402,7 +2362,7 @@
         this.fireTimer += delta
 
         if (this.fireTimer >= this.fireCooldown &&
-          globalEnemyFireCooldown <= 0) {
+          this.waveManager.globalEnemyFireCooldown <= 0) {
           this.shoot()
         }
       }
@@ -2416,7 +2376,7 @@
             this.y + this.height
           ))
 
-          globalEnemyFireCooldown = 1800 + Math.random() * 400
+          this.waveManager.globalEnemyFireCooldown = 1800 + Math.random() * 400
         }
 
         this.fireCooldown = 1800 + Math.random() * 1200
@@ -2498,6 +2458,7 @@
         this.vy = dy / dist * this.speed
 
         this.explosionRadius = 80
+        this.groundHeight = GameConfig.GROUND_HEIGHT
 
         this.player = player
       }
@@ -2519,7 +2480,7 @@
         }
 
         // Проверка удара о землю
-        if (this.y > canvas.height - groundHeight) {
+        if (this.y > canvas.height - this.groundHeight) {
           this.explode()
         }
 
@@ -2832,25 +2793,29 @@
         this.onGround = false
         this.exploded = false
 
+        this.groundHeight = GameConfig.GROUND_HEIGHT
+
         this.alive = true
         this.category = 'enemyBullet' // Грены тоже пули врага
       }
 
       explode() {
+        if (this.exploded) return
         this.exploded = true;
         this.vfxManager.playGroundExplosion(this.x, this.y);
+        this.alive = false
         // Логика урона по области
-        if (Physics.isColliding(this, player)) { // Упрощенная проверка
-          player.die();
-        }
+        // if (Physics.isColliding(this, player)) {
+        //   player.die();
+        // }
       }
 
       update() {
         if (!this.onGround) {
           this.y += this.vy
 
-          if (this.y >= canvas.height - groundHeight - this.height) {
-            this.y = canvas.height - groundHeight - this.height
+          if (this.y >= canvas.height - this.groundHeight - this.height) {
+            this.y = canvas.height - this.groundHeight - this.height
             this.onGround = true
           }
           return
@@ -3157,208 +3122,6 @@
     // ======================
     // GAME FLOW
     // ======================
-    // async function startGame() {
-    //   try {
-    //     await vfxManager.fadeOutMenu()
-    //     initGame()
-    //     await startGameSequence()
-    //     await animatePlayerIntro()
-    //     await new Promise(resolve => setTimeout(resolve, 3000))
-    //     // await showCommanderIntro()
-    //     await waveManager.startStage(0)
-    //
-    //     playerName = document.getElementById("nameInput").value.toUpperCase()
-    //     if (playerName.length < 3) playerName = "AAA"
-    //   } catch (err) {
-    //     console.error("CRITICAL STARTUP ERROR:", err)
-    //   }
-    // }
-
-    // async function restartGame() {
-    //   // Отключаем эффекты для игры
-    //   EffectsManager.disableForGame()
-    //
-    //   initGame()
-    //   currentState = GameState.GAME
-    //
-    //   const ui = document.getElementById("ui")
-    //   ui.style.display = "none"
-    //   ui.classList.remove("game_over_bg")
-    //   effectsLayer.style.display = "block"
-    //
-    //   await vfxManager.crossfade()
-    //
-    //   document.body.classList.add("hide-cursor")
-    //   player = new Player()
-    //   entityManager.clear()
-    // }
-
-    // async function endGame() {
-    //   currentState = GameState.GAME_OVER
-    //
-    //   EffectsManager.enableForMenu()
-    //   document.body.classList.remove("hide-cursor")
-    //
-    //   audio.stopAll()
-    //   audio.playMusic('gameover')
-    //
-    //   await leaderboardManager.saveCurrentScore(playerName)
-    //   leaderboardManager.saveLocal(playerName, survivalTime)
-    //
-    //   UI.showGameOver(playerName, scoreManager.getScore(), textManager.getGameOverMessage())
-    //   if (UI.el.restartBtn) {
-    //     UI.el.restartBtn.onclick = restartGame
-    //   }
-    //
-    //   leaderboardManager.render()
-    // }
-    //
-    // async function startGameSequence() {
-    //   await new Promise(r => setTimeout(r, 5000))
-    //   await vfxManager.crossfade(async () => {
-    //     UI.el.fade.style.opacity = "0"
-    //     UI.el.ui.style.display = "none"
-    //     effectsLayer.style.display = "block"
-    //
-    //     // Отключаем все визуальные эффекты
-    //     EffectsManager.disableForGame()
-    //
-    //     currentState = GameState.GAME
-    //   }, 1000)
-    //
-    //   await new Promise(r => setTimeout(r, 1000))
-    // }
-//
-//     async function showCommanderIntro() {
-//       await new Promise(r => setTimeout(r, 500))
-//
-// //       const msg = `
-// //     Значит так, товарищ солдат. Соответственно… соответственно.
-// // — Слушай боевую задачу.
-// // В час Х выдвигаешься на усиление укреплённой позиции. Наши из шестьдесят девятого там уже хорошо окопались — опасаться нечего.
-// // Будешь оказывать содействие в организации снабжения и связи.
-// // Ротация будет каждые… очень скоро.
-// // В случае малейшего ранения тебя сразу обну… окажут помощь и эвакуируют в тыл.
-// // Кто без команды пойдёт назад — будет принят за наступающие силы противника.
-// //     `
-//       const msg = `Alright, listen up, soldier.
-// Here’s the situation… yeah… here’s the situation.
-// Your mission: at H-hour, you move out to reinforce a fortified position.
-// Units from the 69th are already dug in — area’s considered secure.
-// You’ll assist with supply lines and comms.
-// Rotations will be… happening soon enough.
-// In case of injury, you’ll be… taken care of and evacuated to the rear.
-// Anyone falling back without orders will be treated as hostile.`
-//       await showCommanderMessage(3000, msg)
-//     }
-
-    // async function animatePlayerIntro() {
-    //   player.x = -player.width
-    //   player.y = canvas.height - groundHeight - player.height
-    //   player.direction = 1 // идем вправо
-    //   const targetX = canvas.width * 0.5
-    //   const speed = 3
-    //
-    //   return new Promise(resolve => {
-    //     const interval = setInterval(() => {
-    //       // “имитация” движения, как при нажатии клавиш
-    //       player.vx = speed
-    //       player.isMoving = true
-    //       player.update()  // обновляем позицию и кадры
-    //
-    //       if (player.x >= targetX) {
-    //         player.x = targetX
-    //         player.vx = 0
-    //         player.isMoving = false
-    //         player.update()
-    //         clearInterval(interval)
-    //         resolve()
-    //       }
-    //     }, 100)
-    //   })
-    // }
-    //
-    // async function showCommanderMessage(duration = 10000, message = null) {
-    //   const prevState = currentState
-    //   currentState = GameState.DIALOG
-    //
-    //   UI.showDialog()
-    //
-    //   const balloon = UI.el.commanderBalloon
-    //   const p = balloon.querySelector("p")
-    //
-    //   await UI.animateCommanderIn()
-    //
-    //   await audio.playSfx('radio_on')
-    //
-    //   await new Promise(r => setTimeout(r, 300))
-    //
-    //   const pages = textManager.splitIntoPages(message)
-    //   for (let i = 0; i < pages.length; i++) {
-    //     const page = pages[i] + "..."
-    //     await textManager.typeToElement(p, page)
-    //
-    //     UI.showContinueHint(true)
-    //     await waitForContinue()
-    //     UI.showContinueHint(false)
-    //   }
-    //
-    //   await audio.playSfx('radio_off')
-    //   await UI.animateCommanderOut()
-    //
-    //   currentState = prevState === GameState.PAUSED ? GameState.PAUSED : GameState.GAME
-    //
-    //   UI.hideDialog()
-    // }
-    //
-    // function waitForContinue() {
-    //   return new Promise(resolve => {
-    //     function handler(e) {
-    //       if (e.code === "Enter") {
-    //         window.removeEventListener("keydown", handler)
-    //         resolve()
-    //       }
-    //     }
-    //
-    //     window.addEventListener("keydown", handler)
-    //   })
-    // }
-
-    // function handlePlayerInput() {
-    //   if (player.alive && inputManager.isShooting() && player.weapon?.auto) {
-    //     const dir = inputManager.getShootDirection()
-    //     player.fire(dir.dx, dir.dy)
-    //   }
-    // }
-    //
-    // function updateEntities(delta) {
-    //   if (!player.alive) {
-    //     player.deathTimer -= delta
-    //     if (player.deathTimer <= 0) {
-    //       timeScale = 1
-    //       endGame()
-    //     }
-    //     return
-    //   }
-    //
-    //   player.update(delta, inputManager)
-    //
-    //   if (globalEnemyFireCooldown > 0) {
-    //     globalEnemyFireCooldown -= delta
-    //   }
-    //
-    //   waveManager.update(delta)
-    //
-    //   for (const obj of entityManager.getAll()) {
-    //     if (obj.alive) {
-    //       obj.update(delta)
-    //     }
-    //   }
-    // }
-    //
-    // function cleanupEntities() {
-    //   entityManager.cleanup()
-    // }
 
     class GameRenderer {
       constructor(ctx, canvas, groundHeight, assets, backgroundScene, entityManager, getPlayer, textManager) {
@@ -3456,10 +3219,11 @@
     // ======================
     class GameManager {
       constructor() {
-        // Все менеджеры будут здесь
         this.managers = {}
         this.initialized = false
         this.gameState = GameState.MENU
+        this.timeScale = 1
+        this.groundHeight = GameConfig.GROUND_HEIGHT
       }
 
       async initialize() {
@@ -3514,12 +3278,12 @@
           this.managers.collision = new CollisionManager(this.managers.entity, null, this.managers.ui, this.managers.score, this.managers.vfx) // player будет установлен позже
           this.managers.ui.setStartGameCallback(() => this.startGame())
 
-          const backgroundScene = new BackgroundScene(canvas, groundHeight, this.assets)
+          const backgroundScene = new BackgroundScene(canvas, this.groundHeight, this.assets)
 
           this.renderer = new GameRenderer(
             ctx,
             canvas,
-            groundHeight,
+            this.groundHeight,
             this.assets,
             backgroundScene,
             this.managers.entity,
@@ -3598,7 +3362,7 @@
         }
 
         const rawDelta = Math.min(t - this.last, 100)
-        const delta = rawDelta * (this.timeScale || 1)
+        const delta = rawDelta * this.timeScale
         this.last = t
 
         // Обновляем в зависимости от состояния
@@ -3650,8 +3414,8 @@
 
         this.player.update(delta, this.managers.input)
 
-        if (this.globalEnemyFireCooldown > 0) {
-          this.globalEnemyFireCooldown -= delta
+        if (this.managers.wave.globalEnemyFireCooldown > 0) {
+          this.managers.wave.globalEnemyFireCooldown -= delta
         }
 
         this.managers.wave.update(delta)
@@ -3679,8 +3443,8 @@
           await new Promise(resolve => setTimeout(resolve, 500))
           this.managers.ui.showHUD()
           // await this.showCommanderIntro()
-          // await this.managers.wave.initStages()
-          // await this.managers.wave.startStage(0)
+          await this.managers.wave.initStages()
+          await this.managers.wave.startStage(0)
 
           const playerNameInput = document.getElementById("nameInput").value.toUpperCase()
           this.playerName = playerNameInput.length >= 3 ? playerNameInput : "AAA"
@@ -3690,7 +3454,7 @@
       }
 
       initGame() {
-        this.player = new Player(this.managers.ui, this.managers.vfx, this.assets, this.managers.entity, this.managers.audio)
+        this.player = new Player(this.managers.ui, this.managers.vfx, this.assets, this.managers.entity, this.managers.audio, this)
         this.managers.collision.player = this.player
         this.player.setWeapon("pistol")
         this.managers.score.reset()
@@ -3763,7 +3527,7 @@
 
       async animatePlayerIntro() {
         this.player.x = -this.player.width
-        this.player.y = canvas.height - groundHeight - this.player.height
+        this.player.y = canvas.height - this.groundHeight - this.player.height
         this.player.direction = 1 // идем вправо
         const targetX = canvas.width * 0.1
         const speed = 3
@@ -3817,226 +3581,11 @@
             break
         }
       }
-
-      // renderWorld(ctx) {
-      //   ctx.clearRect(0, 0, canvas.width, canvas.height)
-      //   // Рисуем фон, эффекты, сущности
-      //   this.backgroundScene.draw(ctx)
-      //   if (this.player?.alive) this.player.draw(ctx)
-      //   for (const obj of this.managers.entity.getAll()) {
-      //     if (obj.alive) obj.draw(ctx)
-      //   }
-      // }
-
-      // ... остальные методы
     }
-
-
-    // Убираем все глобальные переменные
-    // Все обращения теперь через game.managers.xxx
-    // function gameLoop(t) {
-    //   if (!gameLoopRunning) {
-    //     setTimeout(() => requestAnimationFrame(gameLoop), 100)
-    //     return
-    //   }
-    //
-    //   frameCounter++
-    //   if (t - lastFrameTime > 1000) {
-    //     fps = frameCounter - (lastFpsFrameCount || 0)
-    //     lastFpsFrameCount = frameCounter
-    //     lastFrameTime = t
-    //   }
-    //
-    //   const rawDelta = Math.min(t - last, 100)
-    //   const delta = rawDelta * timeScale
-    //   last = t
-    //
-    //   switch (currentState) {
-    //     case GameState.MENU:
-    //       if (frameCounter % 3 === 0) {
-    //         updateMenu(delta)
-    //         gameRenderer.drawMenu()
-    //       }
-    //       break
-    //
-    //     case GameState.GAME:
-    //       updateAmbient(delta)
-    //       updateGameplay(delta)
-    //       gameRenderer.drawWorld()
-    //       break
-    //
-    //     case GameState.DIALOG:
-    //       updateDialog(delta)
-    //       gameRenderer.drawWorld()
-    //       break
-    //
-    //     case GameState.PAUSED:
-    //       if (frameCounter % 6 === 0) {
-    //         updatePaused(delta)
-    //         gameRenderer.drawPaused(textManager.getPauseMessage())
-    //       }
-    //       break
-    //
-    //     case GameState.GAME_OVER:
-    //       if (frameCounter % 3 === 0) {
-    //         gameRenderer.drawDeathOverlay()
-    //       }
-    //       break
-    //   }
-    //
-    //   if (gameLoopInstances > 1) {
-    //     console.error("MULTIPLE GAME LOOPS DETECTED! Stopping instance.")
-    //     gameLoopInstances--
-    //     return
-    //   }
-    //
-    //   requestAnimationFrame(gameLoop)
-    // }
-    //
-    // function updateDialog(delta) {
-    //   updateAmbient(delta)
-    // }
-    //
-    // function updatePaused(delta) {
-    //   // Ничего из игрового мира не двигаем.
-    //   // Если захочешь мигающий PAUSED — можно обновлять только его.
-    // }
-    //
-    // function updateGameplay(delta) {
-    //   handlePlayerInput()
-    //   updateEntities(delta)
-    //   collisionManager.update()
-    //   cleanupEntities()
-    //
-    //   survivalTime += delta / 1000
-    // }
-    //
-    // function updateAmbient() {
-    //   backgroundScene.updateAmbient()
-    // }
-
-    // const waveManager = new WaveManager()
-    // const droneSpawner = new DroneSpawner(entityManager, waveManager, canvas)
-    // const backgroundScene = new BackgroundScene(canvas, groundHeight, assets)
-    // const gameRenderer = new GameRenderer(
-    //   ctx,
-    //   canvas,
-    //   groundHeight,
-    //   assets,
-    //   backgroundScene,
-    //   entityManager,
-    //   () => player
-    // )
-
-    // function initGame() {
-    //   // игрок
-    //   player = new Player()
-    //   collisionManager.player = player
-    //
-    //   // оружие
-    //   player.setWeapon("pistol")
-    //
-    //   // игра
-    //   scoreManager.reset()
-    //   survivalTime = 0
-    //   dropTimer = 0
-    //   shootCooldown = 0
-    //
-    //   backgroundScene.initEffects()
-    // }
-
-    // function updateMenu(delta) {
-    //
-    // }
-
-    // if (gameLoopInstances === 0) {
-    //   gameLoopInstances++
-    //   requestAnimationFrame(gameLoop)
-    // }
-
-    // UI.hud.startBtn.onclick = startGame
-    //
-    // document.addEventListener("keydown", e => {
-    //   if (e.code === "Space") {
-    //     if (player.weapon && !player.weapon.auto) {
-    //       const dir = inputManager.getShootDirection()
-    //       player.fire(dir.dx, dir.dy)
-    //     }
-    //   }
-    //
-    //   if (e.code === "KeyP") {
-    //     if (currentState === GameState.GAME) {
-    //       currentState = GameState.PAUSED
-    //     } else if (currentState === GameState.PAUSED) {
-    //       currentState = GameState.GAME
-    //     }
-    //   }
-    //
-    //   if (currentState === GameState.PAUSED) {
-    //     return
-    //   }
-    //
-    //   if (e.key === "i") {
-    //     player.setWeapon('rifle')
-    //   }
-    //
-    //   if (e.key === "s") {
-    //     player.setWeapon('shotgun')
-    //   }
-    //
-    //   if (e.key === "m") {
-    //     player.setWeapon('machinegun')
-    //   }
-    //
-    //   if (e.code === "Space") {
-    //     e.preventDefault()
-    //   }
-    //
-    //   if (e.code === "KeyR") {
-    //     if (player.weapon?.reloading) return
-    //     player.reload()
-    //   }
-    //
-    //   keys[e.key] = true
-    // })
-    //
-    // document.addEventListener("keyup", e => {
-    //   if (currentState === GameState.PAUSED) {
-    //     if (e.code === "Space") {
-    //       shooting = false
-    //     }
-    //     return
-    //   }
-    //
-    //   keys[e.key] = false
-    // })
-    //
-    // document.body.addEventListener("click", () => {
-    //   audio.playMusic('menu')
-    // }, { once: true })
-
-    // async function preloadAssets() {
-    //   const interval = setInterval(() => {
-    //     UI.setLoadingProgress(assets.getProgress() * 100)
-    //   }, 50)
-    //
-    //   await assets.loadAll()
-    //   clearInterval(interval)
-    //   UI.setLoadingProgress(100)
-    //   await new Promise(r => setTimeout(r, 200))
-    //   UI.hideLoadingScreen()
-    // }
-
-    // window.addEventListener("load", async () => {
-    //   await textManager.load()
-    //   await preloadAssets()
-    //   await leaderboardManager.load()
-    // })
 
     const game = new GameManager()
 
     window.addEventListener("load", () => game.initialize())
-
   </script>
 </body>
 </html>
