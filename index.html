@@ -130,14 +130,15 @@
     // ======================
     // DOM REFERENCES
     // ======================
-    const gameVersion = document.getElementById("game-version")
-    const effectsLayer = document.getElementById("effects-layer")
-    const fadeEl = document.getElementById("fade")
-
-    /* Canvas */
-    const canvas = document.getElementById("game")
-    const ctx = canvas.getContext("2d")
-
+    // const gameVersion = document.getElementById("game-version")
+    // const effectsLayer = document.getElementById("effects-layer")
+    // const fadeEl = document.getElementById("fade")
+    //
+    // /* Canvas */
+    // const canvas = document.getElementById("game")
+    // const ctx = canvas.getContext("2d")
+    //
+    // gameVersion.innerText = GameConfig.GAME_VERSION
     // ======================
     // GAME STATE
     // ======================
@@ -149,11 +150,22 @@
       PAUSED: "paused",
     }
 
-    gameVersion.innerText = GameConfig.GAME_VERSION
 
     // ======================
     // SYSTEMS / MANAGERS
     // ======================
+    class CanvasManager {
+      static canvas = null
+      static ctx = null
+
+      static init() {
+        this.canvas = document.getElementById("game")
+        this.ctx = this.canvas.getContext("2d")
+      }
+
+      static get width() { return this.canvas?.width || 0 }
+      static get height() { return this.canvas?.height || 0 }
+    }
 
     class AssetManager {
       constructor() {
@@ -810,6 +822,7 @@
 
     class UIManager {
       constructor(textManager, audioManager, gameManager) {
+        CanvasManager.init()
         this.el = {}
         this.hud = {}
         this.onStartGame = null
@@ -829,6 +842,8 @@
         this.el.commanderBalloon = document.getElementById("commander-balloon")
         this.el.continueHint = document.getElementById("continueHint")
         this.el.gameInfo = document.getElementById("game-info")
+        this.el.gameVersion = document.getElementById("game-version")
+        this.el.effectsLayer = document.getElementById("effects-layer")
 
         this.hudContainer = document.getElementById("hud")
         this.hud.score = document.getElementById("score")
@@ -843,7 +858,19 @@
         this.hud.reloading = document.getElementById("hud-reloading")
         this.hud.container = document.getElementById("hud")
 
+        if (this.el.gameVersion) {
+          this.el.gameVersion.innerText = GameConfig.GAME_VERSION
+        }
+
         this.bindEvents()
+      }
+
+      get effectsLayer() {
+        return this.el.effectsLayer
+      }
+
+      get fade() {
+        return this.el.fade
       }
 
       bindEvents() {
@@ -1302,11 +1329,12 @@
     }
 
     class VFXManager {
-      constructor(entityManager, audio, assetsManager) {
+      constructor(entityManager, audio, assetsManager, uiManager) {
         this.entityManager = entityManager
         this.audio = audio
         this.assetsManager = assetsManager
-        this.transitions = new TransitionManager(fadeEl)
+        this.uiManager = uiManager
+        this.transitions = new TransitionManager(this.uiManager.fade)
       }
 
       playExplosion(x, y) {
@@ -1706,7 +1734,7 @@
           if (!projectile.alive) continue;
 
           // Проверка на столкновение с землей
-          if (projectile.y > canvas.height - this.groundHeight) {
+          if (projectile.y > CanvasManager.height - this.groundHeight) {
             if (typeof projectile.explode === 'function') {
               projectile.explode(); // Для камикадзе, у которых есть метод explode
             } else {
@@ -1842,8 +1870,8 @@
     }
 
     class BackgroundScene {
-      constructor(canvas, groundHeight, assets) {
-        this.canvas = canvas
+      constructor(groundHeight, assets) {
+        this.canvas = CanvasManager.canvas
         this.groundHeight = groundHeight
         this.assets = assets
         this.citySmoke = null
@@ -2028,6 +2056,8 @@
         this.entityManager = entityManager
         this.audioManager = audioManager
         this.gameManager = gameManager
+        this.canvas = CanvasManager.canvas
+        this.ctx = CanvasManager.ctx
         this.x = 0
         this.y = 0
         this.width = 100
@@ -2081,7 +2111,7 @@
         }
 
         for (const s of shots) {
-          this.entityManager.spawn(new Bullet(s.x, s.y, s.vx, s.vy))
+          this.entityManager.spawn(new Bullet(s.x, s.y, s.vx, s.vy, this.canvas))
         }
       }
 
@@ -2145,8 +2175,8 @@
         this.isMoving = Math.abs(this.vx) > 0.1
 
         if (this.x < 0) this.x = 0
-        if (this.x + this.width > canvas.width)
-          this.x = canvas.width - this.width
+        if (this.x + this.width > this.canvas.width)
+          this.x = this.canvas.width - this.width
 
         if (this.isMoving) {
 
@@ -2166,12 +2196,12 @@
       }
 
       draw() {
-        ctx.save()
+        this.ctx.save()
 
         if (this.direction === -1) {
-          ctx.scale(-1, 1)
+          this.ctx.scale(-1, 1)
 
-          ctx.drawImage(
+          this.ctx.drawImage(
             this.walkSprite,
             this.frame * Player.WALK_FRAME_WIDTH,
             0,
@@ -2183,7 +2213,7 @@
             this.height
           )
         } else {
-          ctx.drawImage(
+          this.ctx.drawImage(
             this.walkSprite,
             this.frame * Player.WALK_FRAME_WIDTH,
             0,
@@ -2195,7 +2225,7 @@
             this.height
           )
         }
-        ctx.restore()
+        this.ctx.restore()
 
         if (DEBUG.showHitboxes) {
           this.uiManager.showHitboxRect(this.x, this.y, this.width, this.height, 'lime')
@@ -2209,6 +2239,8 @@
         this.entityManager = entityManager
         this.vfxManager = vfxManager
         this.waveManager = waveManager
+        this.canvas = CanvasManager.canvas
+        this.ctx = CanvasManager.ctx
         this.x = x
         this.y = y
         this.width = options.width || 80
@@ -2221,7 +2253,7 @@
           if (this.direction > 0) {
             this.x = -this.width
           } else {
-            this.x = canvas.width + this.width
+            this.x = this.canvas.width + this.width
             this.speed = -this.speed
           }
         }
@@ -2250,7 +2282,7 @@
         this.x += this.speed
 
         // Разворот при достижении края
-        if (this.x < -this.width || this.x > canvas.width + this.width) {
+        if (this.x < -this.width || this.x > this.canvas.width + this.width) {
           this.speed *= -1
         }
 
@@ -2265,7 +2297,7 @@
         }
 
         // ВАЖНО: Дополнительный fail-safe для выхода за границы (например, если дрон ушел слишком высоко)
-        if (this.y < -500 || this.y > canvas.height + 500) {
+        if (this.y < -500 || this.y > this.canvas.height + 500) {
           this.alive = false
         }
       }
@@ -2295,7 +2327,7 @@
         }
 
         if (DEBUG.showHitboxes) {
-          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
+          this.uiManager.showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
         }
       }
 
@@ -2342,7 +2374,7 @@
 
     class NormalDrone extends BaseDrone {
       constructor(y, assets, entityManager, vfxManager, waveManager, gameManager) {
-        super(0, y, assets, entityManager, vfxManager, waveManager, {
+        super(0, y, assets, entityManager, vfxManager, waveManager,  {
           type: 'normal',
           width: 80,
           height: 60,
@@ -2350,6 +2382,7 @@
           scoreValue: 10,
           frameDelay: 8,
         })
+        this.canvas = CanvasManager.canvas
 
         this.fireTimer = Math.random() * 1000
         this.fireCooldown = 800 + Math.random() * 1200
@@ -2371,6 +2404,7 @@
         this.fireTimer = 0
         if (this.entityManager.getCountByCategory('enemyBullet') < this.waveManager.maxBullets) {
           this.entityManager.spawn(new EnemyBullet(
+            this.uiManager,
             this.assets,
             this.x + this.width / 2,
             this.y + this.height
@@ -2394,6 +2428,9 @@
           frameDelay: 10,
         })
 
+        this.canvas = CanvasManager.canvas
+        this.ctx = CanvasManager.ctx
+
         this.dropTimer = 120 + Math.random() * 120
         this.grenadeCooldown = 3000
       }
@@ -2410,7 +2447,7 @@
       }
 
       dropGrenade() {
-        this.entityManager.spawn(new Grenade(this.assets, this.vfxManager, this.x, this.y))
+        this.entityManager.spawn(new Grenade(this.assets, this.vfxManager, this.x, this.y, this.canvas, this.ctx))
       }
 
       draw(ctx) {
@@ -2433,14 +2470,14 @@
           x = -50
           y = Math.random() * 200
         } else if (side < 0.5) {
-          x = canvas.width + 50
+          x = CanvasManager.width + 50
           y = Math.random() * 200
         } else {
-          x = Math.random() * canvas.width
+          x = Math.random() * CanvasManager.width
           y = -50
         }
 
-        super(x, y, assets, entityManager, vfxManager, {
+        super(x, y, assets, entityManager, vfxManager,  {
           type: 'kamikaze',
           width: 60,
           height: 60,
@@ -2480,12 +2517,12 @@
         }
 
         // Проверка удара о землю
-        if (this.y > canvas.height - this.groundHeight) {
+        if (this.y > CanvasManager.height - this.groundHeight) {
           this.explode()
         }
 
         // ВАЖНО: Проверка выхода за боковые границы или слишком высоко вверх
-        if (this.x < -200 || this.x > canvas.width + 200 || this.y < -300) {
+        if (this.x < -200 || this.x > CanvasManager.width + 200 || this.y < -300) {
           this.alive = false
         }
       }
@@ -2521,13 +2558,14 @@
 
     class BossDrone extends BaseDrone {
       constructor(assets, entityManager, vfxManager) {
-        super(canvas.width / 2 - 150, -120, assets, entityManager, vfxManager, {
+        super(CanvasManager.width / 2 - 150, -120, assets, entityManager, vfxManager, {
           width: 300,
           height: 260,
           hp: 200,
           image: assets.get('boss'),
           skipEntryPos: true
         })
+        this.canvas = CanvasManager.canvas
         this.maxHp = 400
         this.speed = 2
         this.phase = 1
@@ -2609,7 +2647,7 @@
         if (this.active) {
           const barWidth = 400
           const barHeight = 20
-          const x = (canvas.width - barWidth) / 2
+          const x = (this.canvas.width - barWidth) / 2
           const y = 20
 
           ctx.fillStyle = "rgba(255, 0, 0, 0.3)"
@@ -2626,17 +2664,18 @@
           ctx.fillStyle = "white"
           ctx.font = "14px 'Press Start 2P', cursive"
           ctx.textAlign = "center"
-          ctx.fillText("BOSS: Anomaly", canvas.width / 2, y + 40)
+          ctx.fillText("BOSS: Anomaly", this.canvas.width / 2, y + 40)
         }
 
         if (DEBUG.showHitboxes) {
-          UI.showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
+          this.uiManager.showHitboxRect(this.x, this.y, this.width, this.height, 'blue')
         }
       }
     }
 
     class Bullet {
       constructor(x, y, dx, dy) {
+        this.canvas = CanvasManager.canvas
         this.x = x
         this.y = y
         this.vx = dx
@@ -2654,8 +2693,8 @@
         this.y += this.vy
 
         // Удаляем если за экраном
-        if (this.x > canvas.width + 50 || this.x < -50 ||
-          this.y > canvas.height + 50 || this.y < -50) {
+        if (this.x > this.canvas.width + 50 || this.x < -50 ||
+          this.y > this.canvas.height + 50 || this.y < -50) {
           this.alive = false
         }
       }
@@ -2667,8 +2706,11 @@
     }
 
     class EnemyBullet {
-      constructor(assetsManager, x, y) {
+      constructor(uiManager, assetsManager, x, y) {
         this.assets = assetsManager
+        this.uiManager = uiManager
+        this.canvas = CanvasManager.canvas
+        this.ctx = CanvasManager.ctx
         this.x = x
         this.y = y
         this.speed = 4
@@ -2683,11 +2725,11 @@
 
       update() {
         this.y += this.speed
-        if (this.y > canvas.height + 100) this.alive = false
+        if (this.y > this.canvas.height + 100) this.alive = false
       }
 
       draw() {
-        ctx.drawImage(
+        this.ctx.drawImage(
           this.assets.get('drone_bullet'),
           Math.floor(this.x),
           Math.floor(this.y),
@@ -2696,7 +2738,7 @@
         )
 
         if (DEBUG.showHitboxes) {
-          UI.showHitboxRect(this.x, this.y, this.width, this.height)
+          this.uiManager.showHitboxRect(this.x, this.y, this.width, this.height)
         }
       }
     }
@@ -2704,6 +2746,8 @@
     class Missile {
       constructor(assetsManager, x, y, targetX) {
         this.assetsManager = assetsManager
+        this.canvas = CanvasManager.canvas
+        this.ctx = CanvasManager.ctx
         this.x = x
         this.y = y
 
@@ -2721,11 +2765,11 @@
         if (this.x > this.targetX) this.x -= 1.5
 
         this.y += this.speed
-        if (this.y > canvas.height + 100) this.alive = false
+        if (this.y > this.canvas.height + 100) this.alive = false
       }
 
       draw() {
-        ctx.drawImage(
+        this.ctx.drawImage(
           this.assetsManager.get('drone_bullet'),
           Math.floor(this.x),
           Math.floor(this.y),
@@ -2781,6 +2825,8 @@
       constructor(assetsManager, vfxManager, x, y) {
         this.assetsManager = assetsManager
         this.vfxManager = vfxManager
+        this.canvas = CanvasManager.canvas
+        this.ctx = CanvasManager.ctx
         this.x = x
         this.y = y
 
@@ -2814,8 +2860,8 @@
         if (!this.onGround) {
           this.y += this.vy
 
-          if (this.y >= canvas.height - this.groundHeight - this.height) {
-            this.y = canvas.height - this.groundHeight - this.height
+          if (this.y >= this.canvas.height - this.groundHeight - this.height) {
+            this.y = this.canvas.height - this.groundHeight - this.height
             this.onGround = true
           }
           return
@@ -2836,15 +2882,15 @@
 
         if (this.onGround && this.timer < 60) {
           if (Math.floor(this.timer / 10) % 2 === 0) {
-            ctx.drawImage(grenadeImg, this.x, this.y, this.width, this.height)
+            this.ctx.drawImage(grenadeImg, this.x, this.y, this.width, this.height)
 
-            ctx.beginPath()
-            ctx.arc(this.x + 10, this.y + 10, 30, 0, Math.PI * 2)
-            ctx.strokeStyle = "red"
-            ctx.stroke()
+            this.ctx.beginPath()
+            this.ctx.arc(this.x + 10, this.y + 10, 30, 0, Math.PI * 2)
+            this.ctx.strokeStyle = "red"
+            this.ctx.stroke()
           }
         } else {
-          ctx.drawImage(grenadeImg, this.x, this.y, this.width, this.height)
+          this.ctx.drawImage(grenadeImg, this.x, this.y, this.width, this.height)
         }
       }
     }
@@ -3060,10 +3106,10 @@
     // HELPERS
     // ======================
     class DroneSpawner {
-      constructor(entityManager, waveManager, canvas, assetsManager, vfxManager, player) {
+      constructor(entityManager, waveManager, assetsManager, vfxManager, player) {
         this.entityManager = entityManager
         this.waveManager = waveManager
-        this.canvas = canvas
+        this.canvas = CanvasManager.canvas
         this.assetsManager = assetsManager
         this.vfxManager = vfxManager
         this.player = player
@@ -3073,7 +3119,7 @@
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new NormalDrone(Math.random() * this.canvas.height * 0.4, this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
+        const drone = new NormalDrone(Math.random() * CanvasManager.height * 0.4, this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
         this.entityManager.spawn(drone)
         return drone
       }
@@ -3082,7 +3128,7 @@
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new GrenadierDrone(Math.random() * this.canvas.height * 0.4, this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
+        const drone = new GrenadierDrone(Math.random() * CanvasManager.height * 0.4, this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
         this.entityManager.spawn(drone)
         return drone
       }
@@ -3124,9 +3170,9 @@
     // ======================
 
     class GameRenderer {
-      constructor(ctx, canvas, groundHeight, assets, backgroundScene, entityManager, getPlayer, textManager) {
-        this.ctx = ctx
-        this.canvas = canvas
+      constructor(groundHeight, assets, backgroundScene, entityManager, getPlayer, textManager) {
+        this.canvas = CanvasManager.canvas
+        this.ctx = CanvasManager.ctx
         this.groundHeight = groundHeight
         this.assets = assets
         this.backgroundScene = backgroundScene
@@ -3239,11 +3285,14 @@
           this.managers.entity = new EntityManager()
 
           this.managers.ui = new UIManager(this.managers.text, this.managers.audio, this)
+
+          this.canvas = CanvasManager.canvas
+          this.ctx = CanvasManager.ctx
           // 2. Загружаем тексты (асинхронно)
           await this.managers.text.load()
 
           this.managers.input = new InputManager(this)
-          this.managers.vfx = new VFXManager(this.managers.entity, this.managers.audio, this.assets)
+          this.managers.vfx = new VFXManager(this.managers.entity, this.managers.audio, this.assets, this.managers.ui)
           this.managers.transition = new TransitionManager()
           // this.managers.droneSpawner = new DroneSpawner(this.managers.entity, null, canvas, this.assets, this.managers.vfx)
           // this.managers.wave = new WaveManager(this.managers.text, this.managers.entity, this.managers.ui, this.managers.droneSpawner)
@@ -3258,7 +3307,6 @@
           this.managers.droneSpawner = new DroneSpawner(
             this.managers.entity,
             this.managers.wave,
-            canvas,
             this.assets,
             this.managers.vfx,
             () => this.player
@@ -3274,15 +3322,13 @@
           this.managers.leaderboard = new LeaderboardManager(db, this.managers.ui, this.managers.score)
 
           // 4. Создаем вспомогательные менеджеры
-          this.managers.droneSpawner = new DroneSpawner(this.managers.entity, this.managers.wave, canvas)
+          // this.managers.droneSpawner = new DroneSpawner(this.managers.entity, this.managers.wave)
           this.managers.collision = new CollisionManager(this.managers.entity, null, this.managers.ui, this.managers.score, this.managers.vfx) // player будет установлен позже
           this.managers.ui.setStartGameCallback(() => this.startGame())
 
-          const backgroundScene = new BackgroundScene(canvas, this.groundHeight, this.assets)
+          const backgroundScene = new BackgroundScene(this.groundHeight, this.assets)
 
           this.renderer = new GameRenderer(
-            ctx,
-            canvas,
             this.groundHeight,
             this.assets,
             backgroundScene,
@@ -3514,7 +3560,7 @@
         await this.managers.vfx.crossfade(async () => {
           this.managers.ui.el.fade.style.opacity = "0"
           this.managers.ui.el.ui.style.display = "none"
-          effectsLayer.style.display = "block"
+          this.managers.ui.effectsLayer.style.display = "block"
 
           // Отключаем все визуальные эффекты
           EffectsManager.disableForGame()
@@ -3527,9 +3573,9 @@
 
       async animatePlayerIntro() {
         this.player.x = -this.player.width
-        this.player.y = canvas.height - this.groundHeight - this.player.height
+        this.player.y = CanvasManager.height - this.groundHeight - this.player.height
         this.player.direction = 1 // идем вправо
-        const targetX = canvas.width * 0.1
+        const targetX = CanvasManager.width * 0.1
         const speed = 3
 
         return new Promise(resolve => {
@@ -3560,18 +3606,14 @@
       }
 
       render() {
-        // const ctx = canvas.getContext("2d")
-
         switch (this.gameState) {
           case GameState.MENU:
-            // Рендер меню
             break
           case GameState.GAME:
             this.renderer.drawWorld()
             break
           case GameState.DIALOG:
             this.renderer.drawWorld()
-            // this.renderWorld(ctx)
             break
           case GameState.PAUSED:
             this.updatePaused()
