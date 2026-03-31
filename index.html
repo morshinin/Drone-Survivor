@@ -76,14 +76,14 @@
   </div>
 
   <div id="ui">
-    <div class="nes-field" style="display: none">
+    <div class="nes-field">
       <label for="nameInput">Enter your name (3 letters)</label>
       <input id="nameInput" maxlength="3" type="text" class="nes-input">
     </div>
 
     <button id="startBtn" class="nes-btn is-success">Try to Survive</button>
 
-    <div class="menu">
+    <div class="menu" style="display: none">
       <a href="" class="menu-item">Settings</a>
       <a href="" class="menu-item">Your Profile</a>
       <a href="" class="menu-item">Leaderboard</a>
@@ -2263,10 +2263,13 @@
 
         this.category = 'drone'
 
+        console.log(options)
+
         this.hp = options.hp || 1
-        this.maxHp = options.hp || 1
+        this.maxHp = options.maxHp || options.hp || 1
         this.scoreValue = options.scoreValue || 10
         this.damage = options.damage || 1
+
 
         this.alive = true
         this.type = options.type || 'base'
@@ -2329,15 +2332,28 @@
           this.drawHealthBar(ctx)
         }
 
-        if (DEBUG.showHitboxes) {
-          this.uiManager.showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
-        }
+        // if (DEBUG.showHitboxes) {
+        //   this.uiManager.showHitboxRect(this.x, this.y, this.width, this.height, 'yellow')
+        // }
       }
 
       drawHealthBar(ctx) {
+        // const barWidth = this.width
+        // const barHeight = 5
+        // const healthPercent = this.hp / this.maxHp
+        //
+        // ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+        // ctx.fillRect(this.x, this.y - 10, barWidth, barHeight)
+        //
+        // ctx.fillStyle = '#0f0'
+        // ctx.fillRect(this.x, this.y - 10, barWidth * healthPercent, barHeight)
+        if (this.maxHp <= 1) return
+
         const barWidth = this.width
         const barHeight = 5
-        const healthPercent = this.hp / this.maxHp
+        const healthPercent = Math.max(0, this.hp / this.maxHp)
+
+        console.log('Drawing health bar:', this.type, 'HP:', this.hp, '/', this.maxHp, 'percent:', healthPercent)
 
         ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
         ctx.fillRect(this.x, this.y - 10, barWidth, barHeight)
@@ -2382,6 +2398,7 @@
           width: 80,
           height: 60,
           hp: 1,
+          maxHp: 1,
           scoreValue: 10,
           frameDelay: 8,
         })
@@ -2421,12 +2438,13 @@
     }
 
     class GrenadierDrone extends BaseDrone {
-      constructor(y, assets, entityManager, vfxManager) {
-        super(0, y, assets, entityManager, vfxManager, {
+      constructor(y, assets, entityManager, vfxManager, waveManager) {
+        super(0, y, assets, entityManager, vfxManager, waveManager, {
           type: 'grenadier',
           width: 90,
           height: 70,
           hp: 2,
+          maxHp: 2,
           scoreValue: 25,
           frameDelay: 10,
         })
@@ -2464,50 +2482,131 @@
     }
 
     class KamikazeDrone extends BaseDrone {
-      constructor(assets, entityManager, vfxManager, player) {
-        // Случайная стартовая позиция
+      constructor(assets, entityManager, vfxManager, waveManager, getPlayer) {
+        // Определяем позицию
         const side = Math.random()
         let x, y
 
         if (side < 0.25) {
-          x = -50
-          y = Math.random() * 200
+          // Слева
+          x = -100
+          y = Math.random() * (CanvasManager.height - 200)
         } else if (side < 0.5) {
-          x = CanvasManager.width + 50
-          y = Math.random() * 200
+          // Справа
+          x = CanvasManager.width + 100
+          y = Math.random() * (CanvasManager.height - 200)
         } else {
+          // Сверху
           x = Math.random() * CanvasManager.width
-          y = -50
+          y = -100
         }
 
-        super(x, y, assets, entityManager, vfxManager,  {
+        super(x, y, assets, entityManager, vfxManager, waveManager, {
           type: 'kamikaze',
           width: 60,
           height: 60,
           hp: 1,
+          maxHp: 1,
           scoreValue: 30,
           speed: 4,
           frameDelay: 6,
           image: assets.get('kamikaze')
         })
 
-        const dx = player.x - this.x
-        const dy = player.y - this.y
-        const dist = Math.hypot(dx, dy)
-        this.vx = dx / dist * this.speed
-        this.vy = dy / dist * this.speed
+        // this.player = player
+        //
+        // const dx = this.player.x - this.x
+        // const dy = this.player.y - this.y
+        // const dist = Math.hypot(dx, dy)
+        // this.vx = dx / dist * this.speed
+        // this.vy = dy / dist * this.speed
 
-        this.explosionRadius = 80
         this.groundHeight = GameConfig.GROUND_HEIGHT
-
-        this.player = player
+        this.getPlayer = getPlayer
+        this.explosionRadius = 80
+        this.targetLocked = false
+        this.vx = 0
+        this.vy = 0
       }
 
+      // update(delta) {
+      //   // Камикадзе не использует базовое движение
+      //   this.x += this.vx
+      //   this.y += this.vy
+      //
+      //   this.frameTimer += delta
+      //   if (this.frameTimer >= this.frameDelay) {
+      //     this.frame = (this.frame + 1) % 4
+      //     this.frameTimer = 0
+      //   }
+      //
+      //   // Проверка столкновения с игроком
+      //   if (Physics.isColliding(this, this.player)) {
+      //     this.explode()
+      //   }
+      //
+      //   // Проверка удара о землю
+      //   if (this.y > CanvasManager.height - this.groundHeight) {
+      //     this.explode()
+      //   }
+      //
+      //   // ВАЖНО: Проверка выхода за боковые границы или слишком высоко вверх
+      //   if (this.x < -200 || this.x > CanvasManager.width + 200 || this.y < -300) {
+      //     this.alive = false
+      //   }
+      // }
+      //
+      // explode() {
+      //   this.vfxManager.playGroundExplosion(this.x, this.y)
+      //
+      //   // Проверка урона игроку
+      //   const dx = this.player.x + this.player.width / 2 - (this.x + this.width / 2)
+      //   const dy = this.player.y + this.player.height / 2 - (this.y + this.height / 2)
+      //   const dist = Math.sqrt(dx * dx + dy * dy)
+      //
+      //   if (dist < this.explosionRadius) {
+      //     if (!DEBUG.godMode && this.player.alive) {
+      //       this.player.die()
+      //     }
+      //   }
+      //
+      //   this.alive = false
+      // }
+      //
+      // draw(ctx) {
+      //   super.draw(ctx)
+      //   // Визуальный эффект "мигания" перед взрывом
+      //   if (Math.random() < 0.1) {
+      //     ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
+      //     ctx.beginPath()
+      //     ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 30, 0, Math.PI * 2)
+      //     ctx.fill()
+      //   }
+      // }
       update(delta) {
-        // Камикадзе не использует базовое движение
+        // Пытаемся получить игрока
+        const player = this.getPlayer ? this.getPlayer() : null
+
+        // Если еще не заблокировали цель и игрок существует
+        if (!this.targetLocked && player && player.alive) {
+          // Рассчитываем направление к игроку
+          const dx = (player.x + player.width / 2) - (this.x + this.width / 2)
+          const dy = (player.y + player.height / 2) - (this.y + this.height / 2)
+          const dist = Math.hypot(dx, dy)
+
+          if (dist > 0) {
+            // Нормализуем и умножаем на скорость
+            this.vx = (dx / dist) * this.speed
+            this.vy = (dy / dist) * this.speed
+            this.targetLocked = true
+          }
+        }
+
+        // Двигаемся
         this.x += this.vx
         this.y += this.vy
 
+        // Анимация
         this.frameTimer += delta
         if (this.frameTimer >= this.frameDelay) {
           this.frame = (this.frame + 1) % 4
@@ -2515,32 +2614,39 @@
         }
 
         // Проверка столкновения с игроком
-        if (Physics.isColliding(this, this.player)) {
+        if (player && Physics.isColliding(this, player)) {
           this.explode()
+          return
         }
 
         // Проверка удара о землю
-        if (this.y > CanvasManager.height - this.groundHeight) {
+        if (this.y > CanvasManager.height - GameConfig.GROUND_HEIGHT) {
           this.explode()
+          return
         }
 
-        // ВАЖНО: Проверка выхода за боковые границы или слишком высоко вверх
-        if (this.x < -200 || this.x > CanvasManager.width + 200 || this.y < -300) {
+        // Проверка выхода за границы (удаляем, если улетел слишком далеко)
+        if (this.x < -500 || this.x > CanvasManager.width + 500 ||
+          this.y < -500 || this.y > CanvasManager.height + 500) {
           this.alive = false
         }
       }
 
       explode() {
-        this.vfxManager.playGroundExplosion(this.x, this.y)
+        if (this.vfxManager) {
+          this.vfxManager.playGroundExplosion(this.x, this.y)
+        }
 
-        // Проверка урона игроку
-        const dx = this.player.x + this.player.width / 2 - (this.x + this.width / 2)
-        const dy = this.player.y + this.player.height / 2 - (this.y + this.height / 2)
-        const dist = Math.sqrt(dx * dx + dy * dy)
+        const player = this.getPlayer ? this.getPlayer() : null
+        if (player && player.alive) {
+          const dx = player.x + player.width / 2 - (this.x + this.width / 2)
+          const dy = player.y + player.height / 2 - (this.y + this.height / 2)
+          const dist = Math.sqrt(dx * dx + dy * dy)
 
-        if (dist < this.explosionRadius) {
-          if (!DEBUG.godMode && this.player.alive) {
-            this.player.die()
+          if (dist < this.explosionRadius) {
+            if (!DEBUG.godMode) {
+              player.die()
+            }
           }
         }
 
@@ -2549,22 +2655,23 @@
 
       draw(ctx) {
         super.draw(ctx)
-        // Визуальный эффект "мигания" перед взрывом
+        // Визуальный эффект для камикадзе
         if (Math.random() < 0.1) {
-          ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
           ctx.beginPath()
-          ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 30, 0, Math.PI * 2)
+          ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 20, 0, Math.PI * 2)
           ctx.fill()
         }
       }
     }
 
     class BossDrone extends BaseDrone {
-      constructor(assets, entityManager, vfxManager) {
-        super(CanvasManager.width / 2 - 150, -120, assets, entityManager, vfxManager, {
+      constructor(assets, entityManager, vfxManager, waveManager) {
+        super(CanvasManager.width / 2 - 150, -120, assets, entityManager, vfxManager, waveManager, {
           width: 300,
           height: 260,
           hp: 200,
+          maxHp: 400,
           image: assets.get('boss'),
           skipEntryPos: true
         })
@@ -2691,7 +2798,6 @@
       }
 
       update() {
-        debugger
         this.x += this.vx
         this.y += this.vy
 
@@ -3109,13 +3215,12 @@
     // HELPERS
     // ======================
     class DroneSpawner {
-      constructor(entityManager, waveManager, assetsManager, vfxManager, player) {
+      constructor(entityManager, waveManager, assetsManager, vfxManager, getPlayer) {
         this.entityManager = entityManager
         this.waveManager = waveManager
-        this.canvas = CanvasManager.canvas
         this.assetsManager = assetsManager
         this.vfxManager = vfxManager
-        this.player = player
+        this.getPlayer = getPlayer
       }
 
       spawnNormalDrone() {
@@ -3131,7 +3236,14 @@
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new GrenadierDrone(Math.random() * CanvasManager.height * 0.4, this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
+        const drone = new GrenadierDrone(
+          Math.random() * CanvasManager.height * 0.4,
+          this.assetsManager,
+          this.entityManager,
+          this.vfxManager,
+          this.waveManager
+        )
+
         this.entityManager.spawn(drone)
         return drone
       }
@@ -3140,13 +3252,13 @@
         const maxDrones = this.waveManager.maxDrones
         if (this.entityManager.getCountByCategory('drone') >= maxDrones) return
 
-        const drone = new KamikazeDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager, this.player)
+        const drone = new KamikazeDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager, this.getPlayer)
         this.entityManager.spawn(drone)
         return drone
       }
 
       spawnBoss() {
-        const boss = new BossDrone(this.assetsManager, this.entityManager, this.vfxManager)
+        const boss = new BossDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
         this.entityManager.spawn(boss)
         boss.active = true
         return boss
@@ -3341,7 +3453,6 @@
           )
 
           // 5. Игровые объекты
-          this.player = null
           this.survivalTime = 0
           this.gameLoopRunning = true
 
