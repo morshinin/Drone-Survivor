@@ -262,7 +262,7 @@
     }
 
     class WaveManager {
-      constructor(textManager, entityManager, uiManager, droneSpawner) {
+      constructor(textManager, entityManager, uiManager, droneSpawner, audioManager, getPlayer) {
         this.textManager = textManager
         this.entityManager = entityManager
         this.uiManager = uiManager
@@ -279,8 +279,19 @@
         this.maxDrones = 15
         this.maxBullets = 30
         this.globalEnemyFireCooldown = 0
+        this.player = getPlayer
 
         this.currentWaveDrones = []
+
+        this.audioManager = audioManager
+
+        this.stageWeapons = {
+          0: 'pistol',      // Этап 1: Начало
+          1: 'rifle',       // Этап 2: Нарастание
+          2: 'shotgun',     // Этап 3: Тяжелый
+          3: 'machinegun',  // Этап 4: Босс
+          4: 'machinegun',  // Этап 5: Бесконечность
+        }
       }
 
       initStages() {
@@ -436,6 +447,38 @@
 
         const stage = this.stages[index]
 
+        // Выбираем музыку для этапа
+        let musicTrack = 'game' // по умолчанию
+        if (stage.bossWave) {
+          musicTrack = 'boss'
+        } else if (index === 0) {
+          musicTrack = 'wave1'
+        } else if (index === 1) {
+          musicTrack = 'wave2'
+        } else if (index === 2) {
+          musicTrack = 'wave3'
+        }
+
+        // Переключаем музыку с затуханием
+        if (this.audioManager) {
+          this.audioManager.playMusic(musicTrack)
+        }
+
+        // Меняем оружие игрока при начале этапа
+        if (this.stageWeapons[index] && this.player) {
+          const weaponType = this.stageWeapons[index]
+          this.player.setWeapon(weaponType)
+
+          // Показываем сообщение о новом оружии
+          const weaponNames = {
+            pistol: 'Pistol',
+            rifle: 'Assault Rifle',
+            shotgun: 'Shotgun',
+            machinegun: 'Machine Gun'
+          }
+          this.showWeaponMessage(weaponNames[weaponType])
+        }
+
         // ВАЖНО: сбрасываем все счетчики перед стартом этапа
         this.currentStageIndex = index
         this.currentWaveIndex = 0
@@ -530,6 +573,18 @@
           this.uiManager.showCommanderMessage(5000, stage.startMessage).then(() => {
             this.startCurrentWave()
           })
+        }
+      }
+
+      showWeaponMessage(weaponName) {
+        // Показываем сообщение в UI
+        const messageEl = document.getElementById('weapon-message')
+        if (messageEl) {
+          messageEl.textContent = `New weapon: ${weaponName}!`
+          messageEl.classList.add('show')
+          setTimeout(() => {
+            messageEl.classList.remove('show')
+          }, 3000)
         }
       }
 
@@ -1115,6 +1170,33 @@
         }
       }
 
+      createWeaponNotification() {
+        const notification = document.createElement('div')
+        notification.id = 'weapon-notification'
+        notification.className = 'weapon-notification hidden'
+        document.body.appendChild(notification)
+        this.weaponNotification = notification
+      }
+
+      showWeaponNotification(weaponType) {
+        const weaponNames = {
+          pistol: '🔫 PISTOL',
+          rifle: '🔫 ASSAULT RIFLE',
+          shotgun: '🔫 SHOTGUN',
+          machinegun: '🔫 MACHINE GUN'
+        }
+
+        if (this.weaponNotification) {
+          this.weaponNotification.textContent = `NEW WEAPON: ${weaponNames[weaponType]}!`
+          this.weaponNotification.classList.remove('hidden')
+          this.weaponNotification.classList.add('show')
+
+          setTimeout(() => {
+            this.weaponNotification.classList.remove('show')
+            this.weaponNotification.classList.add('hidden')
+          }, 3000)
+        }
+      }
     }
 
     class TextManager {
@@ -1139,7 +1221,6 @@
         try {
           stages = this.texts[this.currentLanguage]?.commander?.stages
         } catch (error) {
-          console.log(this.texts[this.currentLanguage])
           throw new Error(`Could not get commander stage: ${error}`)
         }
         return stages[stageIndex]?.start || null
@@ -2263,8 +2344,6 @@
 
         this.category = 'drone'
 
-        console.log(options)
-
         this.hp = options.hp || 1
         this.maxHp = options.maxHp || options.hp || 1
         this.scoreValue = options.scoreValue || 10
@@ -2352,8 +2431,6 @@
         const barWidth = this.width
         const barHeight = 5
         const healthPercent = Math.max(0, this.hp / this.maxHp)
-
-        console.log('Drawing health bar:', this.type, 'HP:', this.hp, '/', this.maxHp, 'percent:', healthPercent)
 
         ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
         ctx.fillRect(this.x, this.y - 10, barWidth, barHeight)
@@ -2513,14 +2590,6 @@
           image: assets.get('kamikaze')
         })
 
-        // this.player = player
-        //
-        // const dx = this.player.x - this.x
-        // const dy = this.player.y - this.y
-        // const dist = Math.hypot(dx, dy)
-        // this.vx = dx / dist * this.speed
-        // this.vy = dy / dist * this.speed
-
         this.groundHeight = GameConfig.GROUND_HEIGHT
         this.getPlayer = getPlayer
         this.explosionRadius = 80
@@ -2529,60 +2598,6 @@
         this.vy = 0
       }
 
-      // update(delta) {
-      //   // Камикадзе не использует базовое движение
-      //   this.x += this.vx
-      //   this.y += this.vy
-      //
-      //   this.frameTimer += delta
-      //   if (this.frameTimer >= this.frameDelay) {
-      //     this.frame = (this.frame + 1) % 4
-      //     this.frameTimer = 0
-      //   }
-      //
-      //   // Проверка столкновения с игроком
-      //   if (Physics.isColliding(this, this.player)) {
-      //     this.explode()
-      //   }
-      //
-      //   // Проверка удара о землю
-      //   if (this.y > CanvasManager.height - this.groundHeight) {
-      //     this.explode()
-      //   }
-      //
-      //   // ВАЖНО: Проверка выхода за боковые границы или слишком высоко вверх
-      //   if (this.x < -200 || this.x > CanvasManager.width + 200 || this.y < -300) {
-      //     this.alive = false
-      //   }
-      // }
-      //
-      // explode() {
-      //   this.vfxManager.playGroundExplosion(this.x, this.y)
-      //
-      //   // Проверка урона игроку
-      //   const dx = this.player.x + this.player.width / 2 - (this.x + this.width / 2)
-      //   const dy = this.player.y + this.player.height / 2 - (this.y + this.height / 2)
-      //   const dist = Math.sqrt(dx * dx + dy * dy)
-      //
-      //   if (dist < this.explosionRadius) {
-      //     if (!DEBUG.godMode && this.player.alive) {
-      //       this.player.die()
-      //     }
-      //   }
-      //
-      //   this.alive = false
-      // }
-      //
-      // draw(ctx) {
-      //   super.draw(ctx)
-      //   // Визуальный эффект "мигания" перед взрывом
-      //   if (Math.random() < 0.1) {
-      //     ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
-      //     ctx.beginPath()
-      //     ctx.arc(this.x + this.width / 2, this.y + this.height / 2, 30, 0, Math.PI * 2)
-      //     ctx.fill()
-      //   }
-      // }
       update(delta) {
         // Пытаемся получить игрока
         const player = this.getPlayer ? this.getPlayer() : null
@@ -2666,11 +2681,11 @@
     }
 
     class BossDrone extends BaseDrone {
-      constructor(assets, entityManager, vfxManager, waveManager) {
+      constructor(assets, entityManager, vfxManager, waveManager, getPlayer) {
         super(CanvasManager.width / 2 - 150, -120, assets, entityManager, vfxManager, waveManager, {
           width: 300,
           height: 260,
-          hp: 200,
+          hp: 400,
           maxHp: 400,
           image: assets.get('boss'),
           skipEntryPos: true
@@ -2686,6 +2701,7 @@
         this.category = 'boss' // Важно для коллизий
         this.maxMinions = 8
         this.spawnedMinions = 0
+        this.getPlayer = getPlayer
       }
 
       update(delta) {
@@ -2737,7 +2753,7 @@
               this.assetsManager,
               this.x + this.width / 2,
               this.y + this.height,
-              player.x + player.width / 2
+              this.getPlayer.x + this.getPlayer.width / 2
             ))
           }
         }
@@ -3416,7 +3432,9 @@
             this.managers.text,
             this.managers.entity,
             this.managers.ui,
-            null  // droneSpawner будет установлен позже
+            null,  // droneSpawner будет установлен позже
+            this.managers.audio,
+            () => this.player
           )
 
           this.managers.droneSpawner = new DroneSpawner(
@@ -3598,6 +3616,7 @@
         try {
           await this.fadeOutMenu()
           this.initGame()
+          this.managers.audio.playMusic('ambient')
           await this.startGameSequence()
           await this.animatePlayerIntro()
           await new Promise(resolve => setTimeout(resolve, 500))

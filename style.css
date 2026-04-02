@@ -328,6 +328,34 @@ button {
   display: none;
 }
 
+.weapon-notification {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #ff0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  padding: 20px 40px;
+  border-radius: 10px;
+  border: 2px solid #ff0;
+  text-align: center;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.weapon-notification.show {
+  opacity: 1;
+}
+
+.weapon-notification.hidden {
+  display: none;
+}
+
 #continueHint {
   opacity: 0;
   margin-top: 10px;
