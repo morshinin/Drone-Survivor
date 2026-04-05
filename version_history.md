@@ -1,6 +1,6 @@
 # Version History
 
-## 0.18.0
+## 1.0.0 Release
 
 Shoot mechanic
 Death screen
