@@ -262,11 +262,12 @@
     }
 
     class WaveManager {
-      constructor(textManager, entityManager, uiManager, droneSpawner, audioManager, getPlayer) {
+      constructor(textManager, entityManager, uiManager, droneSpawner, audioManager, getPlayer, gameManager) {
         this.textManager = textManager
         this.entityManager = entityManager
         this.uiManager = uiManager
         this.droneSpawner = droneSpawner
+        this.gameManager = gameManager
         this.stages = []// все этапы
         this.currentStageIndex = 0
         this.currentWaveIndex = 0
@@ -465,9 +466,10 @@
         }
 
         // Меняем оружие игрока при начале этапа
-        if (this.stageWeapons[index] && this.player) {
+        if (this.stageWeapons[index] && this.gameManager?.player) {
           const weaponType = this.stageWeapons[index]
-          this.player.setWeapon(weaponType)
+          this.gameManager.player.setWeapon(weaponType)
+
 
           // Показываем сообщение о новом оружии
           const weaponNames = {
@@ -476,7 +478,8 @@
             shotgun: 'Shotgun',
             machinegun: 'Machine Gun'
           }
-          this.showWeaponMessage(weaponNames[weaponType])
+          // this.showWeaponMessage(weaponNames[weaponType])
+          this.uiManager.showWeaponNotification(weaponType)
         }
 
         // ВАЖНО: сбрасываем все счетчики перед стартом этапа
@@ -1715,6 +1718,10 @@
           player?.reload()
         }
 
+        if (e.code === "b") {
+          droneSpawner.spawnBoss()
+        }
+
         this.keys[e.code] = false;
       }
 
@@ -2681,7 +2688,7 @@
     }
 
     class BossDrone extends BaseDrone {
-      constructor(assets, entityManager, vfxManager, waveManager, getPlayer) {
+      constructor(assets, entityManager, vfxManager, waveManager, getPlayer, droneSpawner) {
         super(CanvasManager.width / 2 - 150, -120, assets, entityManager, vfxManager, waveManager, {
           width: 300,
           height: 260,
@@ -2691,6 +2698,7 @@
           skipEntryPos: true
         })
         this.canvas = CanvasManager.canvas
+        this.droneSpawner = droneSpawner
         this.maxHp = 400
         this.speed = 2
         this.phase = 1
@@ -2722,7 +2730,7 @@
           if (this.spawnTimer > 7000) { // 7 секунд
             this.spawnTimer = 0
             if (this.entityManager.getCountByCategory('drone') < 1 + 3) { // 1 босс + 3 миньона
-              droneSpawner.spawnNormalDrone()
+              this.droneSpawner.spawnNormalDrone()
             }
           }
         }
@@ -2734,9 +2742,9 @@
             this.spawnTimer = 0
             if (this.entityManager.getCountByCategory('drone') < 1 + 3) {
               if (Math.random() < 0.6) {
-                droneSpawner.spawnNormalDrone()
+                this.droneSpawner.spawnNormalDrone()
               } else {
-                droneSpawner.spawnGrenadier()
+                this.droneSpawner.spawnGrenadier()
               }
             }
           }
@@ -2750,7 +2758,7 @@
           // Оптимизация: используем глобальный счетчик или простой лимит
           if (this.entityManager.getCountByCategory('enemyBullet') < 40) {
             this.entityManager.spawn(new Missile(
-              this.assetsManager,
+              this.assets,
               this.x + this.width / 2,
               this.y + this.height,
               this.getPlayer.x + this.getPlayer.width / 2
@@ -3274,7 +3282,7 @@
       }
 
       spawnBoss() {
-        const boss = new BossDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager)
+        const boss = new BossDrone(this.assetsManager, this.entityManager, this.vfxManager, this.waveManager, this.getPlayer, this)
         this.entityManager.spawn(boss)
         boss.active = true
         return boss
@@ -3434,7 +3442,8 @@
             this.managers.ui,
             null,  // droneSpawner будет установлен позже
             this.managers.audio,
-            () => this.player
+            () => this.player,
+            this
           )
 
           this.managers.droneSpawner = new DroneSpawner(
@@ -3442,7 +3451,7 @@
             this.managers.wave,
             this.assets,
             this.managers.vfx,
-            () => this.player
+            () => this.player,
           )
 
           this.managers.wave.droneSpawner = this.managers.droneSpawner
