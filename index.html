@@ -2149,10 +2149,10 @@
         this.gameManager = gameManager
         this.canvas = CanvasManager.canvas
         this.ctx = CanvasManager.ctx
-        this.x = 0
-        this.y = 0
         this.width = 100
         this.height = 130
+        this.x = -this.width
+        this.y = CanvasManager.height - GameConfig.GROUND_HEIGHT - this.height
 
         this.speed = 3.8
         this.direction = 1
