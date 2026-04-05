@@ -1455,26 +1455,22 @@
     }
 
     class ScoreManager {
-      constructor(getSurvivalTime, getEntityManager) {
+      constructor() {
         this._score = 0;
-        this._getSurvivalTime = getSurvivalTime;
-        this._getEntityManager = getEntityManager;
-        this._achievements = new Map(); // id -> { id, name, unlocked, unlockedAt }
+        this._achievements = new Map();
+
+        // Фиксированные очки за типы дронов
+        this.droneScores = {
+          normal: 10,
+          grenadier: 50,
+          kamikaze: 100,
+          boss: 1000
+        };
       }
 
-      // --- Подсчёт очков ---
-
-      /**
-       * Рассчитывает очки за уничтожение дрона/босса.
-       * Множители: время выживания (до 5x) и количество врагов на экране (до 4x).
-       */
-      calculateDroneScore(drone) {
-        const survivalTime = this._getSurvivalTime();
-        const droneCount = this._getEntityManager().getCountByCategory('drone');
-        const rawScore = drone.scoreValue *
-          (1 + Math.min(survivalTime / 60, 5)) *
-          (1 + Math.min(droneCount / 20, 4));
-        return Math.floor(rawScore);
+      // Убираем calculateDroneScore, просто возвращаем фиксированное значение
+      getDroneScore(drone) {
+        return this.droneScores[drone.type] || 10;
       }
 
       addScore(amount) {
@@ -1490,8 +1486,7 @@
         this._score = 0;
       }
 
-      // --- Достижения (заготовка на будущее) ---
-
+      // Достижения (опционально)
       registerAchievement(id, name) {
         if (!this._achievements.has(id)) {
           this._achievements.set(id, { id, name, unlocked: false, unlockedAt: null });
@@ -1502,7 +1497,7 @@
         const a = this._achievements.get(id);
         if (a && !a.unlocked) {
           a.unlocked = true;
-          a.unlockedAt = this._getSurvivalTime();
+          a.unlockedAt = Date.now();
           return true;
         }
         return false;
@@ -1808,7 +1803,7 @@
               bullet.alive = false;
               if (drone.takeDamage(1)) {
                 drone.onDeath();
-                const gained = this.scoreManager.calculateDroneScore(drone);
+                const gained = this.scoreManager.getDroneScore(drone)
                 this.scoreManager.addScore(gained);
                 this.uiManager.updateScore(this.scoreManager.getScore());
               }
@@ -3425,8 +3420,6 @@
 
           this.managers.ui = new UIManager(this.managers.text, this.managers.audio, this)
 
-          this.canvas = CanvasManager.canvas
-          this.ctx = CanvasManager.ctx
           // 2. Загружаем тексты (асинхронно)
           await this.managers.text.load()
 
@@ -3457,10 +3450,7 @@
           this.managers.wave.droneSpawner = this.managers.droneSpawner
 
           // 3. Создаем менеджеры, зависящие от текстов
-          this.managers.score = new ScoreManager(
-            () => this.survivalTime,
-            () => this.managers.entity
-          )
+          this.managers.score = new ScoreManager()
           this.managers.leaderboard = new LeaderboardManager(db, this.managers.ui, this.managers.score)
 
           // 4. Создаем вспомогательные менеджеры
@@ -3480,7 +3470,6 @@
           )
 
           // 5. Игровые объекты
-          this.survivalTime = 0
           this.gameLoopRunning = true
 
           // 6. Загружаем ассеты
@@ -3509,18 +3498,6 @@
         await new Promise(r => setTimeout(r, 200))
         this.managers.ui.hideLoadingScreen()
       }
-
-      // async loadLeaderboard() {
-      //   // Логика загрузки лидерборда
-      //   const { data } = await db
-      //     .from("leaderboard")
-      //     .select("*")
-      //     .order("score", { ascending: false })
-      //     .limit(5)
-      //
-      //   this.leaderboard = data
-      //   this.managers.score.renderLeaderboard(this.leaderboard)
-      // }
 
       startGameLoop() {
         if (this.gameLoopRunning) {
@@ -3587,7 +3564,6 @@
         this.renderer.drawWorld()
         this.managers.collision.update()
         this.managers.entity.cleanup()
-        this.survivalTime += delta / 1000
       }
 
       updateEntities(delta) {
